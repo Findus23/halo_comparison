@@ -24,11 +24,11 @@ ref_sizes = []
 comp_sizes = []
 
 print("reading reference file")
-df_ref = read_file(reference_dir)
+df_ref, ref_meta = read_file(reference_dir)
 df_ref_halo = read_halo_file(reference_dir)
 
 print("reading comparison file")
-df_comp = read_file(comparison_dir)
+df_comp, comp_meta = read_file(comparison_dir)
 df_comp_halo = read_halo_file(comparison_dir)
 
 bytes_used = df_ref.memory_usage(index=True).sum()
@@ -40,8 +40,8 @@ for index, original_halo in df_ref_halo[:5].iterrows():
     print(len(df_ref))
     particles_in_ref_halo = df_ref.loc[df_ref["FOFGroupIDs"] == index]
     ref_halo = df_ref_halo.loc[index]
-    print("halo", ref_halo,len(particles_in_ref_halo))
-    cumulative_mass_profile(particles_in_ref_halo,ref_halo)
+    print("halo", ref_halo, len(particles_in_ref_halo))
+    cumulative_mass_profile(particles_in_ref_halo, ref_halo, ref_meta)
     halo_particle_ids = set(particles_in_ref_halo.index.to_list())
 
     if REFERENCE_RESOLUTION < COMPARISON_RESOLUTION:

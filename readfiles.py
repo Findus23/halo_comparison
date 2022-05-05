@@ -1,15 +1,30 @@
+import pickle
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Tuple
 
 import h5py
+import numpy as np
 import pandas as pd
 from pandas import DataFrame
 
 
-def read_file(path: Path) -> pd.DataFrame:
+@dataclass
+class ParticlesMeta:
+    particle_mass: float
+
+
+def read_file(path: Path) -> Tuple[pd.DataFrame, ParticlesMeta]:
     cache_file = path / "cache"
-    if not cache_file.exists():
+    meta_cache_file = path / "cache_meta.pickle"
+    if not (cache_file.exists() and meta_cache_file.exists()):
         file = path / "output_0004.hdf5"
         reference_file = h5py.File(file)
+
+        masses = reference_file["PartType1"]["Masses"]
+        print(masses == masses[0])
+        if not np.all(masses == masses[0]):
+            raise ValueError("only equal mass particles are supported for now")
         df = pd.DataFrame(reference_file["PartType1"]["Coordinates"], columns=["X", "Y", "Z"])
         df2 = pd.DataFrame(reference_file["PartType1"]["FOFGroupIDs"], columns=["FOFGroupIDs"]).astype("category")
         df = df.merge(df2, "outer", left_index=True, right_index=True)
@@ -19,12 +34,19 @@ def read_file(path: Path) -> pd.DataFrame:
         df = df.merge(df3, "outer", left_index=True, right_index=True)
         del df3
         df.set_index("ParticleIDs", inplace=True)
+        meta = ParticlesMeta(
+            particle_mass=masses[0]
+        )
         print("saving cache")
+        with meta_cache_file.open("wb") as f:
+            pickle.dump(meta, f)
         df.to_pickle(str(cache_file))
-        return df
+        return df, meta
     print("from cache")
     df = pd.read_pickle(str(cache_file))
-    return df
+    with meta_cache_file.open("rb") as f:
+        meta = pickle.load(f)
+    return df, meta
 
 
 def read_halo_file(path: Path) -> DataFrame:
