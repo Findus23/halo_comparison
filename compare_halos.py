@@ -9,16 +9,18 @@ from pandas import DataFrame
 from cumulative_mass_profiles import cumulative_mass_profile
 from readfiles import read_file, read_halo_file
 from remap_particle_IDs import IDScaler
+from utils import print_progress, memory_usage
 
 
 def compare_halo_resolutions(reference_resolution: int, comparison_resolution: int, plot=False, single=False):
     reference_dir = Path(f"/home/lukas/monofonic_tests/shannon_{reference_resolution}_100")
-    comparison_dir = Path(f"/home/lukas/monofonic_tests/DB8_{comparison_resolution}_100/")
+    comparison_dir = Path(f"/home/lukas/monofonic_tests/shannon_{comparison_resolution}_100/")
 
     ref_masses = []
     comp_masses = []
     ref_sizes = []
     comp_sizes = []
+    matches = []
 
     print("reading reference file")
     df_ref, ref_meta = read_file(reference_dir)
@@ -28,24 +30,20 @@ def compare_halo_resolutions(reference_resolution: int, comparison_resolution: i
     df_comp, comp_meta = read_file(comparison_dir)
     df_comp_halo = read_halo_file(comparison_dir)
 
-    bytes_used = df_ref.memory_usage(index=True).sum()
-    print(f"Memory: {bytes_used / 1024 / 1024:.2f} MB")
-    print(df_ref.dtypes)
+    print(f"Memory ref: {memory_usage(df_ref):.2f} MB")
+    print(f"Memory comp: {memory_usage(df_comp):.2f} MB")
 
-    for index, original_halo in df_ref_halo[:5].iterrows():
-        print(index)
-        print(len(df_ref))
+    for index, original_halo in df_ref_halo.iterrows():
+        print(f"{index} of {len(df_ref_halo)} original halos")
         particles_in_ref_halo = df_ref.loc[df_ref["FOFGroupIDs"] == index]
         ref_halo = df_ref_halo.loc[index]
-        print("halo", ref_halo, len(particles_in_ref_halo))
-        cumulative_mass_profile(particles_in_ref_halo, ref_halo, ref_meta, plot=PLOT)
+        # cumulative_mass_profile(particles_in_ref_halo, ref_halo, ref_meta, plot=plot)
         halo_particle_ids = set(particles_in_ref_halo.index.to_list())
 
+        prev_len = len(halo_particle_ids)
         if reference_resolution < comparison_resolution:
             print("upscaling IDs")
             upscaled_ids = set()
-            prev_len = len(halo_particle_ids)
-            print(prev_len)
             scaler = IDScaler(reference_resolution, comparison_resolution)
             # i = 0
             for id in halo_particle_ids:
@@ -55,29 +53,24 @@ def compare_halo_resolutions(reference_resolution: int, comparison_resolution: i
                 upscaled_ids.update(set(scaler.upscale(id)))
             halo_particle_ids = upscaled_ids
             after_len = len(upscaled_ids)
-            print(after_len)
-            print(after_len / prev_len)
-            print("done")
+            print(f"{prev_len} => {after_len} (factor {after_len / prev_len})")
         if comparison_resolution < reference_resolution:
             print("downscaling IDs")
-            prev_count = len(halo_particle_ids)
-            print(prev_count)
             downscaled_ids = set()
             scaler = IDScaler(comparison_resolution, reference_resolution)
             for id in halo_particle_ids:
                 downscaled_ids.add(scaler.downscale(id))
             halo_particle_ids = downscaled_ids
             print("done")
-            after_count = len(halo_particle_ids)
-            print(after_count)
-            print(prev_count / after_count)
+            after_len = len(halo_particle_ids)
+            print(f"{prev_len} => {after_len} (factor {prev_len / after_len})")
 
+        print("look up halo particles in comparison dataset")
         particles = df_comp.loc[list(halo_particle_ids)]
-        # print(particles)
 
         halos_in_particles = set(particles["FOFGroupIDs"])
         halos_in_particles.discard(2147483647)
-        # print(halos_in_particles)
+        print(f"{len(halos_in_particles)} halos found in new particles")
         if plot:
             fig: Figure = plt.figure()
             ax: Axes = fig.gca()
@@ -88,10 +81,10 @@ def compare_halo_resolutions(reference_resolution: int, comparison_resolution: i
         best_halo = None
         best_halo_match = 0
 
-        for halo in halos_in_particles:
+        for i, halo in enumerate(halos_in_particles):
             # print("----------", halo, "----------")
-            print(halo)
-            halo_data = df_comp_halo.loc[halo]
+            print_progress(i, len(halos_in_particles), halo)
+            # halo_data = df_comp_halo.loc[halo]
             particles_in_comp_halo: DataFrame = df_comp.loc[df_comp["FOFGroupIDs"] == halo]
             halo_size = len(particles_in_comp_halo)
 
@@ -117,6 +110,7 @@ def compare_halo_resolutions(reference_resolution: int, comparison_resolution: i
         ref_masses.append(ref_halo["Masses"])
         comp_sizes.append(comp_halo["Sizes"])
         comp_masses.append(comp_halo["Masses"])
+        matches.append(best_halo_match / len(particles))
         # exit()
         if plot:
             ax.legend()
@@ -126,16 +120,17 @@ def compare_halo_resolutions(reference_resolution: int, comparison_resolution: i
         if single:
             break
 
-    df = DataFrame(np.array([ref_sizes, comp_sizes, ref_masses, comp_masses]).T,
-                   columns=["ref_sizes", "comp_sizes", "ref_masses", "comp_masses"])
+    df = DataFrame(np.array([matches, ref_sizes, comp_sizes, ref_masses, comp_masses]).T,
+                   columns=["matches", "ref_sizes", "comp_sizes", "ref_masses", "comp_masses"])
     print(df)
     df.to_csv("sizes.csv", index=False)
+    return df, reference_dir.name + "_" + comparison_dir.name
 
 
 if __name__ == '__main__':
     compare_halo_resolutions(
         reference_resolution=128,
         comparison_resolution=512,
-        plot=True,
+        plot=False,
         single=False
     )

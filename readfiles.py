@@ -22,7 +22,6 @@ def read_file(path: Path) -> Tuple[pd.DataFrame, ParticlesMeta]:
         reference_file = h5py.File(file)
 
         masses = reference_file["PartType1"]["Masses"]
-        print(masses == masses[0])
         if not np.all(masses == masses[0]):
             raise ValueError("only equal mass particles are supported for now")
         df = pd.DataFrame(reference_file["PartType1"]["Coordinates"], columns=["X", "Y", "Z"])
