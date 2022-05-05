@@ -41,7 +41,7 @@ for index, original_halo in df_ref_halo[:5].iterrows():
     particles_in_ref_halo = df_ref.loc[df_ref["FOFGroupIDs"] == index]
     ref_halo = df_ref_halo.loc[index]
     print("halo", ref_halo, len(particles_in_ref_halo))
-    cumulative_mass_profile(particles_in_ref_halo, ref_halo, ref_meta)
+    cumulative_mass_profile(particles_in_ref_halo, ref_halo, ref_meta, plot=PLOT)
     halo_particle_ids = set(particles_in_ref_halo.index.to_list())
 
     if REFERENCE_RESOLUTION < COMPARISON_RESOLUTION:

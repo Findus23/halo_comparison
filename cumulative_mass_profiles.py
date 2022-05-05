@@ -11,7 +11,8 @@ def V(r):
     return 4 * np.pi * r ** 3 / 3
 
 
-def cumulative_mass_profile(particles_in_halos: pd.DataFrame, halo: pd.Series, particles_meta: ParticlesMeta):
+def cumulative_mass_profile(particles_in_halos: pd.DataFrame, halo: pd.Series,
+                            particles_meta: ParticlesMeta, plot=False):
     print(type(particles_in_halos))
     centre = np.array([halo.X, halo.Y, halo.Z])
     positions = particles_in_halos[["X", "Y", "Z"]].to_numpy()
@@ -39,17 +40,18 @@ def cumulative_mass_profile(particles_in_halos: pd.DataFrame, halo: pd.Series, p
     print(bin_masses)
     print(bin_densities)
 
-    fig: Figure = plt.figure()
-    ax: Axes = fig.gca()
+    if plot:
+        fig: Figure = plt.figure()
+        ax: Axes = fig.gca()
 
-    ax2 = ax.twinx()
+        ax2 = ax.twinx()
 
-    ax.loglog(log_radial_bins[:-1], bin_masses, label="counts")
-    ax2.loglog(log_radial_bins[:-1], bin_densities, label="densities", c="C1")
-    ax.set_xlabel(r'R / R$_\mathrm{group}$')
-    ax.set_ylabel(r'M [$10^{10} \mathrm{M}_\odot$]')
-    ax2.set_ylabel("density [$\\frac{10^{10} \mathrm{M}_\odot}{Mpc^3}$]")
+        ax.loglog(log_radial_bins[:-1], bin_masses, label="counts")
+        ax2.loglog(log_radial_bins[:-1], bin_densities, label="densities", c="C1")
+        ax.set_xlabel(r'R / R$_\mathrm{group}$')
+        ax.set_ylabel(r'M [$10^{10} \mathrm{M}_\odot$]')
+        ax2.set_ylabel("density [$\\frac{10^{10} \mathrm{M}_\odot}{Mpc^3}$]")
 
-    plt.show()
+        plt.show()
 
     return bin_masses, bin_densities
