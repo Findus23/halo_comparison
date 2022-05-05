@@ -1,28 +1,22 @@
 from pathlib import Path
 
-import h5py
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from pandas import DataFrame
 
+from cumulative_mass_profiles import cumulative_mass_profile
 from readfiles import read_file, read_halo_file
 from remap_particle_IDs import IDScaler
 
 REFERENCE_RESOLUTION = 128
-COMPARISON_RESOLUTION = 512
+COMPARISON_RESOLUTION = 128
 PLOT = True
 SINGLE = False
 
 reference_dir = Path(f"/home/lukas/monofonic_tests/shannon_{REFERENCE_RESOLUTION}_100")
-comparison_dir = Path(f"/home/lukas/monofonic_tests/shannon_{COMPARISON_RESOLUTION}_100/")
-
-
-# comparison_dir = Path(f"/home/lukas/monofonic_tests/DB8_{COMPARISON_RESOLUTION}_100/")
-
-
+comparison_dir = Path(f"/home/lukas/monofonic_tests/DB8_{COMPARISON_RESOLUTION}_100/")
 
 ref_masses = []
 comp_masses = []
@@ -46,6 +40,8 @@ for index, original_halo in df_ref_halo[:5].iterrows():
     print(len(df_ref))
     particles_in_ref_halo = df_ref.loc[df_ref["FOFGroupIDs"] == index]
     ref_halo = df_ref_halo.loc[index]
+    print("halo", ref_halo,len(particles_in_ref_halo))
+    cumulative_mass_profile(particles_in_ref_halo,ref_halo)
     halo_particle_ids = set(particles_in_ref_halo.index.to_list())
 
     if REFERENCE_RESOLUTION < COMPARISON_RESOLUTION:
