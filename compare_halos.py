@@ -1,21 +1,38 @@
-from pathlib import Path
 from typing import Dict
 
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
+from matplotlib.patches import Circle
 from pandas import DataFrame
 
+from paths import base_dir
 from readfiles import read_file, read_halo_file
 from remap_particle_IDs import IDScaler
 from utils import print_progress, memory_usage
 
 
-def compare_halo_resolutions(reference_resolution: int, comparison_resolution: int, plot=False, single=False):
-    reference_dir = Path(f"/home/lukas/monofonic_tests/shannon_{reference_resolution}_100")
-    comparison_dir = Path(f"/home/lukas/monofonic_tests/shannon_{comparison_resolution}_100/")
+def apply_offset_to_list(value_list, offset):
+    result_list = []
+    for value in value_list:
+        value = apply_offset(value, offset)
+        result_list.append(value)
+    return result_list
 
+
+def apply_offset(value, offset):
+    box_size = 100
+    if value > box_size / 2:
+        value -= box_size
+    value -= offset
+    return value
+
+
+def compare_halo_resolutions(reference_resolution: int, comparison_resolution: int, plot=False, single=False):
+    reference_dir = base_dir / f"DB2_{reference_resolution}_100"
+    comparison_dir = base_dir / f"DB2_{comparison_resolution}_100/"
+    comparison_id = reference_dir.name + "_" + comparison_dir.name
     ref_masses = []
     comp_masses = []
     ref_sizes = []
@@ -41,6 +58,7 @@ def compare_halo_resolutions(reference_resolution: int, comparison_resolution: i
         print(f"{index} of {len(df_ref_halo)} original halos")
         halo_particle_ids = ref_halo_lookup[int(index)]
         ref_halo = df_ref_halo.loc[index]
+        offset_x, offset_y = ref_halo.X, ref_halo.Y
         # cumulative_mass_profile(particles_in_ref_halo, ref_halo, ref_meta, plot=plot)
 
         prev_len = len(halo_particle_ids)
@@ -72,18 +90,21 @@ def compare_halo_resolutions(reference_resolution: int, comparison_resolution: i
         if plot:
             fig: Figure = plt.figure()
             ax: Axes = fig.gca()
-            ax.scatter(halo_particles["X"], halo_particles["Y"], s=1, alpha=.3, label="Halo")
+            halo_particles.to_csv(f"halo{index}.csv")
+            ax.scatter(apply_offset_to_list(halo_particles["X"], offset_x),
+                       apply_offset_to_list(halo_particles["Y"], offset_y), s=1,
+                       alpha=.3, label="Halo")
         #     ax.scatter(particles_in_ref_halo["X"], particles_in_ref_halo["Y"], s=1, alpha=.3, label="RefHalo")
         # plt.legend()
         # plt.show()
         best_halo = None
         best_halo_match = 0
 
-        for i, halo in enumerate(halos_in_particles):
+        for i, halo_id in enumerate(halos_in_particles):
             # print("----------", halo, "----------")
             # halo_data = df_comp_halo.loc[halo]
             # particles_in_comp_halo: DataFrame = df_comp.loc[df_comp["FOFGroupIDs"] == halo]
-            particle_ids_in_comp_halo = comp_halo_lookup[halo]
+            particle_ids_in_comp_halo = comp_halo_lookup[halo_id]
             halo_size = len(particle_ids_in_comp_halo)
             # df = particles_in_comp_halo.join(halo_particles, how="inner", rsuffix="ref")
             shared_particles = particle_ids_in_comp_halo.intersection(halo_particle_ids)
@@ -91,12 +112,21 @@ def compare_halo_resolutions(reference_resolution: int, comparison_resolution: i
             match = shared_size / halo_size
             if plot:
                 df = df_comp.loc[list(shared_particles)]
-                ax.scatter(df["X"], df["Y"], s=1, alpha=.3, label=f"shared {halo}")
+                color = f"C{i + 1}"
+
+                ax.scatter(apply_offset_to_list(df["X"], offset_x), apply_offset_to_list(df["Y"], offset_y), s=1,
+                           alpha=.3, c=color)
+                comp_halo = df_comp_halo.loc[halo_id]
+                # circle = Circle((apply_offset(comp_halo.X, offset_x), apply_offset(comp_halo.Y, offset_y)),
+                #                 comp_halo["Sizes"] / 1000, zorder=10,
+                #                 linewidth=1, edgecolor=color, fill=None
+                #                 )
+                # ax.add_artist(circle)
             # print_progress(i, len(halos_in_particles), halo)
             # ax.scatter(particles_in_comp_halo["X"], particles_in_comp_halo["Y"], s=2, alpha=.3, label=f"shared {halo}")
             if shared_size > best_halo_match:
                 best_halo_match = shared_size
-                best_halo = halo
+                best_halo = halo_id
 
         # print("-------")
         # print(best_halo)
@@ -111,8 +141,8 @@ def compare_halo_resolutions(reference_resolution: int, comparison_resolution: i
         matches.append(best_halo_match / len(halo_particles))
         # exit()
         if plot:
-            print("plotting")
-            ax.legend()
+            print(f"plotting with offsets ({offset_x},{offset_y})")
+            # ax.legend()
             ax.set_title(f"{reference_dir.name} vs. {comparison_dir.name} (Halo {index})")
             fig.savefig("out.png", dpi=300)
             plt.show()
@@ -122,7 +152,7 @@ def compare_halo_resolutions(reference_resolution: int, comparison_resolution: i
     df = DataFrame(np.array([matches, ref_sizes, comp_sizes, ref_masses, comp_masses]).T,
                    columns=["matches", "ref_sizes", "comp_sizes", "ref_masses", "comp_masses"])
     print(df)
-    df.to_csv("sizes.csv", index=False)
+    df.to_csv(comparison_id + ".csv", index=False)
     return df, reference_dir.name + "_" + comparison_dir.name
 
 

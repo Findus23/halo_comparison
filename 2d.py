@@ -7,6 +7,7 @@ from matplotlib.axes import Axes
 from matplotlib.colors import LogNorm
 from matplotlib.figure import Figure
 
+from paths import base_dir
 from readfiles import read_file
 
 
@@ -16,7 +17,7 @@ def filter_for_2d(df: pd.DataFrame, group: int):
     return np.array([xs, ys]).T
 
 
-reference_dir = Path(f"/home/lukas/monofonic_tests/shannon_512_100")
+reference_dir = Path(base_dir / f"shannon_512_100")
 df_ref, _ = read_file(reference_dir)
 
 df = df_ref.loc[df_ref["FOFGroupIDs"] == 1]
