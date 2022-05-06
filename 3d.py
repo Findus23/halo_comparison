@@ -8,7 +8,7 @@ from readfiles import read_file
 
 
 def file_to_arry(file: Path):
-    df_ref = read_file(file)
+    df_ref,_ = read_file(file)
     df_ref = df_ref.loc[df_ref["FOFGroupIDs"] == 34]
 
     xs = df_ref.X

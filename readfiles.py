@@ -1,4 +1,5 @@
 import pickle
+import sqlite3
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Tuple
@@ -33,6 +34,8 @@ def read_file(path: Path) -> Tuple[pd.DataFrame, ParticlesMeta]:
         df = df.merge(df3, "outer", left_index=True, right_index=True)
         del df3
         df.set_index("ParticleIDs", inplace=True)
+        print("sorting")
+        df.sort_values("FOFGroupIDs",inplace=True)
         meta = ParticlesMeta(
             particle_mass=masses[0]
         )
