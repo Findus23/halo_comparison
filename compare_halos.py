@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
-from matplotlib.patches import Circle
+from numpy import linalg
 from pandas import DataFrame
 
 from paths import base_dir
@@ -30,14 +30,15 @@ def apply_offset(value, offset):
 
 
 def compare_halo_resolutions(reference_resolution: int, comparison_resolution: int, plot=False, single=False):
-    reference_dir = base_dir / f"DB2_{reference_resolution}_100"
-    comparison_dir = base_dir / f"DB2_{comparison_resolution}_100/"
+    reference_dir = base_dir / f"shannon_{reference_resolution}_100"
+    comparison_dir = base_dir / f"shannon_{comparison_resolution}_100/"
     comparison_id = reference_dir.name + "_" + comparison_dir.name
     ref_masses = []
     comp_masses = []
     ref_sizes = []
     comp_sizes = []
     matches = []
+    distances = []
 
     print("reading reference file")
     df_ref, ref_meta = read_file(reference_dir)
@@ -138,6 +139,9 @@ def compare_halo_resolutions(reference_resolution: int, comparison_resolution: i
         ref_masses.append(ref_halo["Masses"])
         comp_sizes.append(comp_halo["Sizes"])
         comp_masses.append(comp_halo["Masses"])
+        distances.append(linalg.norm(
+            np.array([ref_halo.X, ref_halo.Y, ref_halo.Z]) - np.array([comp_halo.X, comp_halo.Y, comp_halo.Z])
+        ))
         matches.append(best_halo_match / len(halo_particles))
         # exit()
         if plot:
@@ -149,9 +153,11 @@ def compare_halo_resolutions(reference_resolution: int, comparison_resolution: i
         if single:
             break
 
-    df = DataFrame(np.array([matches, ref_sizes, comp_sizes, ref_masses, comp_masses]).T,
-                   columns=["matches", "ref_sizes", "comp_sizes", "ref_masses", "comp_masses"])
+    df = DataFrame(np.array([matches, distances, ref_sizes, comp_sizes, ref_masses, comp_masses]).T,
+                   columns=["matches", "distances", "ref_sizes", "comp_sizes", "ref_masses", "comp_masses"])
     print(df)
+    outfile = comparison_id + ".csv"
+    print(f"saving to {outfile}")
     df.to_csv(comparison_id + ".csv", index=False)
     return df, reference_dir.name + "_" + comparison_dir.name
 
@@ -178,6 +184,6 @@ if __name__ == '__main__':
     compare_halo_resolutions(
         reference_resolution=128,
         comparison_resolution=256,
-        plot=True,
+        plot=False,
         single=False
     )

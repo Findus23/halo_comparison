@@ -63,3 +63,7 @@ def read_halo_file(path: Path) -> DataFrame:
     df = df.merge(df4, "outer", left_index=True, right_index=True)
     df.set_index("GroupIDs", inplace=True)
     return df
+
+
+def read_fof_file(path:Path):
+    file=path/""
