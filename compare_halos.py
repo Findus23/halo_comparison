@@ -177,7 +177,7 @@ def precalculate_halo_membership(df_comp, df_comp_halo):
 if __name__ == '__main__':
     compare_halo_resolutions(
         reference_resolution=128,
-        comparison_resolution=512,
+        comparison_resolution=256,
         plot=True,
         single=False
     )
