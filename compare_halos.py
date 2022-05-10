@@ -6,10 +6,12 @@ from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from numpy import linalg
 from pandas import DataFrame
+from pyvista import Plotter
 
 from paths import base_dir
 from readfiles import read_file, read_halo_file
 from remap_particle_IDs import IDScaler
+from threed import plotdf3d
 from utils import print_progress, memory_usage
 
 
@@ -29,7 +31,8 @@ def apply_offset(value, offset):
     return value
 
 
-def compare_halo_resolutions(reference_resolution: int, comparison_resolution: int, plot=False, single=False):
+def compare_halo_resolutions(reference_resolution: int, comparison_resolution: int,
+                             plot=False, plot3d=False, single=False):
     reference_dir = base_dir / f"shannon_{reference_resolution}_100"
     comparison_dir = base_dir / f"shannon_{comparison_resolution}_100/"
     comparison_id = reference_dir.name + "_" + comparison_dir.name
@@ -95,6 +98,10 @@ def compare_halo_resolutions(reference_resolution: int, comparison_resolution: i
             ax.scatter(apply_offset_to_list(halo_particles["X"], offset_x),
                        apply_offset_to_list(halo_particles["Y"], offset_y), s=1,
                        alpha=.3, label="Halo")
+        if plot3d:
+            pl = Plotter()
+            plotdf3d(pl, halo_particles, color="#b3cde3")  # light blue
+            pl.set_focus((ref_halo.X,ref_halo.Y,ref_halo.Z))
         #     ax.scatter(particles_in_ref_halo["X"], particles_in_ref_halo["Y"], s=1, alpha=.3, label="RefHalo")
         # plt.legend()
         # plt.show()
@@ -111,8 +118,9 @@ def compare_halo_resolutions(reference_resolution: int, comparison_resolution: i
             shared_particles = particle_ids_in_comp_halo.intersection(halo_particle_ids)
             shared_size = len(shared_particles)
             match = shared_size / halo_size
-            if plot:
+            if plot or plot3d:
                 df = df_comp.loc[list(shared_particles)]
+            if plot:
                 color = f"C{i + 1}"
 
                 ax.scatter(apply_offset_to_list(df["X"], offset_x), apply_offset_to_list(df["Y"], offset_y), s=1,
@@ -123,6 +131,8 @@ def compare_halo_resolutions(reference_resolution: int, comparison_resolution: i
                 #                 linewidth=1, edgecolor=color, fill=None
                 #                 )
                 # ax.add_artist(circle)
+            if plot3d:
+                plotdf3d(pl, df, color="#fed9a6")  # light orange
             # print_progress(i, len(halos_in_particles), halo)
             # ax.scatter(particles_in_comp_halo["X"], particles_in_comp_halo["Y"], s=2, alpha=.3, label=f"shared {halo}")
             if shared_size > best_halo_match:
@@ -150,6 +160,8 @@ def compare_halo_resolutions(reference_resolution: int, comparison_resolution: i
             ax.set_title(f"{reference_dir.name} vs. {comparison_dir.name} (Halo {index})")
             fig.savefig("out.png", dpi=300)
             plt.show()
+        if plot3d:
+            pl.show()
         if single:
             break
 
@@ -183,7 +195,8 @@ def precalculate_halo_membership(df_comp, df_comp_halo):
 if __name__ == '__main__':
     compare_halo_resolutions(
         reference_resolution=128,
-        comparison_resolution=256,
+        comparison_resolution=512,
         plot=False,
+        plot3d=True,
         single=False
     )
