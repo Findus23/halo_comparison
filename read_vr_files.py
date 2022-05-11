@@ -48,14 +48,20 @@ def particles_in_halo(df, particle_ids, recursivly: bool, unbound: bool):
     return halo_particle_ids
 
 
-def subhalo_particles(directory: Path, recursivly=True):
+def read_velo_halos(directory: Path, recursivly=True, skip_unbound=False):
     group_catalog = h5py.File(directory / "vroutput.catalog_groups")
+    group_properties = h5py.File(directory / "vroutput.properties")
     df = pd.DataFrame(
         {
             "group_size": group_catalog["Group_Size"],
             "offset": group_catalog["Offset"],
             "offset_unbound": group_catalog["Offset_unbound"],
             "parent_halo_id": group_catalog["Parent_halo_ID"],
+            "X": group_properties["Xc"],
+            "Y": group_properties["Yc"],
+            "Z": group_properties["Zc"],
+            "Rvir": group_properties["Rvir"],
+            "Mass_tot": group_properties["Mass_tot"]
         }
     )
     df.index += 1  # set Halo IDs start at 1
@@ -70,18 +76,21 @@ def subhalo_particles(directory: Path, recursivly=True):
 
     print("look up bound particle IDs")
     halo_particle_ids = particles_in_halo(df, particle_ids, recursivly, unbound=False)
-    print("look up unbound particle IDs")
-    halo_particle_unbound_ids = particles_in_halo(df, particle_ids_unbound, recursivly, unbound=True)
+    if skip_unbound:
+        halo_particle_unbound_ids = {}
+    else:
+        print("look up unbound particle IDs")
+        halo_particle_unbound_ids = particles_in_halo(df, particle_ids_unbound, recursivly, unbound=True)
 
     return df, halo_particle_ids, halo_particle_unbound_ids
 
 
 def main():
     waveform = "shannon"
-    Nres = 128
+    Nres = 512
     directory = base_dir / f"{waveform}_{Nres}_100"
 
-    df_halo, halo_particle_ids, halo_particle_unbound_ids = subhalo_particles(directory, recursivly=True)
+    df_halo, halo_particle_ids, halo_particle_unbound_ids = read_velo_halos(directory, recursivly=True)
     particles, meta = read_file(directory)
     HALO = 1000
     while True:

@@ -9,6 +9,7 @@ from pandas import DataFrame
 from pyvista import Plotter
 
 from paths import base_dir
+from read_vr_files import read_velo_halos
 from readfiles import read_file, read_halo_file
 from remap_particle_IDs import IDScaler
 from threed import plotdf3d
@@ -32,10 +33,12 @@ def apply_offset(value, offset):
 
 
 def compare_halo_resolutions(reference_resolution: int, comparison_resolution: int,
-                             plot=False, plot3d=False, single=False):
+                             plot=False, plot3d=False, single=False, velo_halos=False):
     reference_dir = base_dir / f"shannon_{reference_resolution}_100"
     comparison_dir = base_dir / f"shannon_{comparison_resolution}_100/"
     comparison_id = reference_dir.name + "_" + comparison_dir.name
+    if velo_halos:
+        comparison_id += "_velo"
     ref_masses = []
     comp_masses = []
     ref_sizes = []
@@ -45,15 +48,22 @@ def compare_halo_resolutions(reference_resolution: int, comparison_resolution: i
 
     print("reading reference file")
     df_ref, ref_meta = read_file(reference_dir)
-    df_ref_halo = read_halo_file(reference_dir)
+    if velo_halos:
+        df_ref_halo, ref_halo_lookup, _ = read_velo_halos(reference_dir, skip_unbound=True,recursivly=False)
+    else:
+        df_ref_halo = read_halo_file(reference_dir)
 
     print("reading comparison file")
     df_comp, comp_meta = read_file(comparison_dir)
-    df_comp_halo = read_halo_file(comparison_dir)
+    if velo_halos:
+        df_comp_halo, comp_halo_lookup, _ = read_velo_halos(comparison_dir, skip_unbound=True,recursivly=False)
+    else:
+        df_comp_halo = read_halo_file(comparison_dir)
 
     print("precalculating halo memberships")
-    ref_halo_lookup = precalculate_halo_membership(df_ref, df_ref_halo)
-    comp_halo_lookup = precalculate_halo_membership(df_comp, df_comp_halo)
+    if not velo_halos:
+        ref_halo_lookup = precalculate_halo_membership(df_ref, df_ref_halo)
+        comp_halo_lookup = precalculate_halo_membership(df_comp, df_comp_halo)
 
     print(f"Memory ref: {memory_usage(df_ref):.2f} MB")
     print(f"Memory comp: {memory_usage(df_comp):.2f} MB")
@@ -88,9 +98,29 @@ def compare_halo_resolutions(reference_resolution: int, comparison_resolution: i
         print("look up halo particles in comparison dataset")
         halo_particles = df_comp.loc[list(halo_particle_ids)]
 
-        halos_in_particles = set(halo_particles["FOFGroupIDs"])
-        halos_in_particles.discard(2147483647)
-        print(f"{len(halos_in_particles)} halos found in new particles")
+        halos_in_particles = set()
+        if velo_halos:
+            for halo_id, halo_set in comp_halo_lookup.items():
+                if halo_particle_ids.isdisjoint(halo_set):
+                    continue
+                # print(len(halo_particle_ids))
+                # if int(index)==461:
+                #     print(halo_id,int(index))
+                #     print("halo_particle_ids",halo_particle_ids)
+                #     print("halo_set",halo_set)
+                #     print(halo_particle_ids.isdisjoint(halo_set))
+                #     # exit()
+                halos_in_particles.add(halo_id)
+        else:
+            halos_in_particles = set(halo_particles["FOFGroupIDs"])
+            halos_in_particles.discard(2147483647)
+        # print(f"{len(halos_in_particles)} halos found in new particles")
+        # print(halos_in_particles)
+        # print(halos_in_particles_alt)
+        # print(halos_in_particles == halos_in_particles_alt)
+        # exit()
+        # assert halos_in_particles == halos_in_particles_alt
+        # continue
         if plot:
             fig: Figure = plt.figure()
             ax: Axes = fig.gca()
@@ -101,12 +131,15 @@ def compare_halo_resolutions(reference_resolution: int, comparison_resolution: i
         if plot3d:
             pl = Plotter()
             plotdf3d(pl, halo_particles, color="#b3cde3")  # light blue
-            pl.set_focus((ref_halo.X,ref_halo.Y,ref_halo.Z))
+            pl.set_focus((ref_halo.X, ref_halo.Y, ref_halo.Z))
         #     ax.scatter(particles_in_ref_halo["X"], particles_in_ref_halo["Y"], s=1, alpha=.3, label="RefHalo")
         # plt.legend()
         # plt.show()
         best_halo = None
         best_halo_match = 0
+        if not halos_in_particles:
+            print("something doesn't make any sense")  # TODO
+            continue
 
         for i, halo_id in enumerate(halos_in_particles):
             # print("----------", halo, "----------")
@@ -117,7 +150,13 @@ def compare_halo_resolutions(reference_resolution: int, comparison_resolution: i
             # df = particles_in_comp_halo.join(halo_particles, how="inner", rsuffix="ref")
             shared_particles = particle_ids_in_comp_halo.intersection(halo_particle_ids)
             shared_size = len(shared_particles)
-            match = shared_size / halo_size
+            print(shared_size)
+            if not shared_size:
+                raise RuntimeError()
+            size_match = shared_size / halo_size
+
+            # if shared_size==halo_size:
+            #     raise Exception("match")
             if plot or plot3d:
                 df = df_comp.loc[list(shared_particles)]
             if plot:
@@ -139,16 +178,20 @@ def compare_halo_resolutions(reference_resolution: int, comparison_resolution: i
                 best_halo_match = shared_size
                 best_halo = halo_id
 
-        # print("-------")
-        # print(best_halo)
         comp_halo = df_comp_halo.loc[best_halo]
 
         print(ref_halo)
         print(comp_halo)
-        ref_sizes.append(ref_halo["Sizes"])
-        ref_masses.append(ref_halo["Masses"])
-        comp_sizes.append(comp_halo["Sizes"])
-        comp_masses.append(comp_halo["Masses"])
+        if velo_halos:
+            ref_sizes.append(ref_halo.Rvir)
+            comp_sizes.append(comp_halo.Rvir)
+            ref_masses.append(ref_halo.Mass_tot)
+            comp_masses.append(comp_halo.Mass_tot)
+        else:
+            ref_sizes.append(0)
+            ref_masses.append(ref_halo["Masses"])
+            comp_sizes.append(0)
+            comp_masses.append(comp_halo["Masses"])
         distances.append(linalg.norm(
             np.array([ref_halo.X, ref_halo.Y, ref_halo.Z]) - np.array([comp_halo.X, comp_halo.Y, comp_halo.Z])
         ))
@@ -197,6 +240,7 @@ if __name__ == '__main__':
         reference_resolution=128,
         comparison_resolution=512,
         plot=False,
-        plot3d=True,
+        plot3d=False,
+        velo_halos=False,
         single=False
     )

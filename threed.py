@@ -35,12 +35,12 @@ def df_to_coords(df: pd.DataFrame):
 
 
 if __name__ == '__main__':
-    HALO=1
+    HALO = 1
     reference_dir = base_dir / "shannon_512_100"
     df, _ = read_file(reference_dir)
-    df_halo=read_halo_file(reference_dir).loc[HALO]
-    df = df.loc[df["FOFGroupIDs"] == HALO]
+    df_halo = read_halo_file(reference_dir).loc[HALO]
+    # df = df.loc[df["FOFGroupIDs"] == HALO]
     pl = Plotter()
     plotdf3d(pl, df)
-    pl.set_focus((df_halo.X,df_halo.Y,df_halo.Z))
+    # pl.set_focus((df_halo.X,df_halo.Y,df_halo.Z))
     pl.show()
