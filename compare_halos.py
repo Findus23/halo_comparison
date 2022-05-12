@@ -45,18 +45,24 @@ def compare_halo_resolutions(reference_resolution: int, comparison_resolution: i
     comp_sizes = []
     matches = []
     distances = []
+    skip_counter = 0
 
     print("reading reference file")
     df_ref, ref_meta = read_file(reference_dir)
     if velo_halos:
-        df_ref_halo, ref_halo_lookup, _ = read_velo_halos(reference_dir, skip_unbound=True,recursivly=False)
+        df_ref_halo, ref_halo_lookup, ref_unbound = read_velo_halos(reference_dir, recursivly=False)
+        for k, v in ref_halo_lookup.items():
+            v.update(ref_unbound[k])
     else:
         df_ref_halo = read_halo_file(reference_dir)
 
     print("reading comparison file")
     df_comp, comp_meta = read_file(comparison_dir)
     if velo_halos:
-        df_comp_halo, comp_halo_lookup, _ = read_velo_halos(comparison_dir, skip_unbound=True,recursivly=False)
+        df_comp_halo, comp_halo_lookup, comp_unbound = read_velo_halos(comparison_dir, recursivly=False)
+        for k, v in comp_halo_lookup.items():
+            v.update(comp_unbound[k])
+
     else:
         df_comp_halo = read_halo_file(comparison_dir)
 
@@ -72,6 +78,13 @@ def compare_halo_resolutions(reference_resolution: int, comparison_resolution: i
         print(f"{index} of {len(df_ref_halo)} original halos")
         halo_particle_ids = ref_halo_lookup[int(index)]
         ref_halo = df_ref_halo.loc[index]
+        print("LEN", len(halo_particle_ids), ref_halo.Mass_tot)
+        if 1 < len(halo_particle_ids) < 20:
+            raise ValueError("test")
+            print("skipping")
+            continue
+        if not halo_particle_ids:
+            continue
         offset_x, offset_y = ref_halo.X, ref_halo.Y
         # cumulative_mass_profile(particles_in_ref_halo, ref_halo, ref_meta, plot=plot)
 
@@ -84,6 +97,7 @@ def compare_halo_resolutions(reference_resolution: int, comparison_resolution: i
                 upscaled_ids.update(set(scaler.upscale(id)))
             halo_particle_ids = upscaled_ids
             after_len = len(upscaled_ids)
+            print(prev_len, after_len)
             print(f"{prev_len} => {after_len} (factor {after_len / prev_len})")
         if comparison_resolution < reference_resolution:
             print("downscaling IDs")
@@ -96,24 +110,28 @@ def compare_halo_resolutions(reference_resolution: int, comparison_resolution: i
             print(f"{prev_len} => {after_len} (factor {prev_len / after_len})")
 
         print("look up halo particles in comparison dataset")
-        halo_particles = df_comp.loc[list(halo_particle_ids)]
 
-        halos_in_particles = set()
-        if velo_halos:
-            for halo_id, halo_set in comp_halo_lookup.items():
-                if halo_particle_ids.isdisjoint(halo_set):
-                    continue
-                # print(len(halo_particle_ids))
-                # if int(index)==461:
-                #     print(halo_id,int(index))
-                #     print("halo_particle_ids",halo_particle_ids)
-                #     print("halo_set",halo_set)
-                #     print(halo_particle_ids.isdisjoint(halo_set))
-                #     # exit()
-                halos_in_particles.add(halo_id)
-        else:
-            halos_in_particles = set(halo_particles["FOFGroupIDs"])
-            halos_in_particles.discard(2147483647)
+        halo_distances = np.linalg.norm(
+            ref_halo[['X', 'Y', 'Z']].values
+            - df_comp_halo[['X', 'Y', 'Z']].values,
+            axis=1)
+        # print(list(halo_distances))
+
+        nearby_halos = set(df_comp_halo.loc[halo_distances < ref_halo.Rvir * 5].index.to_list())
+
+        if plot or plot3d or (not velo_halos):
+            halo_particles = df_comp.loc[list(halo_particle_ids)]
+
+        # halos_in_particles = set(comp_halo_lookup.keys())
+        # if velo_halos:
+        #     ...
+        #     # for halo_id, halo_set in comp_halo_lookup.items():
+        #     #     if halo_particle_ids.isdisjoint(halo_set):
+        #     #         continue
+        #     #     halos_in_particles.add(halo_id)
+        # else:
+        #     halos_in_particles = set(halo_particles["FOFGroupIDs"])
+        #     halos_in_particles.discard(2147483647)
         # print(f"{len(halos_in_particles)} halos found in new particles")
         # print(halos_in_particles)
         # print(halos_in_particles_alt)
@@ -137,11 +155,12 @@ def compare_halo_resolutions(reference_resolution: int, comparison_resolution: i
         # plt.show()
         best_halo = None
         best_halo_match = 0
-        if not halos_in_particles:
-            print("something doesn't make any sense")  # TODO
+        if not nearby_halos:
             continue
+            raise Exception("something doesn't make any sense")  # TODO
+            # continue
 
-        for i, halo_id in enumerate(halos_in_particles):
+        for i, halo_id in enumerate(nearby_halos):
             # print("----------", halo, "----------")
             # halo_data = df_comp_halo.loc[halo]
             # particles_in_comp_halo: DataFrame = df_comp.loc[df_comp["FOFGroupIDs"] == halo]
@@ -150,9 +169,9 @@ def compare_halo_resolutions(reference_resolution: int, comparison_resolution: i
             # df = particles_in_comp_halo.join(halo_particles, how="inner", rsuffix="ref")
             shared_particles = particle_ids_in_comp_halo.intersection(halo_particle_ids)
             shared_size = len(shared_particles)
-            print(shared_size)
+            # print(shared_size)
             if not shared_size:
-                raise RuntimeError()
+                continue
             size_match = shared_size / halo_size
 
             # if shared_size==halo_size:
@@ -178,6 +197,9 @@ def compare_halo_resolutions(reference_resolution: int, comparison_resolution: i
                 best_halo_match = shared_size
                 best_halo = halo_id
 
+        if not best_halo:
+            skip_counter += 1
+            continue
         comp_halo = df_comp_halo.loc[best_halo]
 
         print(ref_halo)
@@ -194,8 +216,8 @@ def compare_halo_resolutions(reference_resolution: int, comparison_resolution: i
             comp_masses.append(comp_halo["Masses"])
         distances.append(linalg.norm(
             np.array([ref_halo.X, ref_halo.Y, ref_halo.Z]) - np.array([comp_halo.X, comp_halo.Y, comp_halo.Z])
-        ))
-        matches.append(best_halo_match / len(halo_particles))
+        ) / ref_halo.Rvir)
+        matches.append(best_halo_match / len(halo_particle_ids))
         # exit()
         if plot:
             print(f"plotting with offsets ({offset_x},{offset_y})")
@@ -214,6 +236,7 @@ def compare_halo_resolutions(reference_resolution: int, comparison_resolution: i
     outfile = comparison_id + ".csv"
     print(f"saving to {outfile}")
     df.to_csv(comparison_id + ".csv", index=False)
+    print(skip_counter)
     return df, reference_dir.name + "_" + comparison_dir.name
 
 
@@ -241,6 +264,6 @@ if __name__ == '__main__':
         comparison_resolution=512,
         plot=False,
         plot3d=False,
-        velo_halos=False,
+        velo_halos=True,
         single=False
     )

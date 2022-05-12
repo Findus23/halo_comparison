@@ -61,7 +61,7 @@ def read_velo_halos(directory: Path, recursivly=True, skip_unbound=False):
             "Y": group_properties["Yc"],
             "Z": group_properties["Zc"],
             "Rvir": group_properties["Rvir"],
-            "Mass_tot": group_properties["Mass_tot"]
+            "Mass_tot": group_properties["Mass_200crit"]
         }
     )
     df.index += 1  # set Halo IDs start at 1

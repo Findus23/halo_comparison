@@ -27,7 +27,7 @@ fig2: Figure = plt.figure()
 ax2: Axes = fig2.gca()
 
 ax2.hist(df["distances"][df["distances"] < 50], bins=100)
-ax2.set_ylabel("distance")
+ax2.set_xlabel("distance/R_vir_ref")
 for a in [ax, ax2]:
     a.set_title(file)
 
