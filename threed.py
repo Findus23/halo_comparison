@@ -23,10 +23,10 @@ def plotdf3d(pl: Plotter, df: DataFrame, color="white"):
         color=color,
         # scalars=data[::, -1],
     )
-    pl.camera_position
+    # pl.camera_position
     # pl.enable_stereo_render()
     # pl.ren_win.SetStereoTypeToSplitViewportHorizontal()
-    pl.show_grid()
+    # pl.show_grid()
     pl.enable_parallel_projection()
 
 
@@ -39,7 +39,8 @@ if __name__ == '__main__':
     reference_dir = base_dir / "shannon_512_100"
     df, _ = read_file(reference_dir)
     df_halo = read_halo_file(reference_dir).loc[HALO]
-    # df = df.loc[df["FOFGroupIDs"] == HALO]
+    df = df.loc[df["FOFGroupIDs"] == HALO]
+    df.to_csv("halo.csv")
     pl = Plotter()
     plotdf3d(pl, df)
     # pl.set_focus((df_halo.X,df_halo.Y,df_halo.Z))

@@ -31,27 +31,26 @@ def cic_deposit(X, Y, ngrid):
     return rho / rhomean - 1
 
 
-reference_dir = Path(base_dir / f"shannon_512_100")
-df_ref, _ = read_file(reference_dir)
+if __name__ == '__main__':
+    reference_dir = Path(base_dir / f"shannon_512_100")
+    df_ref, _ = read_file(reference_dir)
 
-# df = df_ref.loc[df_ref["FOFGroupIDs"] == 1]
-# df2 = df_ref.loc[df_ref["FOFGroupIDs"] == 4]
 
-fig: Figure = plt.figure()
-ax: Axes = fig.gca()
+    fig: Figure = plt.figure()
+    ax: Axes = fig.gca()
 
-print("start cic")
-rho = cic_deposit(df_ref.X.to_numpy() / 100, df_ref.Y.to_numpy() / 100, 2000)
-print("finished cic")
-data = 1.001 + rho
-i = ax.imshow(data, norm=LogNorm())
-fig.colorbar(i)
-plt.show()
+    print("start cic")
+    rho = cic_deposit(df_ref.X.to_numpy() / 100, df_ref.Y.to_numpy() / 100, 2000)
+    print("finished cic")
+    data = 1.001 + rho
+    i = ax.imshow(data, norm=LogNorm())
+    fig.colorbar(i)
+    plt.show()
 
-cmap = plt.cm.viridis
-data = np.log(data)
-norm = plt.Normalize(vmin=data.min(), vmax=data.max())
-image = cmap(norm(data))
-plt.imsave("out.png", image)
-# ax.hist2d(df.X, df.Y, bins=500, norm=LogNorm())
-# ax.hist2d(df2.X, df2.Y, bins=1000, norm=LogNorm())
+    cmap = plt.cm.viridis
+    data = np.log(data)
+    norm = plt.Normalize(vmin=data.min(), vmax=data.max())
+    image = cmap(norm(data))
+    plt.imsave("out.png", image)
+    # ax.hist2d(df.X, df.Y, bins=500, norm=LogNorm())
+    # ax.hist2d(df2.X, df2.Y, bins=1000, norm=LogNorm())

@@ -3,6 +3,7 @@ from typing import Dict
 
 import h5py
 import pandas as pd
+from h5py import Dataset
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
@@ -48,22 +49,29 @@ def particles_in_halo(df, particle_ids, recursivly: bool, unbound: bool):
     return halo_particle_ids
 
 
-def read_velo_halos(directory: Path, recursivly=True, skip_unbound=False):
+def read_velo_halos(directory: Path, recursivly=False, skip_unbound=False):
     group_catalog = h5py.File(directory / "vroutput.catalog_groups")
     group_properties = h5py.File(directory / "vroutput.properties")
-    df = pd.DataFrame(
-        {
-            "group_size": group_catalog["Group_Size"],
-            "offset": group_catalog["Offset"],
-            "offset_unbound": group_catalog["Offset_unbound"],
-            "parent_halo_id": group_catalog["Parent_halo_ID"],
-            "X": group_properties["Xc"],
-            "Y": group_properties["Yc"],
-            "Z": group_properties["Zc"],
-            "Rvir": group_properties["Rvir"],
-            "Mass_tot": group_properties["Mass_200crit"]
-        }
-    )
+    scalar_properties = {}
+    for k, v in group_properties.items():
+        if not isinstance(v, Dataset):
+            continue
+        if len(v.shape) != 1:
+            continue
+        if len(v) == 1:
+            # skip global properties like Total_num_of_groups
+            continue
+        scalar_properties[k] = v
+    scalar_properties["X"] = scalar_properties["Xc"]
+    scalar_properties["Y"] = scalar_properties["Yc"]
+    scalar_properties["Z"] = scalar_properties["Zc"]
+    data = {
+        "group_size": group_catalog["Group_Size"],
+        "offset": group_catalog["Offset"],
+        "offset_unbound": group_catalog["Offset_unbound"],
+        "parent_halo_id": group_catalog["Parent_halo_ID"],
+    }
+    df = pd.DataFrame({**data, **scalar_properties})
     df.index += 1  # set Halo IDs start at 1
 
     particle_catalog = h5py.File(directory / "vroutput.catalog_particles")
