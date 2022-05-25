@@ -1,6 +1,6 @@
 from compare_halos import compare_halo_resolutions
 
-for wf in ["DB2", "DB8", "shannon"]:
+for wf in ["DB2", "DB4", "DB8", "shannon"]:
     for res in [128, 256, 512]:
         compare_halo_resolutions(
             ref_waveform="shannon",

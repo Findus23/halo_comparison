@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -10,9 +11,11 @@ from numba import njit
 from paths import base_dir
 from readfiles import read_file
 
+Extent = Tuple[float, float, float, float]
+
 
 @njit()
-def cic_deposit(X, Y, ngrid):
+def cic_deposit(X, Y, ngrid) -> np.ndarray:
     rho = np.zeros((ngrid, ngrid))
     for x, y in zip(X, Y):
         x = np.fmod(1.0 + x, 1.0)
@@ -31,19 +34,48 @@ def cic_deposit(X, Y, ngrid):
     return rho / rhomean - 1
 
 
+def cic_range(
+        X: np.ndarray, Y: np.ndarray,
+        ngrid: int,
+        xmin: float, xmax: float,
+        ymin: float, ymax: float
+) -> Tuple[np.ndarray, Extent]:
+    xrange = xmax - xmin
+    yrange = ymax - ymin
+    Xs = (X - xmin) / xrange
+    Ys = (Y - ymin) / yrange
+    extent = (xmin, xmax, ymin, ymax)
+    return cic_deposit(Xs, Ys, ngrid), extent
+
+
+def cic_from_radius(
+        X: np.ndarray, Y: np.ndarray,
+        ngrid: int,
+        x_center: float, y_center: float,
+        radius: float
+
+) -> Tuple[np.ndarray, Extent]:
+    return cic_range(X, Y, ngrid, x_center - radius, x_center + radius, y_center - radius, y_center + radius)
+
+
 if __name__ == '__main__':
     reference_dir = Path(base_dir / f"shannon_512_100")
     df_ref, _ = read_file(reference_dir)
 
+    # quick hack filter
+    df_ref = df_ref[df_ref["X"] < 40]
+    df_ref = df_ref[df_ref["X"] > 30]
+    df_ref = df_ref[df_ref["Y"] < 40]
+    df_ref = df_ref[df_ref["Y"] > 30]
 
     fig: Figure = plt.figure()
     ax: Axes = fig.gca()
 
     print("start cic")
-    rho = cic_deposit(df_ref.X.to_numpy() / 100, df_ref.Y.to_numpy() / 100, 2000)
+    rho, extent = cic_range(df_ref.X.to_numpy(), df_ref.Y.to_numpy(), 1000, 30, 40, 30, 40)
     print("finished cic")
     data = 1.001 + rho
-    i = ax.imshow(data, norm=LogNorm())
+    i = ax.imshow(data, norm=LogNorm(), extent=extent)
     fig.colorbar(i)
     plt.show()
 

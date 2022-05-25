@@ -1,11 +1,9 @@
+import h5py
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
-from matplotlib.colors import LogNorm
-from matplotlib.figure import Figure
-from pyvista import Axes
 
-from cic import cic_deposit
+from cic import cic_from_radius
 from paths import base_dir
 from read_vr_files import read_velo_halos
 from readfiles import read_file
@@ -23,16 +21,10 @@ def load_halo_data(waveform: str, resolution: int, halo_id: int):
 
     halo = df_halo.loc[halo_id]
     halo_particle_ids = halo_lookup[halo_id]
+    del halo_lookup
+    del unbound
     halo_particles = df.loc[list(halo_particle_ids)]
-    return halo, halo_particles
-
-
-def calc_cic(halo, halo_particles, diameter, X, Y):
-    Xs = (halo_particles.X.to_numpy() - X) / diameter / 2 + 0.5
-    Ys = (halo_particles.Y.to_numpy() - Y) / diameter / 2 + 0.5
-    print(min(Xs), max(Xs))
-    rho = cic_deposit(Xs, Ys, 1000)
-    return rho
+    return halo, halo_particles, meta
 
 
 def get_comp_id(ref_waveform: str, reference_resolution: int, comp_waveform: str, comp_resolution: int):
@@ -46,11 +38,10 @@ def map_halo_id(halo_id: int, ref_waveform: str, reference_resolution: int, comp
     mapping = {}
     for index, line in df.iterrows():
         mapping[int(line["ref_ID"])] = int(line["comp_ID"])
-    print(mapping)
     return mapping[halo_id]
 
 
-def plot_halo(rho, file_name: str):
+def imsave(rho, file_name: str):
     # ax.scatter(Xs, Ys)
     # plt.show()
     cmap = plt.cm.viridis
@@ -59,11 +50,6 @@ def plot_halo(rho, file_name: str):
     image = cmap(norm(data))
     print(file_name)
     plt.imsave(file_name, image)
-    # fig: Figure = plt.figure()
-    # ax: Axes = fig.gca()
-    # i = ax.imshow(1.001 + rho, norm=LogNorm())
-    # fig.colorbar(i)
-    # plt.show()
 
 
 def main():
@@ -72,25 +58,38 @@ def main():
     rhos = {}
     ref_waveform = "shannon"
     ref_resolution = 128
-    diameter=None
-    for waveform in ["shannon", "DB2", "DB8"]:
-        for resolution in [128, 256, 512]:
-            print(waveform, resolution)
-            if first_halo:
-                assert ref_resolution == resolution
-                assert ref_waveform == waveform
-                halo_id = initial_halo_id
-                first_halo = False
-            else:
-                halo_id = map_halo_id(initial_halo_id, ref_waveform, ref_resolution, waveform, resolution)
-            halo, halo_particles = load_halo_data(waveform, resolution, halo_id=halo_id)
-            if not diameter:
-                diameter = halo["R_size"]
-                X = halo["Xc"]
-                Y = halo["Yc"]
-            rho = calc_cic(halo, halo_particles, diameter, X, Y)
-            rhos[(waveform, resolution)] = rho
-            plot_halo(rho, f"out_halo{initial_halo_id}_{waveform}_{resolution}_{halo_id}.png")
+    radius = None
+    vmin = np.Inf
+    vmax = -np.Inf
+    with h5py.File("vis.cache.hdf5", "w") as vis_out:
+        for waveform in ["shannon", "DB2", "DB8"]:
+            for resolution in [128, 256, 512]:
+                if first_halo:
+                    assert ref_resolution == resolution
+                    assert ref_waveform == waveform
+                    halo_id = initial_halo_id
+                    first_halo = False
+                else:
+                    halo_id = map_halo_id(initial_halo_id, ref_waveform, ref_resolution, waveform, resolution)
+
+                halo, halo_particles, meta = load_halo_data(waveform, resolution, halo_id=halo_id)
+                # print("sleep")
+                # sleep(100)
+                if not radius:
+                    radius = halo["R_size"]
+                    X = halo["Xc"]
+                    Y = halo["Yc"]
+                rho, extent = cic_from_radius(
+                    halo_particles.X.to_numpy(), halo_particles.Y.to_numpy(),
+                    1000, X, Y, radius)
+                rhos[(waveform, resolution)] = rho
+                vmin = min(rho.min(), vmin)
+                vmax = max(rho.max(), vmax)
+                vis_out.create_dataset(f"{waveform}_{resolution}_rho", data=rho, compression='gzip', compression_opts=5)
+                vis_out.create_dataset(f"{waveform}_{resolution}_extent", data=extent)
+                vis_out.create_dataset(f"{waveform}_{resolution}_mass", data=meta.particle_mass)
+                imsave(rho, f"out_halo{initial_halo_id}_{waveform}_{resolution}_{halo_id}.png")
+        vis_out.create_dataset("vmin_vmax", data=[vmin, vmax])
 
 
 if __name__ == '__main__':

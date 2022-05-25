@@ -4,3 +4,5 @@
 *.zip
 paths.py
 __pycache__
+*.txt
+*.hdf5
