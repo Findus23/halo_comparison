@@ -9,11 +9,11 @@ from pyvista import Axes
 
 
 def main():
-    rows = ["shannon", "DB8", "DB2"]
-    offset = 1.001
+    rows = ["shannon", "DB8", "DB4", "DB2"]
+    offset = 1.1
     columns = [128, 256, 512]
     fig: Figure = plt.figure(figsize=(9, 9))
-    axes: List[List[Axes]] = fig.subplots(3, 3, sharex=True, sharey=True)
+    axes: List[List[Axes]] = fig.subplots(4, 3, sharex=True, sharey=True)
     with h5py.File("vis.cache.hdf5") as vis_out:
         vmin, vmax = vis_out["vmin_vmax"]
         print(vmin, vmax)

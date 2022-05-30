@@ -9,9 +9,10 @@ from read_vr_files import read_velo_halos
 from readfiles import read_file
 
 show_unbound = False
+all_in_area = True
 
 
-def load_halo_data(waveform: str, resolution: int, halo_id: int):
+def load_halo_data(waveform: str, resolution: int, halo_id: int, radius=None, X=None, Y=None, Z=None):
     dir = base_dir / f"{waveform}_{resolution}_100"
     df, meta = read_file(dir)
     df_halo, halo_lookup, unbound = read_velo_halos(dir, recursivly=False, skip_unbound=not show_unbound)
@@ -20,11 +21,21 @@ def load_halo_data(waveform: str, resolution: int, halo_id: int):
             v.update(unbound[k])
 
     halo = df_halo.loc[halo_id]
-    halo_particle_ids = halo_lookup[halo_id]
-    del halo_lookup
-    del unbound
-    halo_particles = df.loc[list(halo_particle_ids)]
-    return halo, halo_particles, meta
+    if all_in_area:
+        if not (radius and X and Y):
+            radius = halo["R_size"]
+            X = halo["Xc"]
+            Y = halo["Yc"]
+            Z = halo["Zc"]
+        df = df[df["X"].between(X - radius, X + radius)]
+        df = df[df["Y"].between(Y - radius, Y + radius)]
+        halo_particles = df[df["Z"].between(Z - radius, Z + radius)]
+    else:
+        halo_particle_ids = halo_lookup[halo_id]
+        del halo_lookup
+        del unbound
+        halo_particles = df.loc[list(halo_particle_ids)]
+    return halo, halo_particles, meta #TODO: return and keep r,XYZ
 
 
 def get_comp_id(ref_waveform: str, reference_resolution: int, comp_waveform: str, comp_resolution: int):
@@ -53,7 +64,7 @@ def imsave(rho, file_name: str):
 
 
 def main():
-    initial_halo_id = 87
+    initial_halo_id = 2
     first_halo = True
     rhos = {}
     ref_waveform = "shannon"
@@ -62,7 +73,7 @@ def main():
     vmin = np.Inf
     vmax = -np.Inf
     with h5py.File("vis.cache.hdf5", "w") as vis_out:
-        for waveform in ["shannon", "DB2", "DB8"]:
+        for waveform in ["shannon", "DB2", "DB4", "DB8"]:
             for resolution in [128, 256, 512]:
                 if first_halo:
                     assert ref_resolution == resolution
@@ -72,13 +83,14 @@ def main():
                 else:
                     halo_id = map_halo_id(initial_halo_id, ref_waveform, ref_resolution, waveform, resolution)
 
-                halo, halo_particles, meta = load_halo_data(waveform, resolution, halo_id=halo_id)
-                # print("sleep")
-                # sleep(100)
+                halo, halo_particles, meta = load_halo_data(waveform, resolution, halo_id)
                 if not radius:
                     radius = halo["R_size"]
                     X = halo["Xc"]
                     Y = halo["Yc"]
+                print("mass", halo["Mvir"])
+                # print("sleep")
+                # sleep(100)
                 rho, extent = cic_from_radius(
                     halo_particles.X.to_numpy(), halo_particles.Y.to_numpy(),
                     1000, X, Y, radius)

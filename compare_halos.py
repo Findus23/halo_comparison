@@ -125,9 +125,17 @@ def compare_halo_resolutions(
             axis=1)
         # print(list(halo_distances))
 
-        print("find nearby halos")
+        print(f"find nearby halos (5x{ref_halo.Rvir:.1f})")
+        print(ref_halo[['X', 'Y', 'Z']].values)
         # Find IDs of halos that are less than 5 Rvir away
         nearby_halos = set(df_comp_halo.loc[halo_distances < ref_halo.Rvir * 5].index.to_list())
+        if len(nearby_halos) < 10:
+            print(f"only {len(nearby_halos)} halos, expanding to 50xRvir")
+            nearby_halos = set(df_comp_halo.loc[halo_distances < ref_halo.Rvir * 50].index.to_list())
+
+        if not nearby_halos:
+            raise Exception("no halos are nearby")  # TODO
+            # continue
         print(f"found {len(nearby_halos)} halos")
         if plot or plot3d or plot_cic or (not velo_halos):
             print("look up halo particles in comparison dataset")
@@ -188,9 +196,6 @@ def compare_halo_resolutions(
         # plt.show()
         best_halo = None
         best_halo_match = 0
-        if not nearby_halos:
-            raise Exception("no halos are nearby")  # TODO
-            # continue
 
         for i, halo_id in enumerate(nearby_halos):
             # print("----------", halo, "----------")
