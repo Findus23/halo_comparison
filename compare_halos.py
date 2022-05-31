@@ -81,10 +81,13 @@ def compare_halo_resolutions(
     print(f"Memory ref: {memory_usage(df_ref):.2f} MB")
     print(f"Memory comp: {memory_usage(df_comp):.2f} MB")
 
+    comp_halo_masses=dict(df_comp_halo["Mvir"])
+
     for index, original_halo in df_ref_halo.iterrows():
         print(f"{index} of {len(df_ref_halo)} original halos")
         halo_particle_ids = ref_halo_lookup[int(index)]
         ref_halo: pd.Series = df_ref_halo.loc[index]
+        ref_halo_mass=ref_halo["Mvir"]
         if ref_halo["cNFW"] < 0:
             print("NEGATIVE")
             print(ref_halo["cNFW"])
@@ -196,12 +199,19 @@ def compare_halo_resolutions(
         # plt.show()
         best_halo = None
         best_halo_match = 0
-
+        num_skipped_for_mass = 0
         for i, halo_id in enumerate(nearby_halos):
             # print("----------", halo, "----------")
             # halo_data = df_comp_halo.loc[halo]
             # particles_in_comp_halo: DataFrame = df_comp.loc[df_comp["FOFGroupIDs"] == halo]
             particle_ids_in_comp_halo = comp_halo_lookup[halo_id]
+            mass_factor_limit = 5
+
+            if not (1 / mass_factor_limit < (comp_halo_masses[halo_id] / ref_halo_mass) < mass_factor_limit):
+                # print("mass not similar, skipping")
+                num_skipped_for_mass += 1
+                continue
+
             halo_size = len(particle_ids_in_comp_halo)
             # df = particles_in_comp_halo.join(halo_particles, how="inner", rsuffix="ref")
             shared_particles = particle_ids_in_comp_halo.intersection(halo_particle_ids)
@@ -217,7 +227,6 @@ def compare_halo_resolutions(
 
                 ax.scatter(apply_offset_to_list(df["X"], offset_x), apply_offset_to_list(df["Y"], offset_y), s=1,
                            alpha=.3, c=color)
-                comp_halo = df_comp_halo.loc[halo_id]
                 circle = Circle((apply_offset(comp_halo.X, offset_x), apply_offset(comp_halo.Y, offset_y)),
                                 comp_halo["Rvir"], zorder=10,
                                 linewidth=1, edgecolor=color, fill=None
@@ -228,7 +237,7 @@ def compare_halo_resolutions(
             if shared_size > best_halo_match:
                 best_halo_match = shared_size
                 best_halo = halo_id
-
+        print(f"skipped {num_skipped_for_mass} halos due to mass ratio")
         if not best_halo:
             skip_counter += 1
             continue
@@ -290,7 +299,7 @@ if __name__ == '__main__':
         comp_waveform="shannon",
         reference_resolution=128,
         comparison_resolution=256,
-        plot=True,
+        plot=False,
         plot3d=False,
         plot_cic=False,
         velo_halos=True,

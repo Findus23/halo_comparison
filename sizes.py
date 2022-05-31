@@ -17,8 +17,8 @@ with pd.option_context('display.max_rows', None):
 fig: Figure = plt.figure()
 ax: Axes = fig.gca()
 
-x_col = "ref_cNFW"
-y_col = "comp_cNFW"
+x_col = "ref_Mvir"
+y_col = "comp_Mvir"
 
 # ax.scatter(df["ref_sizes"], df["comp_sizes"], s=1, alpha=.3)
 ax.scatter(df[x_col], df[y_col], s=1, alpha=.3)

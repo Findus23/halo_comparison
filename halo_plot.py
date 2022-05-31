@@ -10,10 +10,10 @@ from pyvista import Axes
 
 def main():
     rows = ["shannon", "DB8", "DB4", "DB2"]
-    offset = 1.1
+    offset = 2
     columns = [128, 256, 512]
     fig: Figure = plt.figure(figsize=(9, 9))
-    axes: List[List[Axes]] = fig.subplots(4, 3, sharex=True, sharey=True)
+    axes: List[List[Axes]] = fig.subplots(len(rows), len(columns), sharex=True, sharey=True)
     with h5py.File("vis.cache.hdf5") as vis_out:
         vmin, vmax = vis_out["vmin_vmax"]
         print(vmin, vmax)
@@ -27,7 +27,7 @@ def main():
                 vmax_scaled = (vmax + offset) * mass
                 rho = (rho + offset) * mass
 
-                img = ax.imshow(rho, norm=LogNorm(vmin=vmin_scaled, vmax=vmax_scaled), extent=extent)
+                img = ax.imshow(rho.T, norm=LogNorm(vmin=vmin_scaled, vmax=vmax_scaled), extent=extent,origin="lower")
                 print(img)
     pad = 5
     # based on https://stackoverflow.com/a/25814386/4398037

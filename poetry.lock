@@ -7,6 +7,17 @@ optional = false
 python-versions = "*"
 
 [[package]]
+name = "beniget"
+version = "0.4.1"
+description = "Extract semantic information about static Python code"
+category = "main"
+optional = false
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
+
+[package.dependencies]
+gast = ">=0.5.0,<0.6.0"
+
+[[package]]
 name = "cycler"
 version = "0.11.0"
 description = "Composable style cycles"
@@ -43,6 +54,14 @@ type1 = ["xattr"]
 ufo = ["fs (>=2.2.0,<3)"]
 unicode = ["unicodedata2 (>=14.0.0)"]
 woff = ["zopfli (>=0.1.4)", "brotlicffi (>=0.8.0)", "brotli (>=1.0.1)"]
+
+[[package]]
+name = "gast"
+version = "0.5.3"
+description = "Python AST that abstracts the underlying Python version"
+category = "main"
+optional = false
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 
 [[package]]
 name = "h5py"
@@ -197,6 +216,14 @@ docs = ["olefile", "sphinx (>=2.4)", "sphinx-copybutton", "sphinx-issues (>=3.0.
 tests = ["check-manifest", "coverage", "defusedxml", "markdown2", "olefile", "packaging", "pyroma", "pytest", "pytest-cov", "pytest-timeout"]
 
 [[package]]
+name = "ply"
+version = "3.11"
+description = "Python Lex & Yacc"
+category = "main"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "posix-ipc"
 version = "1.0.5"
 description = "POSIX IPC primitives (semaphores, shared memory and message queues) for Python"
@@ -246,6 +273,23 @@ python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,>=2.7"
 
 [package.dependencies]
 six = ">=1.5"
+
+[[package]]
+name = "pythran"
+version = "0.11.0"
+description = "Ahead of Time compiler for numeric kernels"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+beniget = ">=0.4.0,<0.5.0"
+gast = ">=0.5.0,<0.6.0"
+numpy = "*"
+ply = ">=3.4"
+
+[package.extras]
+doc = ["numpy", "nbsphinx", "scipy", "guzzle-sphinx-theme"]
 
 [[package]]
 name = "pytz"
@@ -378,12 +422,16 @@ url = "https://github.com/pyvista/pyvista-wheels/raw/main/vtk-9.1.0.dev0-cp310-c
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9,<3.11"
-content-hash = "86d7667a37ddf1e9ba04e199b8a8ba3b2e14fe4b200c1e90edd320cbdbe1fb12"
+content-hash = "db1d65073afc49ea08202b1a47d7d0747b8db6c2c7235e2b771d6345ba3103fe"
 
 [metadata.files]
 appdirs = [
     {file = "appdirs-1.4.4-py2.py3-none-any.whl", hash = "sha256:a841dacd6b99318a741b166adb07e19ee71a274450e68237b4650ca1055ab128"},
     {file = "appdirs-1.4.4.tar.gz", hash = "sha256:7d5d0167b2b1ba821647616af46a749d1c653740dd0d2415100fe26e27afdf41"},
+]
+beniget = [
+    {file = "beniget-0.4.1-py3-none-any.whl", hash = "sha256:cb061256631313f9d06031b824f7f403baecaf609b2d3d14d43f23356cf143f2"},
+    {file = "beniget-0.4.1.tar.gz", hash = "sha256:75554b3b8ad0553ce2f607627dad3d95c60c441189875b98e097528f8e23ac0c"},
 ]
 cycler = [
     {file = "cycler-0.11.0-py3-none-any.whl", hash = "sha256:3a27e95f763a428a739d2add979fa7494c912a32c17c4c38c4d5f082cad165a3"},
@@ -430,6 +478,10 @@ cython = [
 fonttools = [
     {file = "fonttools-4.33.3-py3-none-any.whl", hash = "sha256:f829c579a8678fa939a1d9e9894d01941db869de44390adb49ce67055a06cc2a"},
     {file = "fonttools-4.33.3.zip", hash = "sha256:c0fdcfa8ceebd7c1b2021240bd46ef77aa8e7408cf10434be55df52384865f8e"},
+]
+gast = [
+    {file = "gast-0.5.3-py3-none-any.whl", hash = "sha256:211aac1e58c167b25d3504998f2db694454a24bb1fb1225bce99420166f21d6a"},
+    {file = "gast-0.5.3.tar.gz", hash = "sha256:cfbea25820e653af9c7d1807f659ce0a0a9c64f2439421a7bba4f0983f532dea"},
 ]
 h5py = [
     {file = "h5py-3.6.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:a5320837c60870911645e9a935099bdb2be6a786fcf0dac5c860f3b679e2de55"},
@@ -720,6 +772,10 @@ pillow = [
     {file = "Pillow-9.1.0-pp38-pypy38_pp73-win_amd64.whl", hash = "sha256:8d79c6f468215d1a8415aa53d9868a6b40c4682165b8cb62a221b1baa47db458"},
     {file = "Pillow-9.1.0.tar.gz", hash = "sha256:f401ed2bbb155e1ade150ccc63db1a4f6c1909d3d378f7d1235a44e90d75fb97"},
 ]
+ply = [
+    {file = "ply-3.11-py2.py3-none-any.whl", hash = "sha256:096f9b8350b65ebd2fd1346b12452efe5b9607f7482813ffca50c22722a807ce"},
+    {file = "ply-3.11.tar.gz", hash = "sha256:00c7c1aaa88358b9c765b6d3000c6eec0ba42abca5351b095321aef446081da3"},
+]
 posix-ipc = [
     {file = "posix_ipc-1.0.5-cp27-cp27m-macosx_10_9_x86_64.whl", hash = "sha256:ccb36ba90efec56a1796f1566eee9561f355a4f45babbc4d18ac46fb2d0b246b"},
     {file = "posix_ipc-1.0.5-cp36-cp36m-macosx_10_6_intel.whl", hash = "sha256:613bf1afe90e84c06255ec1a6f52c9b24062492de66e5f0dbe068adf67fc3454"},
@@ -756,6 +812,10 @@ pyparsing = [
 python-dateutil = [
     {file = "python-dateutil-2.8.2.tar.gz", hash = "sha256:0123cacc1627ae19ddf3c27a5de5bd67ee4586fbdd6440d9748f8abb483d3e86"},
     {file = "python_dateutil-2.8.2-py2.py3-none-any.whl", hash = "sha256:961d03dc3453ebbc59dbdea9e4e11c5651520a876d0f4db161e8674aae935da9"},
+]
+pythran = [
+    {file = "pythran-0.11.0-py3-none-any.whl", hash = "sha256:8fea162e6096c6a3d45613a9a5389db739bf78805e713f853c9fcc7113ab9369"},
+    {file = "pythran-0.11.0.tar.gz", hash = "sha256:0b2cba712e09f7630879dff69f268460bfe34a6d6000451b47d598558a92a875"},
 ]
 pytz = [
     {file = "pytz-2022.1-py2.py3-none-any.whl", hash = "sha256:e68985985296d9a66a881eb3193b0906246245294a881e7c8afe623866ac6a5c"},
