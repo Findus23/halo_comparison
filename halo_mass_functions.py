@@ -9,6 +9,9 @@ from read_vr_files import read_velo_halos
 fig: Figure = plt.figure()
 ax: Axes = fig.gca()
 
+num_bins = 100
+sim_volume = 100 ** 3
+
 for waveform in ["DB2", "DB4", "DB8", "shannon"]:
     for resolution in [128, 256, 512]:
         dir = base_dir / f"{waveform}_{resolution}_100"
@@ -17,10 +20,6 @@ for waveform in ["DB2", "DB4", "DB8", "shannon"]:
         halos = halos[halos["Mvir"] > 2]  # there seem to be multiple halos with a mass of 1.88196993
 
         halo_masses: np.ndarray = halos["Mvir"].to_numpy()
-        print(halo_masses)
-        num_bins = 100
-
-        sim_volume = 100 ** 3
         bins = np.geomspace(halo_masses.min(), halo_masses.max(), num_bins + 1)
 
         digits = np.digitize(halo_masses, bins)
@@ -54,7 +53,7 @@ for waveform in ["DB2", "DB4", "DB8", "shannon"]:
         ax.set_yscale("log")
 
         # ax.bar(centers, number_densities, width=widths, log=True, fill=False)
-        ax.step(left_edges,number_densities,where="post")
+        ax.step(left_edges, number_densities, where="post")
         # break
     # break
 
