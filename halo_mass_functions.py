@@ -12,8 +12,11 @@ ax: Axes = fig.gca()
 num_bins = 100
 sim_volume = 100 ** 3
 
-for waveform in ["DB2", "DB4", "DB8", "shannon"]:
-    for resolution in [128, 256, 512]:
+linestyles = ["solid", "dashed", "dotted"]
+colors = ["C1", "C2", "C3", "C4"]
+
+for i, waveform in enumerate(["DB2", "DB4", "DB8", "shannon"]):
+    for j, resolution in enumerate([128, 256, 512]):
         dir = base_dir / f"{waveform}_{resolution}_100"
         halos = read_velo_halos(dir)
 
@@ -53,8 +56,9 @@ for waveform in ["DB2", "DB4", "DB8", "shannon"]:
         ax.set_yscale("log")
 
         # ax.bar(centers, number_densities, width=widths, log=True, fill=False)
-        ax.step(left_edges, number_densities, where="post")
+        name = f"{waveform} {resolution}"
+        ax.step(left_edges, number_densities, where="post", color=colors[i], linestyle=linestyles[j], label=name)
         # break
     # break
-
+plt.legend()
 plt.show()
