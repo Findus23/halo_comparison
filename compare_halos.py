@@ -9,7 +9,6 @@ from matplotlib.colors import LogNorm
 from matplotlib.figure import Figure
 from matplotlib.patches import Circle
 from numpy import linalg
-from pyvista import Plotter
 
 from cic import cic_deposit
 from paths import base_dir
@@ -191,6 +190,7 @@ def compare_halo_resolutions(
             plt.show()
 
         if plot3d:
+            from pyvista import Plotter
             pl = Plotter()
             plotdf3d(pl, halo_particles, color="#b3cde3")  # light blue
             pl.set_focus((ref_halo.X, ref_halo.Y, ref_halo.Z))

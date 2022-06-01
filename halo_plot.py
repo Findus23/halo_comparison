@@ -3,10 +3,10 @@ from typing import List
 import h5py
 import numpy as np
 from matplotlib import pyplot as plt
+from matplotlib.axes import Axes
 from matplotlib.colors import LogNorm
 from matplotlib.figure import Figure
 from matplotlib.patches import Circle
-from pyvista import Axes
 
 from cic import Extent
 from paths import base_dir, vis_datafile
