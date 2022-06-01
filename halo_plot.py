@@ -16,15 +16,18 @@ from read_vr_files import read_velo_halos
 def increase_extent_1d(xmin: float, xmax: float, factor: float):
     xrange = xmax - xmin
     xcenter = (xmax + xmin) / 2
-    return
+    return xcenter - xrange / 2 * factor, xcenter + xrange / 2 * factor
 
 
 def increase_extent(extent: Extent, factor: float) -> Extent:
     xmin, xmax, ymin, ymax = extent
+    xmin, xmax = increase_extent_1d(xmin, xmax, factor)
+    ymin, ymax = increase_extent_1d(ymin, ymax, factor)
+    return xmin, xmax, ymin, ymax
 
 
 def in_extent(extent: Extent, X, Y, factor=2) -> bool:
-    xmin, xmax, ymin, ymax = extent
+    xmin, xmax, ymin, ymax = increase_extent(extent, factor)
     return (xmin < X < xmax) and (ymin < Y < ymax)
 
 
