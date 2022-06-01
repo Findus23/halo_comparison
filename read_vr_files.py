@@ -83,14 +83,10 @@ def cached_particles_in_halo(file: Path, *args, **kwargs) -> HaloParticleMapping
     return halo_particle_ids
 
 
-def read_velo_halos(
-        directory: Path, recursivly=False, skip_unbound=False
-) -> Tuple[DataFrame, HaloParticleMapping, HaloParticleMapping]:
+def read_velo_halos(directory: Path):
     """
-    This reads the output files of VELOCIraptor
     Returns a dataframe containing all scalar properties of the halos
     (https://velociraptor-stf.readthedocs.io/en/latest/output.html),
-    and two dictionaries mapping the halo IDs to sets of particle IDs
     """
     group_catalog = h5py.File(directory / "vroutput.catalog_groups")
     group_properties = h5py.File(directory / "vroutput.properties")
@@ -117,7 +113,18 @@ def read_velo_halos(
     }
     df = pd.DataFrame({**data, **scalar_properties})  # create dataframe from two merged dicts
     df.index += 1  # Halo IDs start at 1
+    return df
 
+
+def read_velo_halo_particles(
+        directory: Path, recursivly=False, skip_unbound=False
+) -> Tuple[DataFrame, HaloParticleMapping, HaloParticleMapping]:
+    """
+    This reads the output files of VELOCIraptor
+    and returns the halo data from read_velo_halos
+    and two dictionaries mapping the halo IDs to sets of particle IDs
+    """
+    df = read_velo_halos(directory)
     particle_catalog = h5py.File(directory / "vroutput.catalog_particles")
     particle_ids = np.asarray(particle_catalog["Particle_IDs"])
 
@@ -145,7 +152,7 @@ def main():
     Nres = 512
     directory = base_dir / f"{waveform}_{Nres}_100"
 
-    df_halo, halo_particle_ids, halo_particle_unbound_ids = read_velo_halos(directory)
+    df_halo, halo_particle_ids, halo_particle_unbound_ids = read_velo_halo_particles(directory)
     particles, meta = read_file(directory)
     HALO = 1000
     while True:

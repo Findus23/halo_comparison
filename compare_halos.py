@@ -13,7 +13,7 @@ from pyvista import Plotter
 
 from cic import cic_deposit
 from paths import base_dir
-from read_vr_files import read_velo_halos
+from read_vr_files import read_velo_halo_particles
 from readfiles import read_file, read_halo_file
 from remap_particle_IDs import IDScaler
 from threed import plotdf3d
@@ -56,7 +56,7 @@ def compare_halo_resolutions(
     print("reading reference file")
     df_ref, ref_meta = read_file(reference_dir)
     if velo_halos:
-        df_ref_halo, ref_halo_lookup, ref_unbound = read_velo_halos(reference_dir, recursivly=False)
+        df_ref_halo, ref_halo_lookup, ref_unbound = read_velo_halo_particles(reference_dir, recursivly=False)
         # TODO: clarify if unbound particles should be ignored
         for k, v in ref_halo_lookup.items():
             v.update(ref_unbound[k])
@@ -66,7 +66,7 @@ def compare_halo_resolutions(
     print("reading comparison file")
     df_comp, comp_meta = read_file(comparison_dir)
     if velo_halos:
-        df_comp_halo, comp_halo_lookup, comp_unbound = read_velo_halos(comparison_dir, recursivly=False)
+        df_comp_halo, comp_halo_lookup, comp_unbound = read_velo_halo_particles(comparison_dir, recursivly=False)
         for k, v in comp_halo_lookup.items():
             v.update(comp_unbound[k])
 

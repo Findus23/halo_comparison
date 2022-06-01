@@ -53,8 +53,6 @@ def cic_range(
     print((60 - ymin) / yrange)
     extent = (xmin, xmax, ymin, ymax)
     rho = cic_deposit(Xs, Ys, ngrid, *args, **kwargs)
-    print(rho)
-    exit()
     return rho, extent
 
 

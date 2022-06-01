@@ -5,7 +5,27 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.colors import LogNorm
 from matplotlib.figure import Figure
+from matplotlib.patches import Circle
 from pyvista import Axes
+
+from cic import Extent
+from paths import base_dir, vis_datafile
+from read_vr_files import read_velo_halos
+
+
+def increase_extent_1d(xmin: float, xmax: float, factor: float):
+    xrange = xmax - xmin
+    xcenter = (xmax + xmin) / 2
+    return
+
+
+def increase_extent(extent: Extent, factor: float) -> Extent:
+    xmin, xmax, ymin, ymax = extent
+
+
+def in_extent(extent: Extent, X, Y, factor=2) -> bool:
+    xmin, xmax, ymin, ymax = extent
+    return (xmin < X < xmax) and (ymin < Y < ymax)
 
 
 def main():
@@ -14,21 +34,41 @@ def main():
     columns = [128, 256, 512]
     fig: Figure = plt.figure(figsize=(9, 9))
     axes: List[List[Axes]] = fig.subplots(len(rows), len(columns), sharex=True, sharey=True)
-    with h5py.File("vis.cache.hdf5") as vis_out:
+    with h5py.File(vis_datafile) as vis_out:
         vmin, vmax = vis_out["vmin_vmax"]
         print(vmin, vmax)
         for i, waveform in enumerate(rows):
             for j, resolution in enumerate(columns):
+                dir = base_dir / f"{waveform}_{resolution}_100"
+                halos = read_velo_halos(dir)
                 ax = axes[i][j]
                 rho = np.asarray(vis_out[f"{waveform}_{resolution}_rho"])
-                extent = list(vis_out[f"{waveform}_{resolution}_extent"])
-                mass = vis_out[f"{waveform}_{resolution}_mass"]
+                extent = tuple(vis_out[f"{waveform}_{resolution}_extent"])
+                mass = vis_out[f"{waveform}_{resolution}_mass"][()]  # get scalar value from Dataset
+                main_halo_id = vis_out[f"{waveform}_{resolution}_halo_id"][()]
                 vmin_scaled = (vmin + offset) * mass
                 vmax_scaled = (vmax + offset) * mass
                 rho = (rho + offset) * mass
 
-                img = ax.imshow(rho.T, norm=LogNorm(vmin=vmin_scaled, vmax=vmax_scaled), extent=extent,origin="lower")
+                img = ax.imshow(rho.T, norm=LogNorm(vmin=vmin_scaled, vmax=vmax_scaled), extent=extent,
+                                origin="lower")
+                for halo_id, halo in halos.iterrows():
+                    if halo["Vmax"] > 135:
+                        if in_extent(extent, halo.X, halo.Y):
+                            color = "red" if halo_id == main_halo_id else "white"
+                            if halo_id == main_halo_id:
+                                print(halo_id == main_halo_id, halo_id, main_halo_id, halo["Rvir"])
+                                print("plotting main halo")
+                            circle = Circle(
+                                (halo.X, halo.Y),
+                                halo["Rvir"], zorder=10,
+                                linewidth=1, edgecolor=color, fill=None, alpha=.2
+                            )
+                            ax.add_artist(circle)
+
                 print(img)
+            #     break
+            # break
     pad = 5
     # based on https://stackoverflow.com/a/25814386/4398037
     for ax, col in zip(axes[0], columns):

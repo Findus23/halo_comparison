@@ -6,8 +6,8 @@ import pandas as pd
 from matplotlib import pyplot as plt
 
 from cic import cic_from_radius
-from paths import base_dir
-from read_vr_files import read_velo_halos
+from paths import base_dir, vis_datafile
+from read_vr_files import read_velo_halo_particles
 from readfiles import read_file
 
 show_unbound = False
@@ -19,7 +19,7 @@ Coords = Tuple[float, float, float, float]  # radius, X, Y, Z
 def load_halo_data(waveform: str, resolution: int, halo_id: int, coords: Coords):
     dir = base_dir / f"{waveform}_{resolution}_100"
     df, meta = read_file(dir)
-    df_halo, halo_lookup, unbound = read_velo_halos(dir, recursivly=False, skip_unbound=not show_unbound)
+    df_halo, halo_lookup, unbound = read_velo_halo_particles(dir, recursivly=False, skip_unbound=not show_unbound)
     if show_unbound:
         for k, v in halo_lookup.items():
             v.update(unbound[k])
@@ -79,7 +79,9 @@ def main():
     coords = None
     vmin = np.Inf
     vmax = -np.Inf
-    with h5py.File("vis.cache.hdf5", "w") as vis_out:
+    if vis_datafile.exists():
+        input("confirm to overwrite file")
+    with h5py.File(vis_datafile, "w") as vis_out:
         for waveform in ["shannon", "DB2", "DB4", "DB8"]:
             for resolution in [128, 256, 512]:
                 if first_halo:
@@ -89,7 +91,6 @@ def main():
                     first_halo = False
                 else:
                     halo_id = map_halo_id(initial_halo_id, ref_waveform, ref_resolution, waveform, resolution)
-
                 halo, halo_particles, meta, image_coords = load_halo_data(waveform, resolution, halo_id, coords)
                 if not coords:
                     coords = image_coords
@@ -107,6 +108,7 @@ def main():
                 vis_out.create_dataset(f"{waveform}_{resolution}_rho", data=rho, compression='gzip', compression_opts=5)
                 vis_out.create_dataset(f"{waveform}_{resolution}_extent", data=extent)
                 vis_out.create_dataset(f"{waveform}_{resolution}_mass", data=meta.particle_mass)
+                vis_out.create_dataset(f"{waveform}_{resolution}_halo_id", data=halo_id)
                 imsave(rho, f"out_halo{initial_halo_id}_{waveform}_{resolution}_{halo_id}.png")
         vis_out.create_dataset("vmin_vmax", data=[vmin, vmax])
 
