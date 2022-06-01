@@ -17,10 +17,13 @@ colors = ["C1", "C2", "C3", "C4"]
 
 for i, waveform in enumerate(["DB2", "DB4", "DB8", "shannon"]):
     for j, resolution in enumerate([128, 256, 512]):
+        print(waveform, resolution)
         dir = base_dir / f"{waveform}_{resolution}_100"
         halos = read_velo_halos(dir)
 
-        halos = halos[halos["Mvir"] > 2]  # there seem to be multiple halos with a mass of 1.88196993
+        # halos = halos[halos["Mvir"] > 2]  # there seem to be multiple halos with a mass of 1.88196993
+
+        # halos.to_csv("weird_halos.csv")
 
         halo_masses: np.ndarray = halos["Mvir"].to_numpy()
         bins = np.geomspace(halo_masses.min(), halo_masses.max(), num_bins + 1)

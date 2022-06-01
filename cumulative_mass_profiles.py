@@ -25,7 +25,7 @@ def cumulative_mass_profile(particles_in_halos: pd.DataFrame, halo: pd.Series,
     group_radius = distances.max()
     normalized_distances = distances / group_radius
 
-    num_bins = 30
+    num_bins = 100
     log_radial_bins = np.geomspace(0.01, 2, num_bins)
 
     bin_masses = []
@@ -38,7 +38,7 @@ def cumulative_mass_profile(particles_in_halos: pd.DataFrame, halo: pd.Series,
         mass = count * particles_meta.particle_mass
         volume = V(bin_end * group_radius) - V(bin_start * group_radius)
         bin_masses.append(mass)
-        density = count / volume
+        density = mass / volume
         bin_densities.append(density)
     print(bin_masses)
     print(bin_densities)
@@ -54,7 +54,7 @@ def cumulative_mass_profile(particles_in_halos: pd.DataFrame, halo: pd.Series,
         ax.set_xlabel(r'R / R$_\mathrm{group}$')
         ax.set_ylabel(r'M [$10^{10} \mathrm{M}_\odot$]')
         ax2.set_ylabel("density [$\\frac{10^{10} \mathrm{M}_\odot}{Mpc^3}$]")
-
+        plt.legend()
         plt.show()
 
     return bin_masses, bin_densities
