@@ -1,10 +1,13 @@
+import sys
+from pathlib import Path
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 
-from readfiles import ParticlesMeta
+from readfiles import ParticlesMeta, read_file, read_halo_file
 
 
 def V(r):
@@ -55,3 +58,16 @@ def cumulative_mass_profile(particles_in_halos: pd.DataFrame, halo: pd.Series,
         plt.show()
 
     return bin_masses, bin_densities
+
+
+if __name__ == '__main__':
+    dir = Path(sys.argv[1])
+    df, particles_meta = read_file(dir)
+    df_halos = read_halo_file(dir)
+
+    halo_id = 1
+
+    particles_in_halo = df.loc[df["FOFGroupIDs"] == halo_id]
+    halo = df_halos.loc[halo_id]
+
+    cumulative_mass_profile(particles_in_halo, halo, particles_meta, plot=True)
