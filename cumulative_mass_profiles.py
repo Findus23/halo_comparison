@@ -61,9 +61,9 @@ def cumulative_mass_profile(particles_in_halos: pd.DataFrame, halo: pd.Series,
 
 
 if __name__ == '__main__':
-    dir = Path(sys.argv[1])
-    df, particles_meta = read_file(dir)
-    df_halos = read_halo_file(dir)
+    input_file = Path(sys.argv[1])
+    df, particles_meta = read_file(input_file)
+    df_halos = read_halo_file(input_file)
 
     halo_id = 1
 

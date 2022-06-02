@@ -37,8 +37,8 @@ def df_to_coords(df: pd.DataFrame):
 if __name__ == '__main__':
     HALO = 1
     reference_dir = base_dir / "shannon_512_100"
-    df, _ = read_file(reference_dir)
-    df_halo = read_halo_file(reference_dir).loc[HALO]
+    df, _ = read_file(reference_dir / "output_0004.hdf5")
+    df_halo = read_halo_file(reference_dir / "fof_output_0004.hdf5").loc[HALO]
     df = df.loc[df["FOFGroupIDs"] == HALO]
     df.to_csv("halo.csv")
     pl = Plotter()

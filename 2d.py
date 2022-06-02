@@ -18,7 +18,7 @@ def filter_for_2d(df: pd.DataFrame, group: int):
 
 
 reference_dir = Path(base_dir / f"shannon_512_100")
-df_ref, _ = read_file(reference_dir)
+df_ref, _ = read_file(reference_dir/ "output_0004.hdf5")
 
 df = df_ref.loc[df_ref["FOFGroupIDs"] == 1]
 df2 = df_ref.loc[df_ref["FOFGroupIDs"] == 4]

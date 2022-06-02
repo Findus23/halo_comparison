@@ -15,11 +15,10 @@ class ParticlesMeta:
     particle_mass: float
 
 
-def read_file(path: Path) -> Tuple[pd.DataFrame, ParticlesMeta]:
-    cache_file = path / "cache"
-    meta_cache_file = path / "cache_meta.pickle"
+def read_file(file: Path) -> Tuple[pd.DataFrame, ParticlesMeta]:
+    cache_file = file.with_suffix(".cache.pickle")
+    meta_cache_file = file.with_suffix(".cache_meta.pickle")
     if not (cache_file.exists() and meta_cache_file.exists()):
-        file = path / "output_0004.hdf5"
         reference_file = h5py.File(file)
 
         masses = reference_file["PartType1"]["Masses"]
@@ -51,8 +50,8 @@ def read_file(path: Path) -> Tuple[pd.DataFrame, ParticlesMeta]:
     return df, meta
 
 
-def read_halo_file(path: Path) -> DataFrame:
-    file = path / "fof_output_0004.hdf5"
+def read_halo_file(file: Path) -> DataFrame:
+    # file = path / "fof_output_0004.hdf5"
     reference_file = h5py.File(file)
     df1 = pd.DataFrame(reference_file["Groups"]["Centres"], columns=["X", "Y", "Z"])
     df2 = pd.DataFrame(reference_file["Groups"]["GroupIDs"], columns=["GroupIDs"])

@@ -53,24 +53,24 @@ def compare_halo_resolutions(
     skip_counter = 0
 
     print("reading reference file")
-    df_ref, ref_meta = read_file(reference_dir)
+    df_ref, ref_meta = read_file(reference_dir / "output_0004.hdf5")
     if velo_halos:
         df_ref_halo, ref_halo_lookup, ref_unbound = read_velo_halo_particles(reference_dir, recursivly=False)
         # TODO: clarify if unbound particles should be ignored
         for k, v in ref_halo_lookup.items():
             v.update(ref_unbound[k])
     else:
-        df_ref_halo = read_halo_file(reference_dir)
+        df_ref_halo = read_halo_file(reference_dir / "fof_output_0004.hdf5")
 
     print("reading comparison file")
-    df_comp, comp_meta = read_file(comparison_dir)
+    df_comp, comp_meta = read_file(comparison_dir / "output_0004.hdf5")
     if velo_halos:
         df_comp_halo, comp_halo_lookup, comp_unbound = read_velo_halo_particles(comparison_dir, recursivly=False)
         for k, v in comp_halo_lookup.items():
             v.update(comp_unbound[k])
 
     else:
-        df_comp_halo = read_halo_file(comparison_dir)
+        df_comp_halo = read_halo_file(comparison_dir / "fof_output_0004.hdf5")
 
     print("precalculating halo memberships")
     if not velo_halos:
@@ -80,13 +80,13 @@ def compare_halo_resolutions(
     print(f"Memory ref: {memory_usage(df_ref):.2f} MB")
     print(f"Memory comp: {memory_usage(df_comp):.2f} MB")
 
-    comp_halo_masses=dict(df_comp_halo["Mvir"])
+    comp_halo_masses = dict(df_comp_halo["Mvir"])
 
     for index, original_halo in df_ref_halo.iterrows():
         print(f"{index} of {len(df_ref_halo)} original halos")
         halo_particle_ids = ref_halo_lookup[int(index)]
         ref_halo: pd.Series = df_ref_halo.loc[index]
-        ref_halo_mass=ref_halo["Mvir"]
+        ref_halo_mass = ref_halo["Mvir"]
         if ref_halo["cNFW"] < 0:
             print("NEGATIVE")
             print(ref_halo["cNFW"])

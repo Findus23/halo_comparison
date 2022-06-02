@@ -71,8 +71,8 @@ def cic_from_radius(
 
 
 if __name__ == '__main__':
-    reference_dir = Path(sys.argv[1])
-    df_ref, _ = read_file(reference_dir)
+    input_file = Path(sys.argv[1])
+    df_ref, _ = read_file(input_file)
 
     fig: Figure = plt.figure()
     ax: Axes = fig.gca()
