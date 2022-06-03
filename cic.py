@@ -70,8 +70,7 @@ def cic_from_radius(
     )
 
 
-if __name__ == '__main__':
-    input_file = Path(sys.argv[1])
+def plot_file(input_file: Path):
     df_ref, _ = read_file(input_file)
 
     fig: Figure = plt.figure()
@@ -96,3 +95,7 @@ if __name__ == '__main__':
     plt.imsave("out.png", image)
     # ax.hist2d(df.X, df.Y, bins=500, norm=LogNorm())
     # ax.hist2d(df2.X, df2.Y, bins=1000, norm=LogNorm())
+
+
+if __name__ == '__main__':
+    plot_file(Path(sys.argv[1]))
