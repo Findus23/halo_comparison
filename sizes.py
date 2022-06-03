@@ -16,9 +16,10 @@ with pd.option_context('display.max_rows', None):
 
 fig: Figure = plt.figure()
 ax: Axes = fig.gca()
+# hist2d, log?
 
-x_col = "ref_Mvir"
-y_col = "comp_Mvir"
+x_col = "ref_Mass_200mean"
+y_col = "comp_Mass_200mean"
 
 # ax.scatter(df["ref_sizes"], df["comp_sizes"], s=1, alpha=.3)
 ax.scatter(df[x_col], df[y_col], s=1, alpha=.3)
@@ -31,7 +32,7 @@ ax.set_ylabel(y_col)
 min_x = min([min(df[x_col]), min(df[y_col])])
 max_x = max([max(df[x_col]), max(df[y_col])])
 
-ax.plot([min_x, max_x], [min_x, max_x], linewidth=1, color="C2")
+ax.loglog([min_x, max_x], [min_x, max_x], linewidth=1, color="C2")
 
 fig2: Figure = plt.figure()
 ax2: Axes = fig2.gca()
