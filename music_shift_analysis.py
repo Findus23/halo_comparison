@@ -37,3 +37,12 @@ assert (xshift == oliver_shift).all()
 print(adrian_shift - oliver_shift)
 
 print(xshift / ncoarse * 100)
+
+
+xshift_in_mpc = np.array([-4.6875, 0, -9.375])
+#according to music output:
+highres_region_centre = np.array([0.566187, 0.517375, 0.612728]) * 100
+
+shifted_highres_centre = highres_region_centre + xshift_in_mpc
+
+print(desired_box_centre * 100 - shifted_highres_centre)
