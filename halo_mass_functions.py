@@ -9,8 +9,10 @@ from read_vr_files import read_velo_halos
 fig: Figure = plt.figure()
 ax: Axes = fig.gca()
 
-num_bins = 100
+num_bins = 30
 sim_volume = 100 ** 3
+
+# notes: shannon + db2
 
 linestyles = ["solid", "dashed", "dotted"]
 colors = ["C1", "C2", "C3", "C4"]
@@ -21,7 +23,7 @@ for i, waveform in enumerate(["DB2", "DB4", "DB8", "shannon"]):
         dir = base_dir / f"{waveform}_{resolution}_100"
         halos = read_velo_halos(dir)
 
-        # halos = halos[halos["Mvir"] > 2]  # there seem to be multiple halos with a mass of 1.88196993
+        halos = halos[halos["Mvir"] > 2]  # there seem to be multiple halos with a mass of 1.88196993
 
         # halos.to_csv("weird_halos.csv")
 

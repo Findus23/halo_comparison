@@ -78,11 +78,14 @@ if __name__ == '__main__':
     ax: Axes = fig.gca()
 
     print("start cic")
-    rho, extent = cic_from_radius(df_ref.X.to_numpy(), df_ref.Y.to_numpy(), 2000, 48.85, 56.985, 2, periodic=False)
-    # rho, extent = cic_range(df_ref.X.to_numpy(), df_ref.Y.to_numpy(), 1000, 30, 70, 30, 70, periodic=False)
+    # rho, extent = cic_from_radius(df_ref.X.to_numpy(), df_ref.Y.to_numpy(), 2000, 48.85, 56.985, 2, periodic=False)
+    rho, extent = cic_from_radius(df_ref.X.to_numpy(), df_ref.Y.to_numpy(), 500, 56, 49.5, 5, periodic=False)
+    # rho, extent = cic_range(df_ref.X.to_numpy(), df_ref.Y.to_numpy(), 1000, 0, 100, 0, 100, periodic=False)
     print("finished cic")
     data = 1.1 + rho
     i = ax.imshow(data.T, norm=LogNorm(), extent=extent, origin="lower")
+    ax.set_title(str(input_file.relative_to(input_file.parent.parent)))
+
     fig.colorbar(i)
     plt.show()
 

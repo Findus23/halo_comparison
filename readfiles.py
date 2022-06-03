@@ -20,21 +20,24 @@ def read_file(file: Path) -> Tuple[pd.DataFrame, ParticlesMeta]:
     meta_cache_file = file.with_suffix(".cache_meta.pickle")
     if not (cache_file.exists() and meta_cache_file.exists()):
         reference_file = h5py.File(file)
+        has_fof=        "FOFGroupIDs" in reference_file["PartType1"]
 
         masses = reference_file["PartType1"]["Masses"]
         if not np.all(masses == masses[0]):
             raise ValueError("only equal mass particles are supported for now")
         df = pd.DataFrame(reference_file["PartType1"]["Coordinates"], columns=["X", "Y", "Z"])
-        df2 = pd.DataFrame(reference_file["PartType1"]["FOFGroupIDs"], columns=["FOFGroupIDs"]).astype("category")
-        df = df.merge(df2, "outer", left_index=True, right_index=True)
-        del df2
+        if has_fof:
+            df2 = pd.DataFrame(reference_file["PartType1"]["FOFGroupIDs"], columns=["FOFGroupIDs"]).astype("category")
+            df = df.merge(df2, "outer", left_index=True, right_index=True)
+            del df2
         df3 = pd.DataFrame(reference_file["PartType1"]["ParticleIDs"], columns=["ParticleIDs"])
 
         df = df.merge(df3, "outer", left_index=True, right_index=True)
         del df3
         df.set_index("ParticleIDs", inplace=True)
-        print("sorting")
-        df.sort_values("FOFGroupIDs",inplace=True)
+        if has_fof:
+            print("sorting")
+            df.sort_values("FOFGroupIDs",inplace=True)
         meta = ParticlesMeta(
             particle_mass=masses[0]
         )
