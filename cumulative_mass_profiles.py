@@ -53,7 +53,7 @@ def cumulative_mass_profile(particles_in_halos: pd.DataFrame, halo: pd.Series,
         ax2.loglog(log_radial_bins[:-1], bin_densities, label="densities", c="C1")
         ax.set_xlabel(r'R / R$_\mathrm{group}$')
         ax.set_ylabel(r'M [$10^{10} \mathrm{M}_\odot$]')
-        ax2.set_ylabel("density [$\\frac{10^{10} \mathrm{M}_\odot}{Mpc^3}$]")
+        ax2.set_ylabel("density [$\\frac{10^{10} \\mathrm{M}_\\odot}{Mpc^3}$]")
         plt.legend()
         plt.show()
 

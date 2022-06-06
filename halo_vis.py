@@ -10,7 +10,6 @@ from paths import base_dir, vis_datafile
 from read_vr_files import read_velo_halo_particles
 from readfiles import read_file
 
-show_unbound = False
 all_in_area = True
 
 Coords = Tuple[float, float, float, float]  # radius, X, Y, Z
@@ -20,9 +19,6 @@ def load_halo_data(waveform: str, resolution: int, halo_id: int, coords: Coords)
     dir = base_dir / f"{waveform}_{resolution}_100"
     df, meta = read_file(dir/"output_0004.hdf5")
     df_halo, halo_lookup, unbound = read_velo_halo_particles(dir / "output_0004.hdf5", recursivly=False, skip_unbound=not show_unbound)
-    if show_unbound:
-        for k, v in halo_lookup.items():
-            v.update(unbound[k])
 
     halo = df_halo.loc[halo_id]
     if all_in_area:

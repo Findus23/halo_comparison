@@ -117,7 +117,7 @@ def read_velo_halos(directory: Path):
 
 
 def read_velo_halo_particles(
-        directory: Path, recursivly=False, skip_unbound=False
+        directory: Path, recursivly=False, skip_unbound=True
 ) -> Tuple[DataFrame, HaloParticleMapping, HaloParticleMapping]:
     """
     This reads the output files of VELOCIraptor

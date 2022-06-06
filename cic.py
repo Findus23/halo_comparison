@@ -70,32 +70,38 @@ def cic_from_radius(
     )
 
 
-def plot_file(input_file: Path):
-    df_ref, _ = read_file(input_file)
-
+def plot_cic(rho: np.ndarray, extent: Extent, title: str):
     fig: Figure = plt.figure()
     ax: Axes = fig.gca()
 
     print("start cic")
     # rho, extent = cic_from_radius(df_ref.X.to_numpy(), df_ref.Y.to_numpy(), 2000, 48.85, 56.985, 2, periodic=False)
-    rho, extent = cic_from_radius(df_ref.X.to_numpy(), df_ref.Y.to_numpy(), 500, 56, 49.5, 5, periodic=False)
     # rho, extent = cic_range(df_ref.X.to_numpy(), df_ref.Y.to_numpy(), 1000, 0, 100, 0, 100, periodic=False)
     print("finished cic")
     data = 1.1 + rho
     i = ax.imshow(data.T, norm=LogNorm(), extent=extent, origin="lower")
-    ax.set_title(str(input_file.relative_to(input_file.parent.parent)))
+    ax.set_title(title)
 
     fig.colorbar(i)
+    plt.savefig((Path("~/tmp").expanduser() / title).with_suffix(".fig.png"))
+
     plt.show()
 
     cmap = plt.cm.viridis
     data = np.log(data)
     norm = plt.Normalize(vmin=data.min(), vmax=data.max())
     image = cmap(norm(data))
-    plt.imsave("out.png", image)
+    plt.imsave((Path("~/tmp").expanduser() / title).with_suffix(".png"), image)
     # ax.hist2d(df.X, df.Y, bins=500, norm=LogNorm())
     # ax.hist2d(df2.X, df2.Y, bins=1000, norm=LogNorm())
 
 
 if __name__ == '__main__':
-    plot_file(Path(sys.argv[1]))
+    input_file = Path(sys.argv[1])
+    df_ref, _ = read_file(input_file)
+    rho, extent = cic_from_radius(df_ref.X.to_numpy(), df_ref.Y.to_numpy(), 500, 50, 50, 5, periodic=False)
+
+    plot_cic(
+        rho, extent,
+        title=str(input_file.relative_to(input_file.parent.parent).name)
+    )

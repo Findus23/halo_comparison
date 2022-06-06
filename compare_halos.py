@@ -56,9 +56,6 @@ def compare_halo_resolutions(
     df_ref, ref_meta = read_file(reference_dir / "output_0004.hdf5")
     if velo_halos:
         df_ref_halo, ref_halo_lookup, ref_unbound = read_velo_halo_particles(reference_dir, recursivly=False)
-        # TODO: clarify if unbound particles should be ignored -> yes
-        for k, v in ref_halo_lookup.items():
-            v.update(ref_unbound[k])
     else:
         df_ref_halo = read_halo_file(reference_dir / "fof_output_0004.hdf5")
 
@@ -66,8 +63,6 @@ def compare_halo_resolutions(
     df_comp, comp_meta = read_file(comparison_dir / "output_0004.hdf5")
     if velo_halos:
         df_comp_halo, comp_halo_lookup, comp_unbound = read_velo_halo_particles(comparison_dir, recursivly=False)
-        for k, v in comp_halo_lookup.items():
-            v.update(comp_unbound[k])
 
     else:
         df_comp_halo = read_halo_file(comparison_dir / "fof_output_0004.hdf5")

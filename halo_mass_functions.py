@@ -15,9 +15,9 @@ sim_volume = 100 ** 3
 # notes: shannon + db2
 
 linestyles = ["solid", "dashed", "dotted"]
-colors = ["C1", "C2", "C3", "C4"]
+colors = ["C1", "C2"]
 
-for i, waveform in enumerate(["DB2", "DB4", "DB8", "shannon"]):
+for i, waveform in enumerate(["DB2", "shannon"]):
     for j, resolution in enumerate([128, 256, 512]):
         print(waveform, resolution)
         dir = base_dir / f"{waveform}_{resolution}_100"
