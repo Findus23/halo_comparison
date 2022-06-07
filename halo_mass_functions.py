@@ -12,8 +12,6 @@ ax: Axes = fig.gca()
 num_bins = 30
 sim_volume = 100 ** 3
 
-# notes: shannon + db2
-
 linestyles = ["solid", "dashed", "dotted"]
 colors = ["C1", "C2"]
 
@@ -36,6 +34,7 @@ for i, waveform in enumerate(["DB2", "shannon"]):
         widths = []
         centers = []
         left_edges = []
+        Ns=[]
 
         for bin_id in range(num_bins):
             mass_low = bins[bin_id]
@@ -56,14 +55,22 @@ for i, waveform in enumerate(["DB2", "shannon"]):
             assert num_halos == counter
             nd = num_halos / sim_volume / delta_mass
             number_densities.append(nd)
+            Ns.append(num_halos)
 
         ax.set_xscale("log")
         ax.set_yscale("log")
 
         # ax.bar(centers, number_densities, width=widths, log=True, fill=False)
         name = f"{waveform} {resolution}"
+        number_densities = np.array(number_densities)
+        Ns = np.array(Ns)
+        print(number_densities)
+        ax.fill_between(
+            left_edges,
+            number_densities - 1/np.sqrt(Ns)/ sim_volume / delta_mass,
+            number_densities + 1/np.sqrt(Ns)/ sim_volume / delta_mass, alpha=.5, linewidth=0)
         ax.step(left_edges, number_densities, where="post", color=colors[i], linestyle=linestyles[j], label=name)
-        # break
-    # break
+        break
+    break
 plt.legend()
 plt.show()
