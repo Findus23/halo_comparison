@@ -11,7 +11,7 @@ import wave
 from paths import base_dir, spectra_dir
 
 
-def spectra(waveform: str, resolution_1: int, resolution_2: int, Lbox: float, time: str):
+def run_spectra(waveform: str, resolution_1: int, resolution_2: int, Lbox: float, time: str):
     setup_1 = f'{waveform}_{resolution_1}_{Lbox}'
     setup_2 = f'{waveform}_{resolution_2}_{Lbox}'
 
@@ -46,12 +46,12 @@ def spectra(waveform: str, resolution_1: int, resolution_2: int, Lbox: float, ti
 def power_run(waveforms: list, resolutions: list, Lbox: float, time: str):
     for waveform in enumerate(waveforms):
         for resolution in enumerate(resolutions):
-            spectra(waveform=waveform, resolution_1=resolution, resolution_2=resolution, Lbox=Lbox, time=time)
+            run_spectra(waveform=waveform, resolution_1=resolution, resolution_2=resolution, Lbox=Lbox, time=time)
 
 def cross_run(waveforms: list, resolutions: list, Lbox: float, time: str):
     for waveform in enumerate(waveforms):
         for resolution_pair in itertools.combinations(resolutions, 2):
-            spectra(waveform=waveform, resolution_1=resolution_pair[0], resolution_2=resolution_pair[1], Lbox=Lbox, time=time)
+            run_spectra(waveform=waveform, resolution_1=resolution_pair[0], resolution_2=resolution_pair[1], Lbox=Lbox, time=time)
 
 
 if __name__ == '__main__':
