@@ -1,7 +1,3 @@
-# import numpy as np
-# import matplotlib.pyplot as plt
-# import itertools
-# import pandas as pd
 import subprocess
 
 from paths import base_dir, spectra_dir
@@ -22,7 +18,7 @@ for k, waveform in enumerate(["DB2", "DB4", "DB8", "shannon"]):
         # f'{2 * resolution}',
         '1024',
         # #For evaluation of ICs
-        '--format=4', #This seems to work, but is not as readible
+        '--format=4', #This seems to work, but is not as readable
         '--output',
         str(base_dir / f'spectra/{waveform}_{Lbox}/{waveform}_{Lbox}_ics_{resolution}_{resolution}'),
         '--input',
@@ -39,6 +35,3 @@ for k, waveform in enumerate(["DB2", "DB4", "DB8", "shannon"]):
         # '--input',
         # str(base_dir / f'{setup}/output_0004.hdf5')
         ], check=True)
-        break
-    break
-
