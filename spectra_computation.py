@@ -11,7 +11,7 @@ import wave
 from paths import base_dir, spectra_dir
 
 
-def run_spectra(waveform: str, resolution_1: int, resolution_2: int, Lbox: float, time: str):
+def run_spectra(waveform: str, resolution_1: int, resolution_2: int, Lbox: int, time: str):
     setup_1 = f'{waveform}_{resolution_1}_{Lbox}'
     setup_2 = f'{waveform}_{resolution_2}_{Lbox}'
 
@@ -43,19 +43,19 @@ def run_spectra(waveform: str, resolution_1: int, resolution_2: int, Lbox: float
         str(base_dir / f'{setup_2}/output_0004.hdf5')
         ], check=True)
 
-def power_run(waveforms: list, resolutions: list, Lbox: float, time: str):
+def power_run(waveforms: list, resolutions: list, Lbox: int, time: str):
     for waveform in waveforms:
         for resolution in resolutions:
             run_spectra(waveform=waveform, resolution_1=resolution, resolution_2=resolution, Lbox=Lbox, time=time)
 
-def cross_run(waveforms: list, resolutions: list, Lbox: float, time: str):
+def cross_run(waveforms: list, resolutions: list, Lbox: int, time: str):
     for waveform in waveforms:
         for resolution_pair in itertools.combinations(resolutions, 2):
             run_spectra(waveform=waveform, resolution_1=resolution_pair[0], resolution_2=resolution_pair[1], Lbox=Lbox, time=time)
 
 
 if __name__ == '__main__':
-    Lbox = 100.0
+    Lbox = 100
     k0 = 2 * 3.14159265358979323846264338327950 / Lbox
     resolutions = [128, 256, 512] 
     waveforms = ["DB2", "DB4", "DB8", "shannon"]
