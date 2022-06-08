@@ -6,6 +6,14 @@ from matplotlib.figure import Figure
 from paths import base_dir
 from read_vr_files import read_velo_halos
 
+def counts_without_inf(number_halos):
+    with np.errstate(divide='ignore', invalid='ignore'):
+        number_halos_inverse = np.true_divide(1, np.sqrt(number_halos))
+        number_halos_inverse[np.abs(number_halos_inverse) == np.inf] = 0
+    
+    return number_halos_inverse
+
+
 fig: Figure = plt.figure()
 ax: Axes = fig.gca()
 
@@ -64,12 +72,16 @@ for i, waveform in enumerate(["DB2", "shannon"]):
         name = f"{waveform} {resolution}"
         number_densities = np.array(number_densities)
         Ns = np.array(Ns)
-        print(number_densities)
+        ax.step(left_edges, number_densities, where="post", color=colors[i], linestyle=linestyles[j], label=name)
+
+        lower_error_limit = number_densities - counts_without_inf(Ns) / sim_volume / delta_mass
+        upper_error_limit = number_densities + counts_without_inf(Ns) / sim_volume / delta_mass
+
         ax.fill_between(
             left_edges,
-            number_densities - 1/np.sqrt(Ns)/ sim_volume / delta_mass,
-            number_densities + 1/np.sqrt(Ns)/ sim_volume / delta_mass, alpha=.5, linewidth=0)
-        ax.step(left_edges, number_densities, where="post", color=colors[i], linestyle=linestyles[j], label=name)
+            lower_error_limit,
+            upper_error_limit, alpha=.5, linewidth=0, step='post')
+
         break
     break
 plt.legend()

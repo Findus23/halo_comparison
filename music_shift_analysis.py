@@ -45,4 +45,6 @@ highres_region_centre = np.array([0.566187, 0.517375, 0.612728]) * 100
 
 shifted_highres_centre = highres_region_centre + xshift_in_mpc
 
+print(shifted_highres_centre)
+
 print(desired_box_centre * 100 - shifted_highres_centre)
