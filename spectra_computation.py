@@ -48,9 +48,9 @@ def power_run(waveforms: list, resolutions: list, Lbox: float, time: str):
         for resolution in enumerate(resolutions):
             spectra(waveform=waveform, resolution_1=resolution, resolution_2=resolution, Lbox=Lbox, time=time)
 
-def cross_run(waveforms: list, resolutions: list, Lbox: float, time:str):
+def cross_run(waveforms: list, resolutions: list, Lbox: float, time: str):
     for waveform in enumerate(waveforms):
-        for resolution_pair in list(itertools.combinations(resolutions, 2)):
+        for resolution_pair in itertools.combinations(resolutions, 2):
             spectra(waveform=waveform, resolution_1=resolution_pair[0], resolution_2=resolution_pair[1], Lbox=Lbox, time=time)
 
 
@@ -61,7 +61,7 @@ if __name__ == '__main__':
     waveforms = ["DB2", "DB4", "DB8", "shannon"]
 
     spectra = spectra_dir / 'spectra'
-    time = int(argv[1])
+    time = argv[1]
 
     if argv[2] == 'power':
         power_run(waveforms=waveforms, resolutions=resolutions, Lbox=Lbox, time=time)
