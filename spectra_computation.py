@@ -67,13 +67,13 @@ def cross_run(waveforms: list, resolutions: list, Lbox: int, time: str):
     args = []
     for waveform in waveforms:
         for res1, res2 in itertools.combinations(resolutions, 2):
-            args.append({
-                "waveform": waveform,
-                "resolution_1": res1,
-                "resolution_2": res2,
-                "Lbox": Lbox,
-                "time": time
-            })
+            args.append((
+                waveform,
+                res1,
+                res2,
+                Lbox,
+                time
+            ))
     return args
 
 
