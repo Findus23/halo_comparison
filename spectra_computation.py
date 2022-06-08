@@ -44,12 +44,12 @@ def run_spectra(waveform: str, resolution_1: int, resolution_2: int, Lbox: float
         ], check=True)
 
 def power_run(waveforms: list, resolutions: list, Lbox: float, time: str):
-    for waveform in enumerate(waveforms):
-        for resolution in enumerate(resolutions):
+    for waveform in waveforms:
+        for resolution in resolutions:
             run_spectra(waveform=waveform, resolution_1=resolution, resolution_2=resolution, Lbox=Lbox, time=time)
 
 def cross_run(waveforms: list, resolutions: list, Lbox: float, time: str):
-    for waveform in enumerate(waveforms):
+    for waveform in waveforms:
         for resolution_pair in itertools.combinations(resolutions, 2):
             run_spectra(waveform=waveform, resolution_1=resolution_pair[0], resolution_2=resolution_pair[1], Lbox=Lbox, time=time)
 
