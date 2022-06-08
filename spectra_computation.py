@@ -93,5 +93,5 @@ if __name__ == '__main__':
         args = cross_run(waveforms=waveforms, resolutions=resolutions, Lbox=Lbox, time=time)
     else:
         raise ValueError("missing argv[2] (power|cross)")
-    with Pool(processes=cpu_count() // 2) as p:
+    with Pool(processes=3) as p:
         p.starmap(run_spectra, args)
