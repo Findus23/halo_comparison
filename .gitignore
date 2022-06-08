@@ -6,3 +6,4 @@ paths.py
 __pycache__
 *.txt
 *.hdf5
+mass_function.py
