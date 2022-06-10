@@ -18,7 +18,7 @@ Coords = Tuple[float, float, float, float]  # radius, X, Y, Z
 def load_halo_data(waveform: str, resolution: int, halo_id: int, coords: Coords):
     dir = base_dir / f"{waveform}_{resolution}_100"
     df, meta = read_file(dir/"output_0004.hdf5")
-    df_halo, halo_lookup, unbound = read_velo_halo_particles(dir / "output_0004.hdf5", recursivly=False, skip_unbound=not show_unbound)
+    df_halo, halo_lookup, unbound = read_velo_halo_particles(dir, recursivly=False)
 
     halo = df_halo.loc[halo_id]
     if all_in_area:

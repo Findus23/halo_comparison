@@ -1,3 +1,6 @@
+import sys
+from pathlib import Path
+
 import pandas as pd
 import pyvista
 from pandas import DataFrame
@@ -35,12 +38,14 @@ def df_to_coords(df: pd.DataFrame):
 
 
 if __name__ == '__main__':
-    HALO = 1
-    reference_dir = base_dir / "shannon_512_100"
-    df, _ = read_file(reference_dir / "output_0004.hdf5")
-    df_halo = read_halo_file(reference_dir / "fof_output_0004.hdf5").loc[HALO]
-    df = df.loc[df["FOFGroupIDs"] == HALO]
-    df.to_csv("halo.csv")
+    # HALO = 1
+    # reference_dir = base_dir / "shannon_512_100"
+    # df, _ = read_file(reference_dir / "output_0004.hdf5")
+    # df_halo = read_halo_file(reference_dir / "fof_output_0004.hdf5").loc[HALO]
+    # df = df.loc[df["FOFGroupIDs"] == HALO]
+    # df.to_csv("halo.csv")
+    input_file = Path(sys.argv[1])
+    df, _ = read_file(input_file)
     pl = Plotter()
     plotdf3d(pl, df)
     # pl.set_focus((df_halo.X,df_halo.Y,df_halo.Z))

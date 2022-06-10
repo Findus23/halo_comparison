@@ -90,6 +90,9 @@ def compare_halo_resolutions(
             print(f"halo is too small ({len(halo_particle_ids)}")
             print("skipping")
             continue
+        if ref_halo_mass < 2:
+            print("skip weird, small mass halo")
+            continue
         print("LEN", len(halo_particle_ids), ref_halo.Mass_tot)
         offset_x, offset_y = ref_halo.X, ref_halo.Y
         # cumulative_mass_profile(particles_in_ref_halo, ref_halo, ref_meta, plot=plot)
@@ -201,6 +204,9 @@ def compare_halo_resolutions(
             # particles_in_comp_halo: DataFrame = df_comp.loc[df_comp["FOFGroupIDs"] == halo]
             particle_ids_in_comp_halo = comp_halo_lookup[halo_id]
             mass_factor_limit = 5
+            if comp_halo_masses[halo_id] < 2:
+                print("skip weird, small mass halo")
+                continue
 
             if not (1 / mass_factor_limit < (comp_halo_masses[halo_id] / ref_halo_mass) < mass_factor_limit):
                 # print("mass not similar, skipping")

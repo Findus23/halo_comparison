@@ -74,10 +74,6 @@ def plot_cic(rho: np.ndarray, extent: Extent, title: str):
     fig: Figure = plt.figure()
     ax: Axes = fig.gca()
 
-    print("start cic")
-    # rho, extent = cic_from_radius(df_ref.X.to_numpy(), df_ref.Y.to_numpy(), 2000, 48.85, 56.985, 2, periodic=False)
-    # rho, extent = cic_range(df_ref.X.to_numpy(), df_ref.Y.to_numpy(), 1000, 0, 100, 0, 100, periodic=False)
-    print("finished cic")
     data = 1.1 + rho
     i = ax.imshow(data.T, norm=LogNorm(), extent=extent, origin="lower")
     ax.set_title(title)
@@ -90,8 +86,8 @@ def plot_cic(rho: np.ndarray, extent: Extent, title: str):
     cmap = plt.cm.viridis
     data = np.log(data)
     norm = plt.Normalize(vmin=data.min(), vmax=data.max())
-    image = cmap(norm(data))
-    plt.imsave((Path("~/tmp").expanduser() / title).with_suffix(".png"), image)
+    image = cmap(norm(data.T))
+    plt.imsave((Path("~/tmp").expanduser() / title).with_suffix(".png"), image, origin="lower")
     # ax.hist2d(df.X, df.Y, bins=500, norm=LogNorm())
     # ax.hist2d(df2.X, df2.Y, bins=1000, norm=LogNorm())
 
@@ -99,7 +95,8 @@ def plot_cic(rho: np.ndarray, extent: Extent, title: str):
 if __name__ == '__main__':
     input_file = Path(sys.argv[1])
     df_ref, _ = read_file(input_file)
-    rho, extent = cic_from_radius(df_ref.X.to_numpy(), df_ref.Y.to_numpy(), 500, 50, 50, 5, periodic=False)
+    rho, extent = cic_from_radius(df_ref.X.to_numpy(), df_ref.Y.to_numpy(), 1500, 48.8, 57, 1, periodic=False)
+    # rho, extent = cic_range(df_ref.X.to_numpy(), df_ref.Y.to_numpy(), 800, 0, 85.47, 0, 85.47, periodic=False)
 
     plot_cic(
         rho, extent,
