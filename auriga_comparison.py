@@ -12,16 +12,31 @@ from cic import cic_from_radius
 from cumulative_mass_profiles import cumulative_mass_profile
 from paths import auriga_dir
 from readfiles import read_file, read_halo_file
+from utils import read_swift_config
 
-softening_length = 0.026041666666666668
+
+# softening_length = 0.026041666666666668
+
+def dir_name_to_parameter(dir_name: str):
+    return map(int, dir_name.lstrip("auriga6_halo").split("_"))
+
+
+def levelmax_to_softening_length(levelmax: int) -> float:
+    # TODO: replace with real calculation
+    if levelmax == 9:
+        return 0.00651041667
+    if levelmax == 10:
+        return 0.00325520833
+    raise ValueError(f"unknown levelmax {levelmax}")
+
 
 fig1: Figure = plt.figure(figsize=(9, 6))
 ax1: Axes = fig1.gca()
 fig2: Figure = plt.figure(figsize=(9, 6))
 ax2: Axes = fig2.gca()
 
-for ax in [ax1,ax2]:
-    ax.set_xlabel(r'R / R$_\mathrm{group}$')
+for ax in [ax1, ax2]:
+    ax.set_xlabel(r'R [Mpc]$')
 ax1.set_ylabel(r'M [$10^{10} \mathrm{M}_\odot$]')
 ax2.set_ylabel("density [$\\frac{10^{10} \\mathrm{M}_\\odot}{Mpc^3}$]")
 
@@ -35,10 +50,16 @@ class Result:
 images = []
 vmin = np.Inf
 vmax = -np.Inf
+dirs = [d for d in auriga_dir.glob("*") if d.is_dir() and "bak" not in d.name]
+for i, dir in enumerate(sorted(dirs)):
+    is_by_adrian = "arj" in dir.name
+    print(dir.name)
 
-for i, dir in enumerate(auriga_dir.glob("*")):
-    if "auriga" not in dir.name:
-        continue
+    if not is_by_adrian:
+        levelmin, levelmin_TF, levelmax = dir_name_to_parameter(dir.name)
+        print(levelmin, levelmin_TF, levelmax)
+        # if levelmin_TF != 8:
+        #     continue
     Xc_adrian = 56.50153741810241
     Yc_adrian = 49.40761085700951
     Zc_adrian = 49.634393647291695
@@ -46,16 +67,20 @@ for i, dir in enumerate(auriga_dir.glob("*")):
     Yc = 51.34632916228137
     Zc = 51.68749302578122
 
-    is_by_adrian = "arj" in dir.name
-    if not dir.is_dir():
-        continue
     input_file = dir / "output_0007.hdf5"
     if is_by_adrian:
         input_file = dir / "output_0000.hdf5"
+        softening_length = None
+    else:
+        swift_conf = read_swift_config(dir)
+        softening_length = swift_conf["Gravity"]["comoving_DM_softening"]
+        assert softening_length == swift_conf["Gravity"]["max_physical_DM_softening"]
+        print(levelmax_to_softening_length(levelmax))
+        assert softening_length == levelmax_to_softening_length(levelmax)
     print(input_file)
     df, particles_meta = read_file(input_file)
     df_halos = read_halo_file(input_file.with_name("fof_" + input_file.name))
-
+    # halos = read_velo_halos(dir, veloname="velo_out")
     # particles_in_halo = df.loc[df["FOFGroupIDs"] == 3]
 
     halo_id = 1
@@ -66,6 +91,7 @@ for i, dir in enumerate(auriga_dir.glob("*")):
         halo_id += 1
 
     halo = df_halos.loc[halo_id]
+    # halo = halos.loc[1]
     log_radial_bins, bin_masses, bin_densities, group_radius = cumulative_mass_profile(
         df, halo, particles_meta, plot=False
     )
@@ -73,8 +99,9 @@ for i, dir in enumerate(auriga_dir.glob("*")):
 
     ax2.loglog(log_radial_bins[:-1], bin_densities, label=str(dir.name), c=f"C{i}")
 
-    for ax in [ax1,ax2]:
-        ax.axvline(4 * softening_length, color=f"C{i}", linestyle="dotted")
+    if softening_length:
+        for ax in [ax1, ax2]:
+            ax.axvline(4 * softening_length, color=f"C{i}", linestyle="dotted")
 
     X, Y, Z = df.X.to_numpy(), df.Y.to_numpy(), df.Z.to_numpy()
     print()
@@ -115,7 +142,7 @@ for result, ax in zip(images, axes):
     vmin_scaled = 1.1 + vmin
     vmax_scaled = 1.1 + vmax
     img = ax.imshow(data.T, norm=LogNorm(vmin=vmin_scaled, vmax=vmax_scaled), extent=extent,
-                     origin="lower")
+                    origin="lower")
     ax.set_title(result.title)
 
 fig3.tight_layout()
@@ -123,8 +150,8 @@ fig3.subplots_adjust(right=0.825)
 cbar_ax = fig3.add_axes([0.85, 0.15, 0.05, 0.7])
 fig3.colorbar(img, cax=cbar_ax)
 
-fig1.savefig(Path("~/tmp/auriga1.pdf").expanduser())
-fig2.savefig(Path("~/tmp/auriga2.pdf").expanduser())
+fig1.savefig(Path(f"~/tmp/auriga1_{8}.pdf").expanduser())
+fig2.savefig(Path(f"~/tmp/auriga2_{8}.pdf").expanduser())
 fig3.savefig(Path("~/tmp/auriga3.pdf").expanduser())
 
 plt.show()

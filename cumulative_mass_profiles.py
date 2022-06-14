@@ -7,6 +7,7 @@ import pandas as pd
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 
+from find_center import find_center
 from readfiles import ParticlesMeta, read_file, read_halo_file
 
 
@@ -14,14 +15,15 @@ def V(r):
     return 4 * np.pi * r ** 3 / 3
 
 
-def cumulative_mass_profile(particles_in_halos: pd.DataFrame, halo: pd.Series,
+def cumulative_mass_profile(particles: pd.DataFrame, halo: pd.Series,
                             particles_meta: ParticlesMeta, plot=False, num_bins=30):
-    print(type(particles_in_halos))
-    centre = np.array([halo.X, halo.Y, halo.Z])
-    positions = particles_in_halos[["X", "Y", "Z"]].to_numpy()
+    print(type(particles))
+    center = np.array([halo.X, halo.Y, halo.Z])
+    center = find_center(particles, center)
+    positions = particles[["X", "Y", "Z"]].to_numpy()
     print(positions)
     print(positions.shape)
-    distances = np.linalg.norm(positions - centre, axis=1)
+    distances = np.linalg.norm(positions - center, axis=1)
     group_radius = distances.max()
     # normalized_distances = distances / group_radius
 

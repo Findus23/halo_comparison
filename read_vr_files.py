@@ -83,13 +83,13 @@ def cached_particles_in_halo(file: Path, *args, **kwargs) -> HaloParticleMapping
     return halo_particle_ids
 
 
-def read_velo_halos(directory: Path):
+def read_velo_halos(directory: Path,veloname="vroutput"):
     """
     Returns a dataframe containing all scalar properties of the halos
     (https://velociraptor-stf.readthedocs.io/en/latest/output.html),
     """
-    group_catalog = h5py.File(directory / "vroutput.catalog_groups")
-    group_properties = h5py.File(directory / "vroutput.properties")
+    group_catalog = h5py.File(directory / f"{veloname}.catalog_groups")
+    group_properties = h5py.File(directory / f"{veloname}.properties")
     scalar_properties = {}
     for k, v in group_properties.items():
         if not isinstance(v, Dataset):

@@ -1,6 +1,8 @@
+from pathlib import Path
 from typing import Tuple
 
 import pandas as pd
+import yaml
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
@@ -14,6 +16,7 @@ def memory_usage(df: pd.DataFrame):
     bytes_used = df.memory_usage(index=True).sum()
     return bytes_used / 1024 / 1024
 
+
 def create_figure() -> Tuple[Figure, Axes]:
     """
     helper function for matplotlib OOP interface with proper typing
@@ -22,3 +25,7 @@ def create_figure() -> Tuple[Figure, Axes]:
     ax: Axes = fig.gca()
     return fig, ax
 
+
+def read_swift_config(dir: Path):
+    with (dir / "used_parameters.yml").open() as f:
+        return yaml.safe_load(f)
