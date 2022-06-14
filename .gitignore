@@ -7,3 +7,4 @@ __pycache__
 *.txt
 *.hdf5
 mass_function.py
+*.pickle

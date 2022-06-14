@@ -1,4 +1,6 @@
+import pickle
 from dataclasses import dataclass
+from enum import Enum
 from pathlib import Path
 from typing import List
 
@@ -9,25 +11,27 @@ from matplotlib.colors import LogNorm
 from matplotlib.figure import Figure
 
 from cic import cic_from_radius
-from cumulative_mass_profiles import cumulative_mass_profile
-from paths import auriga_dir
+from halo_mass_profile import halo_mass_profile
+from paths import auriga_dir, richings_dir
 from readfiles import read_file, read_halo_file
 from utils import read_swift_config
 
 
-# softening_length = 0.026041666666666668
+class Mode(Enum):
+    richings = 1
+    auriga6 = 2
+
+
+mode = Mode.richings
+
 
 def dir_name_to_parameter(dir_name: str):
-    return map(int, dir_name.lstrip("auriga6_halo").split("_"))
+    return map(int, dir_name.lstrip("auriga6_halo").lstrip("richings21_").split("_"))
 
 
 def levelmax_to_softening_length(levelmax: int) -> float:
-    # TODO: replace with real calculation
-    if levelmax == 9:
-        return 0.00651041667
-    if levelmax == 10:
-        return 0.00325520833
-    raise ValueError(f"unknown levelmax {levelmax}")
+    box_size = 100
+    return box_size / 30 / 2 ** levelmax
 
 
 fig1: Figure = plt.figure(figsize=(9, 6))
@@ -40,6 +44,10 @@ for ax in [ax1, ax2]:
 ax1.set_ylabel(r'M [$10^{10} \mathrm{M}_\odot$]')
 ax2.set_ylabel("density [$\\frac{10^{10} \\mathrm{M}_\\odot}{Mpc^3}$]")
 
+part_numbers = []
+
+reference_file = Path("auriga_reference.pickle")
+
 
 @dataclass
 class Result:
@@ -50,7 +58,8 @@ class Result:
 images = []
 vmin = np.Inf
 vmax = -np.Inf
-dirs = [d for d in auriga_dir.glob("*") if d.is_dir() and "bak" not in d.name]
+root_dir = auriga_dir if mode == Mode.auriga6 else richings_dir
+dirs = [d for d in root_dir.glob("*") if d.is_dir() and "bak" not in d.name]
 for i, dir in enumerate(sorted(dirs)):
     is_by_adrian = "arj" in dir.name
     print(dir.name)
@@ -58,7 +67,7 @@ for i, dir in enumerate(sorted(dirs)):
     if not is_by_adrian:
         levelmin, levelmin_TF, levelmax = dir_name_to_parameter(dir.name)
         print(levelmin, levelmin_TF, levelmax)
-        # if levelmin_TF != 8:
+        # if levelmax != 12:
         #     continue
     Xc_adrian = 56.50153741810241
     Yc_adrian = 49.40761085700951
@@ -68,6 +77,8 @@ for i, dir in enumerate(sorted(dirs)):
     Zc = 51.68749302578122
 
     input_file = dir / "output_0007.hdf5"
+    if mode == Mode.richings:
+        input_file = dir / "output_0004.hdf5"
     if is_by_adrian:
         input_file = dir / "output_0000.hdf5"
         softening_length = None
@@ -75,8 +86,10 @@ for i, dir in enumerate(sorted(dirs)):
         swift_conf = read_swift_config(dir)
         softening_length = swift_conf["Gravity"]["comoving_DM_softening"]
         assert softening_length == swift_conf["Gravity"]["max_physical_DM_softening"]
-        print(levelmax_to_softening_length(levelmax))
-        assert softening_length == levelmax_to_softening_length(levelmax)
+        ideal_softening_length = levelmax_to_softening_length(levelmax)
+        # if not np.isclose(softening_length, levelmax_to_softening_length(levelmax)):
+        #     raise ValueError(f"softening length for levelmax {levelmax} should be {ideal_softening_length} "
+        #                      f"but is {softening_length}")
     print(input_file)
     df, particles_meta = read_file(input_file)
     df_halos = read_halo_file(input_file.with_name("fof_" + input_file.name))
@@ -91,13 +104,33 @@ for i, dir in enumerate(sorted(dirs)):
         halo_id += 1
 
     halo = df_halos.loc[halo_id]
+    part_numbers.append(len(df) * particles_meta.particle_mass)
     # halo = halos.loc[1]
-    log_radial_bins, bin_masses, bin_densities, group_radius = cumulative_mass_profile(
-        df, halo, particles_meta, plot=False
+    log_radial_bins, bin_masses, bin_densities, center = halo_mass_profile(
+        df, halo, particles_meta, plot=False, num_bins=100,
+        vmin=0.002, vmax=6.5
     )
+    if is_by_adrian:
+        with reference_file.open("wb") as f:
+            pickle.dump([log_radial_bins, bin_masses, bin_densities], f)
     ax1.loglog(log_radial_bins[:-1], bin_masses, label=str(dir.name), c=f"C{i}")
 
     ax2.loglog(log_radial_bins[:-1], bin_densities, label=str(dir.name), c=f"C{i}")
+
+    if reference_file.exists() and not is_by_adrian and mode == Mode.auriga6:
+        with reference_file.open("rb") as f:
+            data: List[np.ndarray] = pickle.load(f)
+            ref_log_radial_bins, ref_bin_masses, ref_bin_densities = data
+        mass_deviation: np.ndarray = np.abs(bin_masses - ref_bin_masses)
+        density_deviation: np.ndarray = np.abs(bin_densities - ref_bin_densities)
+        ax1.loglog(log_radial_bins[:-1], mass_deviation, c=f"C{i}",
+                   linestyle="dotted")
+
+        ax2.loglog(log_radial_bins[:-1], density_deviation, c=f"C{i}",
+                   linestyle="dotted")
+        accuracy = mass_deviation / ref_bin_masses
+        print(accuracy)
+        print("mean accuracy", accuracy.mean())
 
     if softening_length:
         for ax in [ax1, ax2]:
@@ -107,17 +140,17 @@ for i, dir in enumerate(sorted(dirs)):
     print()
     print(Yc - Yc_adrian)
     # shift: (-6, 0, -12)
-    if not is_by_adrian:
-        xshift = Xc - Xc_adrian
-        yshift = Yc - Yc_adrian
-        zshift = Zc - Zc_adrian
-        print("shift", xshift, yshift, zshift)
+    # if not is_by_adrian:
+    #     xshift = Xc - Xc_adrian
+    #     yshift = Yc - Yc_adrian
+    #     zshift = Zc - Zc_adrian
+    #     print("shift", xshift, yshift, zshift)
 
-        X -= 1.9312
-        Y -= 1.7375
-        Z -= 1.8978
+    X -= center[0]
+    Y -= center[1]
+    Z -= center[2]
 
-    rho, extent = cic_from_radius(X, Z, 500, Xc_adrian, Yc_adrian, 5, periodic=False)
+    rho, extent = cic_from_radius(X, Z, 500, 0, 0, 5, periodic=False)
 
     vmin = min(vmin, rho.min())
     vmax = max(vmax, rho.max())
@@ -134,8 +167,10 @@ for i, dir in enumerate(sorted(dirs)):
 ax1.legend()
 ax2.legend()
 
-fig3: Figure = plt.figure(figsize=(9, 6))
-axes: List[Axes] = fig3.subplots(2, 3, sharex=True, sharey=True).flatten()
+# fig3: Figure = plt.figure(figsize=(9, 9))
+# axes: List[Axes] = fig3.subplots(3, 3, sharex=True, sharey=True).flatten()
+fig3: Figure = plt.figure(figsize=(6, 3))
+axes: List[Axes] = fig3.subplots(1, 2, sharex=True, sharey=True).flatten()
 
 for result, ax in zip(images, axes):
     data = 1.1 + result.rho
@@ -155,3 +190,4 @@ fig2.savefig(Path(f"~/tmp/auriga2_{8}.pdf").expanduser())
 fig3.savefig(Path("~/tmp/auriga3.pdf").expanduser())
 
 plt.show()
+print(part_numbers)
