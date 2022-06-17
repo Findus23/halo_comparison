@@ -40,7 +40,7 @@ fig2: Figure = plt.figure(figsize=(9, 6))
 ax2: Axes = fig2.gca()
 
 for ax in [ax1, ax2]:
-    ax.set_xlabel(r'R [Mpc]$')
+    ax.set_xlabel(r'R [Mpc]')
 ax1.set_ylabel(r'M [$10^{10} \mathrm{M}_\odot$]')
 ax2.set_ylabel("density [$\\frac{10^{10} \\mathrm{M}_\\odot}{Mpc^3}$]")
 
