@@ -21,6 +21,12 @@ PyYAML = "^6.0"
 
 [tool.poetry.dev-dependencies]
 
+[[tool.poetry.source]]
+name = "vtk"
+url = "https://wheels.pyvista.org/"
+default = false
+secondary = false
+
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"

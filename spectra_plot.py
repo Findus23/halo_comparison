@@ -1,16 +1,38 @@
-import numpy as np
-import matplotlib.pyplot as plt
 import itertools
-import pandas as pd
+from pathlib import Path
 from sys import argv
+
+import matplotlib.pyplot as plt
+import pandas as pd
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 
 from paths import base_dir
 
+Lbox = 100
+k0 = 2 * 3.14159265358979323846264338327950 / Lbox
+resolutions = [128, 256, 512]
+waveforms = ["DB2", "DB4", "DB8", "shannon"]
+
+# Careful: k is actually in Mpc^-1, the column is just named weirdly.
+columns = [
+    "k [Mpc]",
+    "Pcross",
+    "P1",
+    "err. P1",
+    "P2",
+    "err. P2",
+    "P2-1",
+    "err. P2-1",
+    "modes in bin",
+]
+
+# linestyles = ["solid", "dashed", "dotted"]
+colors = ["C1", "C2", "C3", "C4"]
+
 
 def spectra_data(
-    waveform: str, resolution_1: int, resolution_2: int, Lbox: int, time: str
+        waveform: str, resolution_1: int, resolution_2: int, Lbox: int, time: str
 ):
     dir = base_dir / f"spectra/{waveform}_{Lbox}"
 
@@ -41,32 +63,9 @@ def spectra_data(
     return spectra_data
 
 
-if __name__ == "__main__":
-    Lbox = 100
-    k0 = 2 * 3.14159265358979323846264338327950 / Lbox
-    resolutions = [128, 256, 512]
-    waveforms = ["DB2", "DB4", "DB8", "shannon"]
-
-    # Careful: k is actually in Mpc^-1, the column is just named weirdly.
-    columns = [
-        "k [Mpc]",
-        "Pcross",
-        "P1",
-        "err. P1",
-        "P2",
-        "err. P2",
-        "P2-1",
-        "err. P2-1",
-        "modes in bin",
-    ]
-
-    # linestyles = ["solid", "dashed", "dotted"]
-    colors = ["C1", "C2", "C3", "C4"]
-
-    time = argv[1]
-
-    if argv[2] == "power":
-        fig = plt.figure(figsize=(9, 9))
+def create_plot(mode, time, show=True):
+    fig: Figure = plt.figure(figsize=(9, 9))
+    if mode == "power":
         subfigs = fig.subplots(len(waveforms), 1, sharex=True, sharey=True).flatten()
         for i, waveform in enumerate(waveforms):
             ax: Axes = subfigs[i]
@@ -98,10 +97,8 @@ if __name__ == "__main__":
 
         fig.suptitle(f"Power Spectra {time}")
         fig.tight_layout()
-        plt.show()
 
-    elif argv[2] == "cross":
-        fig: Figure = plt.figure(figsize=(9, 9))
+    elif mode == "cross":
         combination_list = list(itertools.combinations(resolutions, 2))
         subfigs = fig.subplots(
             len(combination_list), 1, sharex=True, sharey=True
@@ -131,7 +128,24 @@ if __name__ == "__main__":
 
         fig.suptitle(f"Cross Spectra {time}")
         fig.tight_layout()
+    fig.savefig(Path(f"~/tmp/spectra_{time}_{mode}.pdf").expanduser())
+    if show:
         plt.show()
 
-    else:
-        raise ValueError("missing argv[2], should be (power|cross)")
+
+def main():
+    if len(argv) < 2:
+        print("run spectra_plot.py [ics|end] [power|cross] or spectra_plot.py all")
+        exit(1)
+    if argv[1] == "all":
+        for time in ["ics", "end"]:
+            for mode in ["power", "cross"]:
+                create_plot(mode, time, show=False)
+        return
+    time = argv[1]
+    mode = argv[2]
+    create_plot(mode, time)
+
+
+if __name__ == "__main__":
+    main()
