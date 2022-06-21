@@ -141,8 +141,7 @@ for i, dir in enumerate(sorted(dirs)):
             ax.axvline(4 * softening_length, color=f"C{i}", linestyle="dotted")
 
     X, Y, Z = df.X.to_numpy(), df.Y.to_numpy(), df.Z.to_numpy()
-    print()
-    print(Yc - Yc_adrian)
+
     # shift: (-6, 0, -12)
     # if not is_by_adrian:
     #     xshift = Xc - Xc_adrian
