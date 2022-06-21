@@ -4,7 +4,9 @@ from enum import Enum
 from pathlib import Path
 from typing import List
 
+import h5py
 import numpy as np
+import pandas as pd
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
 from matplotlib.colors import LogNorm
@@ -13,7 +15,7 @@ from matplotlib.figure import Figure
 from cic import cic_from_radius
 from halo_mass_profile import halo_mass_profile
 from paths import auriga_dir, richings_dir
-from readfiles import read_file, read_halo_file
+from readfiles import read_file, read_halo_file, ParticlesMeta
 from utils import read_swift_config
 
 
@@ -46,7 +48,7 @@ ax2.set_ylabel("density [$\\frac{10^{10} \\mathrm{M}_\\odot}{Mpc^3}$]")
 
 part_numbers = []
 
-reference_file = Path("auriga_reference.pickle")
+reference_file = Path(f"auriga_reference_{mode}.pickle")
 
 
 @dataclass
@@ -69,12 +71,6 @@ for i, dir in enumerate(sorted(dirs)):
         print(levelmin, levelmin_TF, levelmax)
         # if levelmax != 12:
         #     continue
-    Xc_adrian = 56.50153741810241
-    Yc_adrian = 49.40761085700951
-    Zc_adrian = 49.634393647291695
-    Xc = 58.25576087992683
-    Yc = 51.34632916228137
-    Zc = 51.68749302578122
 
     input_file = dir / "output_0007.hdf5"
     if mode == Mode.richings:
@@ -91,23 +87,31 @@ for i, dir in enumerate(sorted(dirs)):
         #     raise ValueError(f"softening length for levelmax {levelmax} should be {ideal_softening_length} "
         #                      f"but is {softening_length}")
     print(input_file)
-    df, particles_meta = read_file(input_file)
-    df_halos = read_halo_file(input_file.with_name("fof_" + input_file.name))
-    # halos = read_velo_halos(dir, veloname="velo_out")
-    # particles_in_halo = df.loc[df["FOFGroupIDs"] == 3]
+    if mode == Mode.richings and is_by_adrian:
+        with h5py.File(dir / "Richings_object_z0.h5") as f:
+            df = pd.DataFrame(f["Coordinates"], columns=["X", "Y", "Z"])
+        particles_meta = ParticlesMeta(particle_mass=1.1503e7 / 1e10)
+        center = np.array([60.7, 29, 64])
+        softening_length = None
+    else:
+        df, particles_meta = read_file(input_file)
+        df_halos = read_halo_file(input_file.with_name("fof_" + input_file.name))
+        # halos = read_velo_halos(dir, veloname="velo_out")
+        # particles_in_halo = df.loc[df["FOFGroupIDs"] == 3]
 
-    halo_id = 1
-    while True:
-        particles_in_halo = df.loc[df["FOFGroupIDs"] == halo_id]
-        if len(particles_in_halo) > 1:
-            break
-        halo_id += 1
+        halo_id = 1
+        while True:
+            particles_in_halo = df.loc[df["FOFGroupIDs"] == halo_id]
+            if len(particles_in_halo) > 1:
+                break
+            halo_id += 1
 
-    halo = df_halos.loc[halo_id]
-    part_numbers.append(len(df) * particles_meta.particle_mass)
-    # halo = halos.loc[1]
+        halo = df_halos.loc[halo_id]
+        part_numbers.append(len(df) * particles_meta.particle_mass)
+        # halo = halos.loc[1]
+        center = np.array([halo.X, halo.Y, halo.Z])
     log_radial_bins, bin_masses, bin_densities, center = halo_mass_profile(
-        df, halo, particles_meta, plot=False, num_bins=100,
+        df, center, particles_meta, plot=False, num_bins=100,
         vmin=0.002, vmax=6.5
     )
     if is_by_adrian:
@@ -117,7 +121,7 @@ for i, dir in enumerate(sorted(dirs)):
 
     ax2.loglog(log_radial_bins[:-1], bin_densities, label=str(dir.name), c=f"C{i}")
 
-    if reference_file.exists() and not is_by_adrian and mode == Mode.auriga6:
+    if reference_file.exists() and not is_by_adrian:
         with reference_file.open("rb") as f:
             data: List[np.ndarray] = pickle.load(f)
             ref_log_radial_bins, ref_bin_masses, ref_bin_densities = data
@@ -169,8 +173,8 @@ ax2.legend()
 
 # fig3: Figure = plt.figure(figsize=(9, 9))
 # axes: List[Axes] = fig3.subplots(3, 3, sharex=True, sharey=True).flatten()
-fig3: Figure = plt.figure(figsize=(6, 3))
-axes: List[Axes] = fig3.subplots(1, 2, sharex=True, sharey=True).flatten()
+fig3: Figure = plt.figure(figsize=(6, 9))
+axes: List[Axes] = fig3.subplots(3, 2, sharex=True, sharey=True).flatten()
 
 for result, ax in zip(images, axes):
     data = 1.1 + result.rho
@@ -185,8 +189,8 @@ fig3.subplots_adjust(right=0.825)
 cbar_ax = fig3.add_axes([0.85, 0.15, 0.05, 0.7])
 fig3.colorbar(img, cax=cbar_ax)
 
-fig1.savefig(Path(f"~/tmp/auriga1_{8}.pdf").expanduser())
-fig2.savefig(Path(f"~/tmp/auriga2_{8}.pdf").expanduser())
+fig1.savefig(Path(f"~/tmp/auriga1.pdf").expanduser())
+fig2.savefig(Path(f"~/tmp/auriga2.pdf").expanduser())
 fig3.savefig(Path("~/tmp/auriga3.pdf").expanduser())
 
 plt.show()

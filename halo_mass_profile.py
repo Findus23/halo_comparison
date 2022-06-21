@@ -15,9 +15,8 @@ def V(r):
     return 4 / 3 * np.pi * r ** 3
 
 
-def halo_mass_profile(particles: pd.DataFrame, halo: pd.Series,
+def halo_mass_profile(particles: pd.DataFrame, center: np.ndarray,
                       particles_meta: ParticlesMeta, vmin: float, vmax: float, plot=False, num_bins=30):
-    center = np.array([halo.X, halo.Y, halo.Z])
     center = find_center(particles, center)
     positions = particles[["X", "Y", "Z"]].to_numpy()
     distances = np.linalg.norm(positions - center, axis=1)
