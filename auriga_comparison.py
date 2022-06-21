@@ -88,10 +88,11 @@ for i, dir in enumerate(sorted(dirs)):
         #                      f"but is {softening_length}")
     print(input_file)
     if mode == Mode.richings and is_by_adrian:
+        h = 0.6777
         with h5py.File(dir / "Richings_object_z0.h5") as f:
-            df = pd.DataFrame(f["Coordinates"], columns=["X", "Y", "Z"])
+            df = pd.DataFrame(f["Coordinates"][:] / h, columns=["X", "Y", "Z"])
         particles_meta = ParticlesMeta(particle_mass=1.1503e7 / 1e10)
-        center = np.array([60.7, 29, 64])
+        center = np.array([60.7, 29, 64]) / h
         softening_length = None
     else:
         df, particles_meta = read_file(input_file)

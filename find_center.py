@@ -29,4 +29,5 @@ def find_center(df: pd.DataFrame, center: np.ndarray, initial_radius=1):
     # plt.scatter(center_history[::, 0], center_history[::, 1], c=range(len(center_history[::, 1])))
     # plt.colorbar(label="step")
     # plt.show()
+    print()
     return center
