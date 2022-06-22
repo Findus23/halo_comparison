@@ -78,6 +78,7 @@ def cross_run(waveforms: list, resolutions: list, Lbox: int, time: str):
 
 
 if __name__ == '__main__':
+    input("are you sure you want to run this? This might need a large amount of memory")
     Lbox = 100
     k0 = 2 * 3.14159265358979323846264338327950 / Lbox
     resolutions = [128, 256, 512]

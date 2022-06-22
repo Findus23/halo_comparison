@@ -87,8 +87,8 @@ def main():
                 lower_error_limit,
                 upper_error_limit, alpha=.5, linewidth=0, step='post')
 
-            break
-        break
+            # break
+        # break
     plt.legend()
     plt.show()
 
