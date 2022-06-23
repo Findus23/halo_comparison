@@ -2,6 +2,7 @@ import pickle
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
+from pprint import pprint
 from typing import List
 
 import h5py
@@ -14,6 +15,7 @@ from matplotlib.figure import Figure
 
 from cic import cic_from_radius
 from halo_mass_profile import halo_mass_profile
+from nfw import fit_nfw, nfw
 from paths import auriga_dir, richings_dir
 from readfiles import read_file, read_halo_file, ParticlesMeta
 from utils import read_swift_config
@@ -49,6 +51,8 @@ ax2.set_ylabel("density [$\\frac{10^{10} \\mathrm{M}_\\odot}{Mpc^3}$]")
 part_numbers = []
 
 reference_file = Path(f"auriga_reference_{mode}.pickle")
+
+centers = {}
 
 
 @dataclass
@@ -115,6 +119,16 @@ for i, dir in enumerate(sorted(dirs)):
         df, center, particles_meta, plot=False, num_bins=100,
         vmin=0.002, vmax=6.5
     )
+    i_min_border = np.argmax(0.01 < log_radial_bins)  # first bin outside of specific radius
+    i_max_border = np.argmax(1.5 < log_radial_bins)
+    popt = fit_nfw(log_radial_bins[i_min_border:i_max_border], bin_densities[i_min_border:i_max_border])  # = rho_0, r_s
+    print(popt)
+    ax.loglog(
+        log_radial_bins[i_min_border:i_max_border],
+        nfw(log_radial_bins[i_min_border:i_max_border], *popt),
+        linestyle="dotted"
+    )
+    centers[dir.name] = center
     if is_by_adrian:
         with reference_file.open("wb") as f:
             pickle.dump([log_radial_bins, bin_masses, bin_densities], f)
@@ -154,7 +168,7 @@ for i, dir in enumerate(sorted(dirs)):
     Y -= center[1]
     Z -= center[2]
 
-    rho, extent = cic_from_radius(X, Z, 500, 0, 0, 5, periodic=False)
+    rho, extent = cic_from_radius(X, Z, 5000, 0, 0, 5, periodic=False)
 
     vmin = min(vmin, rho.min())
     vmax = max(vmax, rho.max())
@@ -192,6 +206,6 @@ fig3.colorbar(img, cax=cbar_ax)
 fig1.savefig(Path(f"~/tmp/auriga1.pdf").expanduser())
 fig2.savefig(Path(f"~/tmp/auriga2.pdf").expanduser())
 fig3.savefig(Path("~/tmp/auriga3.pdf").expanduser())
-
+pprint(centers)
 plt.show()
 print(part_numbers)
