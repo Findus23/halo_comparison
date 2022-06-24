@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 from pprint import pprint
-from typing import List
+from typing import List, Tuple
 
 import h5py
 import numpy as np
@@ -15,7 +15,7 @@ from matplotlib.figure import Figure
 
 from cic import cic_from_radius
 from halo_mass_profile import halo_mass_profile
-from nfw import fit_nfw, nfw
+from nfw import fit_nfw
 from paths import auriga_dir, richings_dir
 from readfiles import read_file, read_halo_file, ParticlesMeta
 from utils import read_swift_config
@@ -59,14 +59,17 @@ centers = {}
 class Result:
     title: str
     rho: np.ndarray
+    levels: Tuple[int, int, int]
 
 
 images = []
 vmin = np.Inf
 vmax = -np.Inf
 root_dir = auriga_dir if mode == Mode.auriga6 else richings_dir
-dirs = [d for d in root_dir.glob("*") if d.is_dir() and "bak" not in d.name]
-for i, dir in enumerate(sorted(dirs)):
+i = 0
+for dir in sorted(root_dir.glob("*")):
+    if not dir.is_dir() or "bak" in dir.name:
+        continue
     is_by_adrian = "arj" in dir.name
     print(dir.name)
 
@@ -83,7 +86,10 @@ for i, dir in enumerate(sorted(dirs)):
         input_file = dir / "output_0000.hdf5"
         softening_length = None
     else:
-        swift_conf = read_swift_config(dir)
+        try:
+            swift_conf = read_swift_config(dir)
+        except FileNotFoundError:
+            continue
         softening_length = swift_conf["Gravity"]["comoving_DM_softening"]
         assert softening_length == swift_conf["Gravity"]["max_physical_DM_softening"]
         ideal_softening_length = levelmax_to_softening_length(levelmax)
@@ -123,11 +129,12 @@ for i, dir in enumerate(sorted(dirs)):
     i_max_border = np.argmax(1.5 < log_radial_bins)
     popt = fit_nfw(log_radial_bins[i_min_border:i_max_border], bin_densities[i_min_border:i_max_border])  # = rho_0, r_s
     print(popt)
-    ax.loglog(
-        log_radial_bins[i_min_border:i_max_border],
-        nfw(log_radial_bins[i_min_border:i_max_border], *popt),
-        linestyle="dotted"
-    )
+    # # Plot NFW profile
+    # ax.loglog(
+    #     log_radial_bins[i_min_border:i_max_border],
+    #     nfw(log_radial_bins[i_min_border:i_max_border], *popt),
+    #     linestyle="dotted"
+    # )
     centers[dir.name] = center
     if is_by_adrian:
         with reference_file.open("wb") as f:
@@ -168,16 +175,17 @@ for i, dir in enumerate(sorted(dirs)):
     Y -= center[1]
     Z -= center[2]
 
-    rho, extent = cic_from_radius(X, Z, 5000, 0, 0, 5, periodic=False)
+    rho, extent = cic_from_radius(X, Z, 1000, 0, 0, 5, periodic=False)
 
     vmin = min(vmin, rho.min())
     vmax = max(vmax, rho.max())
 
     images.append(Result(
         rho=rho,
-        title=str(dir.name)
+        title=str(dir.name),
+        levels=(levelmin, levelmin_TF, levelmax) if levelmin else None
     ))
-
+    i += 1
     # plot_cic(
     #     rho, extent,
     #     title=str(dir.name)
@@ -187,8 +195,8 @@ ax2.legend()
 
 # fig3: Figure = plt.figure(figsize=(9, 9))
 # axes: List[Axes] = fig3.subplots(3, 3, sharex=True, sharey=True).flatten()
-fig3: Figure = plt.figure(figsize=(6, 9))
-axes: List[Axes] = fig3.subplots(3, 2, sharex=True, sharey=True).flatten()
+fig3: Figure = plt.figure(figsize=(9, 9))
+axes: List[Axes] = fig3.subplots(3, 3, sharex=True, sharey=True).flatten()
 
 for result, ax in zip(images, axes):
     data = 1.1 + result.rho
