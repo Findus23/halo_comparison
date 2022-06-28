@@ -63,82 +63,67 @@ def spectra_data(
     return spectra_data
 
 
-def create_plot(mode, time, show=True):
+def create_plot(mode):
     fig: Figure
-    if mode == "power":
-        fig, axes = plt.subplots(
-            len(waveforms), 1, sharex=True, sharey=True,
-            constrained_layout=True, figsize=(9, 9)
-        )
-        axes = axes.flatten()
-        for i, waveform in enumerate(waveforms):
-            ax: Axes = axes[i]
-            ax.set_xlabel("k [Mpc$^{-1}$]")
-            ax.set_ylabel("P")
+    combination_list = list(itertools.combinations(resolutions, 2))
+    fig, axes = plt.subplots(
+        len(waveforms), 2, sharex=True, sharey=True,
+        constrained_layout=True, figsize=(9, 9),
+    )
+    for i, waveform in enumerate(waveforms):
+        ax_ics: Axes = axes[i][0]
+        ax_end: Axes = axes[i][1]
+        bottom_row = i == len(waveforms) - 1
+        for is_end, ax in enumerate([ax_ics, ax_end]):
+            if bottom_row:
+                ax.set_xlabel("k [Mpc$^{-1}$]")
             ax.text(
                 0.02,
-                0.93,
-                waveform,
-                size=10,
+                0.85,
+                f"{waveform}",
+                size=13,
                 horizontalalignment="left",
                 verticalalignment="top",
                 transform=ax.transAxes,
             )
-            for j, resolution in enumerate(resolutions):
-                data = spectra_data(waveform, resolution, resolution, Lbox, time)
-                k = data["k [Mpc]"]
-                p1 = data["P1"]
-                p1_error = data["err. P1"]
+            ax.text(
+                0.98,
+                0.85,
+                "end" if is_end else "ics",
+                size=13,
+                horizontalalignment="right",
+                verticalalignment="top",
+                transform=ax.transAxes,
+            )
+            # ax.set_xticklabels([])
+            # ax.set_yticklabels([])
 
-                ax.loglog(k, p1, color=colors[j])
-                ax.axvline(
-                    k0 * resolution,
-                    color=colors[j],
-                    linestyle="dashed",
-                    label=f"{resolution}",
-                )
-            ax.legend()
+        if mode == "power":
+            ax_ics.set_ylabel("P")
+            for j, resolution in enumerate(resolutions):
+                ics_data = spectra_data(waveform, resolution, resolution, Lbox, "ics")
+                ics_k = ics_data["k [Mpc]"]
+                ics_p1 = ics_data["P1"]
+
+                end_data = spectra_data(waveform, resolution, resolution, Lbox, "end")
+                end_k = end_data["k [Mpc]"]
+                end_p1 = end_data["P1"]
+
+                ax_ics.loglog(ics_k, ics_p1, color=colors[j])
+                ax_end.loglog(end_k, end_p1, color=colors[j])
+                for ax in [ax_ics, ax_end]:
+                    ax.axvline(
+                        k0 * resolution,
+                        color=colors[j],
+                        linestyle="dashed",
+                        label=f"{resolution}",
+                    )
 
         # fig.suptitle(f"Power Spectra {time}") #Not needed for paper
         # fig.tight_layout()
 
-    elif mode == "cross":
-        combination_list = list(itertools.combinations(resolutions, 2))
-        fig, axes = plt.subplots(
-            len(waveforms), 2, sharex=True, sharey=True,
-            constrained_layout=True, figsize=(9, 9),
-        )
-        # fig.subplots_adjust(wspace=0, hspace=0)
-        for i, waveform in enumerate(waveforms):
-            ax_ics: Axes = axes[i][0]
-            ax_end: Axes = axes[i][1]
-            bottom_row = i == len(waveforms) - 1
-            if bottom_row:
-                ax_ics.set_xlabel("k [Mpc$^{-1}$]")
+        elif mode == "cross":
             ax_ics.set_ylabel("C")
-            for is_end, ax in enumerate([ax_ics, ax_end]):
-                ax.text(
-                    0.02,
-                    0.85,
-                    f"{waveform}",
-                    size=13,
-                    horizontalalignment="left",
-                    verticalalignment="top",
-                    transform=ax.transAxes,
-                )
-                ax.text(
-                    0.98,
-                    0.85,
-                    "end" if is_end else "ics",
-                    size=13,
-                    horizontalalignment="right",
-                    verticalalignment="top",
-                    transform=ax.transAxes,
-                )
-                # ax.set_xticklabels([])
-                # ax.set_yticklabels([])
-            if bottom_row:
-                ax_end.set_xlabel("k [Mpc$^{-1}$]")
             # ax_end.set_ylabel("C")
             for j, (res1, res2) in enumerate(combination_list):
                 ics_data = spectra_data(waveform, res1, res2, Lbox, 'ics')
@@ -155,28 +140,26 @@ def create_plot(mode, time, show=True):
 
             ax_end.set_xlim(right=k0 * res1)
             ax_end.set_ylim(0.8, 1.02)
-            if bottom_row:
-                ax_end.legend()
+        if bottom_row:
+            ax_end.legend()
 
         # fig.suptitle(f"Cross Spectra {time}") #Not needed for paper
         # fig.tight_layout()
-    fig.savefig(Path(f"~/tmp/spectra_{time}_{mode}.pdf").expanduser())
-    if show:
-        plt.show()
+    fig.savefig(Path(f"~/tmp/spectra_{mode}.pdf").expanduser())
 
 
 def main():
     if len(argv) < 2:
-        print("run spectra_plot.py [ics|end] [power|cross] or spectra_plot.py all")
+        print("run spectra_plot.py [power|cross] or spectra_plot.py all")
         exit(1)
     if argv[1] == "all":
-        for time in ["ics", "end"]:
-            for mode in ["power", "cross"]:
-                create_plot(mode, time, show=False)
+        for mode in ["power", "cross"]:
+            create_plot(mode, "end")
+        plt.show()
         return
-    time = argv[1]
-    mode = argv[2]
-    create_plot(mode, time)
+    mode = argv[1]
+    create_plot(mode)
+    plt.show()
 
 
 if __name__ == "__main__":
