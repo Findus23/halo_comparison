@@ -95,38 +95,65 @@ def create_plot(mode, time, show=True):
                 )
             ax.legend()
 
-        fig.suptitle(f"Power Spectra {time}")
+        # fig.suptitle(f"Power Spectra {time}") #Not needed for paper
         fig.tight_layout()
 
     elif mode == "cross":
         combination_list = list(itertools.combinations(resolutions, 2))
         subfigs = fig.subplots(
-            len(combination_list), 1, sharex=True, sharey=True
+            len(waveforms), 2, sharex=True, sharey=True
         ).flatten()
-        for j, (res1, res2) in enumerate(combination_list):
-            ax: Axes = subfigs[j]
-            ax.set_xlabel("k [Mpc$^{-1}$]")
-            ax.set_ylabel("C")
-            ax.text(
+        fig.subplots_adjust(wspace = 0, hspace = 0)
+        for i, waveform in enumerate(waveforms):
+            ax_ics: Axes = subfigs[2 * i]
+            ax_end: Axes = subfigs[2 * i + 1]
+
+            if i == len(waveforms) - 1:
+                ax_ics.set_xlabel("k [Mpc$^{-1}$]")
+            ax_ics.set_ylabel("C")
+            ax_ics.text(
                 0.02,
-                0.93,
-                f"{res1} vs {res2}",
-                size=10,
+                0.85,
+                f"{waveform}",
+                size=13,
                 horizontalalignment="left",
                 verticalalignment="top",
-                transform=ax.transAxes,
+                transform=ax_ics.transAxes,
             )
-            for i, waveform in enumerate(waveforms):
-                data = spectra_data(waveform, res1, res2, Lbox, time)
-                k = data["k [Mpc]"]
-                pcross = data["Pcross"]
+            ax_ics.set_xticklabels([])
+            ax_ics.set_yticklabels([])
+            if i == len(waveforms) - 1:
+                ax_end.set_xlabel("k [Mpc$^{-1}$]")
+            # ax_end.set_ylabel("C")
+            ax_end.text(
+                0.02,
+                0.85,
+                f"{waveform}",
+                size=13,
+                horizontalalignment="left",
+                verticalalignment="top",
+                transform=ax_end.transAxes,
+            )
+            ax_end.set_xticklabels([])
+            ax_end.set_yticklabels([])
+            for j, (res1, res2) in enumerate(combination_list):
+                ics_data = spectra_data(waveform, res1, res2, Lbox, 'ics')
+                ics_k = ics_data["k [Mpc]"]
+                ics_pcross = ics_data["Pcross"]
 
-                ax.semilogx(k, pcross, color=colors[i], label=waveform)
-            ax.set_xlim(right=k0 * res1)
-            ax.set_ylim(0.8, 1.02)
-            ax.legend()
+                ax_ics.semilogx(ics_k, ics_pcross, color=colors[j], label=f'{res1} vs {res2}')
 
-        fig.suptitle(f"Cross Spectra {time}")
+                end_data = spectra_data(waveform, res1, res2, Lbox, 'end')
+                end_k = end_data["k [Mpc]"]
+                end_pcross = end_data["Pcross"]
+
+                ax_end.semilogx(end_k, end_pcross, color=colors[j], label=f'{res1} vs {res2}')
+
+            ax_end.set_xlim(right=k0 * res1)
+            ax_end.set_ylim(0.8, 1.02)
+            ax_end.legend()
+
+        # fig.suptitle(f"Cross Spectra {time}") #Not needed for paper
         fig.tight_layout()
     fig.savefig(Path(f"~/tmp/spectra_{time}_{mode}.pdf").expanduser())
     if show:
