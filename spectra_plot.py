@@ -95,6 +95,13 @@ def create_plot(mode):
                 verticalalignment="top",
                 transform=ax.transAxes,
             )
+            for res in [128]:
+                ax.axvline(
+                    k0 * res,
+                    color="gray",
+                    linestyle="dashed",
+                    label=f"{res}",
+                )
             # ax.set_xticklabels([])
             # ax.set_yticklabels([])
 
@@ -104,10 +111,16 @@ def create_plot(mode):
                 ics_data = spectra_data(waveform, resolution, resolution, Lbox, "ics")
                 ics_k = ics_data["k [Mpc]"]
                 ics_p1 = ics_data["P1"]
+                comp_data = spectra_data(waveform, 512, 512, Lbox, "ics")
+                comp_p1 = comp_data["P1"]
+                ics_p1 /= comp_p1
 
                 end_data = spectra_data(waveform, resolution, resolution, Lbox, "end")
                 end_k = end_data["k [Mpc]"]
                 end_p1 = end_data["P1"]
+                comp_data = spectra_data(waveform, 512, 512, Lbox, "end")
+                comp_p1 = comp_data["P1"]
+                end_p1 /= comp_p1
 
                 ax_ics.loglog(ics_k, ics_p1, color=colors[j])
                 ax_end.loglog(end_k, end_p1, color=colors[j])
@@ -138,7 +151,7 @@ def create_plot(mode):
 
                 ax_end.semilogx(end_k, end_pcross, color=colors[j], label=f'{res1} vs {res2}')
 
-            ax_end.set_xlim(right=k0 * res1)
+            ax_end.set_xlim(right=k0 * 256)
             ax_end.set_ylim(0.8, 1.02)
         if bottom_row:
             ax_end.legend()

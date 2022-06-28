@@ -17,6 +17,7 @@ from cic import cic_from_radius
 from halo_mass_profile import halo_mass_profile
 from nfw import fit_nfw
 from paths import auriga_dir, richings_dir
+from read_vr_files import read_velo_halos
 from readfiles import read_file, read_halo_file, ParticlesMeta
 from utils import read_swift_config
 
@@ -26,7 +27,7 @@ class Mode(Enum):
     auriga6 = 2
 
 
-mode = Mode.richings
+mode = Mode.auriga6
 
 
 def dir_name_to_parameter(dir_name: str):
@@ -107,7 +108,7 @@ for dir in sorted(root_dir.glob("*")):
     else:
         df, particles_meta = read_file(input_file)
         df_halos = read_halo_file(input_file.with_name("fof_" + input_file.name))
-        # halos = read_velo_halos(dir, veloname="velo_out")
+        vr_halo = read_velo_halos(dir, veloname="velo_out").loc[1]
         # particles_in_halo = df.loc[df["FOFGroupIDs"] == 3]
 
         halo_id = 1
@@ -161,6 +162,8 @@ for dir in sorted(root_dir.glob("*")):
     if softening_length:
         for ax in [ax1, ax2]:
             ax.axvline(4 * softening_length, color=f"C{i}", linestyle="dotted")
+    for ax in [ax1, ax2]:
+        ax.axvline(vr_halo.Rvir, color=f"C{i}", linestyle="dashed")
 
     X, Y, Z = df.X.to_numpy(), df.Y.to_numpy(), df.Z.to_numpy()
 

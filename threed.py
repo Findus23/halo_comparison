@@ -3,6 +3,7 @@ from pathlib import Path
 
 import pandas as pd
 import pyvista
+import vtk
 from pandas import DataFrame
 from pyvista import Plotter
 
@@ -30,8 +31,16 @@ def plotdf3d(pl: Plotter, df: DataFrame, color="white"):
     # pl.enable_stereo_render()
     # pl.ren_win.SetStereoTypeToSplitViewportHorizontal()
     # pl.show_grid()
+    pl.enable_terrain_style()
     pl.enable_parallel_projection()
+    pl.camera.zoom(2)
+    renderer = pl.renderer
+    basic_passes = vtk.vtkRenderStepsPass()
+    blur_pass = vtk.vtkGaussianBlurPass()
+    blur_pass.SetDelegatePass(basic_passes)
 
+    glrenderer = vtk.vtkOpenGLRenderer.SafeDownCast(renderer)
+    glrenderer.SetPass(blur_pass)
 
 def df_to_coords(df: pd.DataFrame):
     return df[["X", "Y", "Z"]].to_numpy()

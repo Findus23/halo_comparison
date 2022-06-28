@@ -88,8 +88,6 @@ def cascade_algorithm(h, g, maxit):
 
 # # Wavelet Coefficients for DB2 to DB8
 
-# In[10]:
-
 
 maxit = 10
 
@@ -159,7 +157,7 @@ g_DB16 = np.array([-2.1093396300980412e-08, -2.3087840868545578e-07, -7.36365678
 
 xdb16, phidb16, psidb16 = cascade_algorithm(h_DB16, g_DB16, maxit)
 
-# In[30]:
+###################################
 
 fig: Figure
 fig, ax = plt.subplots(5, 2, figsize=(12, 12))  # ,gridspec_kw = {'wspace':0.025})
@@ -218,24 +216,24 @@ ax.plot([0, np.pi], [0., 0.], 'k:')
 ax.plot([0, np.pi], [1., 1.], 'k:')
 
 kh, fphih, fpsih = fourier_wavelet(h_Haar, g_Haar, 256)
-ax.plot(kh, np.abs(fphih) ** 2, label='$\\hat\\varphi_{\\rm Haar}$',c="C0")
-ax.plot(kh, np.abs(fpsih) ** 2, label='$\\hat\\psi_{\\rm Haar}$',c="C0",linestyle="dashed")
+ax.plot(kh, np.abs(fphih) ** 2, label='$\\hat\\varphi_{\\rm Haar}$', c="C0")
+ax.plot(kh, np.abs(fpsih) ** 2, label='$\\hat\\psi_{\\rm Haar}$', c="C0", linestyle="dashed")
 
 kdb2, fphidb2, fpsidb2 = fourier_wavelet(h_DB2, g_DB2, 256)
-ax.plot(kdb2, np.abs(fphidb2) ** 2, label='$\\hat\\varphi_{DB2}$')
-ax.plot(kdb2, np.abs(fpsidb2) ** 2, label='$\\hat\\psi_{DB2}$')
+ax.plot(kdb2, np.abs(fphidb2) ** 2, label='$\\hat\\varphi_{DB2}$', c="C1")
+ax.plot(kdb2, np.abs(fpsidb2) ** 2, label='$\\hat\\psi_{DB2}$', c="C1", linestyle="dashed")
 
 kdb4, fphidb4, fpsidb4 = fourier_wavelet(h_DB4, g_DB4, 256)
-ax.plot(kdb4, np.abs(fphidb4) ** 2, label='$\\hat\\varphi_{DB4}$')
-ax.plot(kdb4, np.abs(fpsidb4) ** 2, label='$\\hat\\psi_{DB4}$')
+ax.plot(kdb4, np.abs(fphidb4) ** 2, label='$\\hat\\varphi_{DB4}$', c="C2")
+ax.plot(kdb4, np.abs(fpsidb4) ** 2, label='$\\hat\\psi_{DB4}$', c="C2", linestyle="dashed")
 
 kdb8, fphidb8, fpsidb8 = fourier_wavelet(h_DB8, g_DB8, 256)
-ax.plot(kdb8, np.abs(fphidb8) ** 2, label='$\\hat\\varphi_{DB8}$')
-ax.plot(kdb8, np.abs(fpsidb8) ** 2, label='$\\hat\\psi_{DB8}$')
+ax.plot(kdb8, np.abs(fphidb8) ** 2, label='$\\hat\\varphi_{DB8}$', c="C3")
+ax.plot(kdb8, np.abs(fpsidb8) ** 2, label='$\\hat\\psi_{DB8}$', c="C3", linestyle="dashed")
 
 kdb16, fphidb16, fpsidb16 = fourier_wavelet(h_DB16, g_DB16, 256)
-ax.plot(kdb16, np.abs(fphidb16) ** 2, label='$\\hat\\varphi_{DB16}$')
-ax.plot(kdb16, np.abs(fpsidb16) ** 2, label='$\\hat\\psi_{DB16}$')
+ax.plot(kdb16, np.abs(fphidb16) ** 2, label='$\\hat\\varphi_{DB16}$', c="C4")
+ax.plot(kdb16, np.abs(fpsidb16) ** 2, label='$\\hat\\psi_{DB16}$', c="C4", linestyle="dashed")
 ax.legend(frameon=False)
 ax.set_xlabel('k')
 ax.set_ylabel('P(k)')
