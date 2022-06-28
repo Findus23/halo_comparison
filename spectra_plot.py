@@ -87,7 +87,7 @@ def create_plot(mode):
                 transform=ax.transAxes,
             )
             ax.text(
-                0.98,
+                0.98 if mode == "cross" else 0.93,
                 0.85,
                 "end" if is_end else "ics",
                 size=13,
@@ -154,7 +154,7 @@ def main():
         exit(1)
     if argv[1] == "all":
         for mode in ["power", "cross"]:
-            create_plot(mode, "end")
+            create_plot(mode)
         plt.show()
         return
     mode = argv[1]
