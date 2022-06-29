@@ -10,7 +10,8 @@ from matplotlib.figure import Figure
 from paths import base_dir
 
 Lbox = 100
-k0 = 2 * 3.14159265358979323846264338327950 / Lbox
+h = 0.690021
+k0 = 3.14159265358979323846264338327950 / Lbox
 resolutions = [128, 256, 512]
 waveforms = ["DB2", "DB4", "DB8", "shannon"]
 
