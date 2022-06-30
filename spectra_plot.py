@@ -123,9 +123,10 @@ def create_plot(mode):
                 comp_p1 = comp_data["P1"]
                 end_p1 /= comp_p1
 
-                ax_ics.loglog(ics_k, ics_p1, color=colors[j])
-                ax_end.loglog(end_k, end_p1, color=colors[j])
+                ax_ics.semilogx(ics_k, ics_p1, color=colors[j])
+                ax_end.semilogx(end_k, end_p1, color=colors[j])
                 for ax in [ax_ics, ax_end]:
+                    ax.set_ylim(0.9,1.10)
                     ax.axvline(
                         k0 * resolution,
                         color=colors[j],
