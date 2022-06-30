@@ -12,19 +12,24 @@ file = Path(argv[1])
 
 df = pd.read_csv(file)
 
-with pd.option_context('display.max_rows', None):
-    print(df[["ref_npart", "comp_npart", "ref_cNFW", "comp_cNFW"]])
 # df = df.iloc
 
 fig: Figure = plt.figure()
 ax: Axes = fig.gca()
 # hist2d, log?
 
-x_col = "ref_cNFW"
-y_col = "comp_cNFW"
+matches:pd.DataFrame=df["match"]
+# print(matches)
+# exit()
+print(matches.median())
+print(matches.std())
+exit()
 
-# x_col = "ref_Mvir"
-# y_col = "comp_Mvir"
+# x_col = "ref_cNFW"
+# y_col = "comp_cNFW"
+#
+x_col = "ref_Mvir"
+y_col = "comp_Mvir"
 
 min_x = min([min(df[x_col]), min(df[y_col])])
 max_x = max([max(df[x_col]), max(df[y_col])])
