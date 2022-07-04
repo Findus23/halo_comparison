@@ -88,8 +88,8 @@ def read_velo_halos(directory: Path,veloname="vroutput"):
     Returns a dataframe containing all scalar properties of the halos
     (https://velociraptor-stf.readthedocs.io/en/latest/output.html),
     """
-    group_catalog = h5py.File(directory / f"{veloname}.catalog_groups")
-    group_properties = h5py.File(directory / f"{veloname}.properties")
+    group_catalog = h5py.File(directory / f"{veloname}.catalog_groups.0")
+    group_properties = h5py.File(directory / f"{veloname}.properties.0")
     scalar_properties = {}
     for k, v in group_properties.items():
         if not isinstance(v, Dataset):
@@ -125,11 +125,11 @@ def read_velo_halo_particles(
     and two dictionaries mapping the halo IDs to sets of particle IDs
     """
     df = read_velo_halos(directory)
-    particle_catalog = h5py.File(directory / "vroutput.catalog_particles")
+    particle_catalog = h5py.File(directory / "vroutput.catalog_particles.0")
     particle_ids = np.asarray(particle_catalog["Particle_IDs"])
 
     particle_catalog_unbound = h5py.File(
-        directory / "vroutput.catalog_particles.unbound"
+        directory / "vroutput.catalog_particles.unbound.0"
     )
     particle_ids_unbound = particle_catalog_unbound["Particle_IDs"][:]
 

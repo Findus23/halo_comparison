@@ -29,7 +29,8 @@ columns = [
 ]
 
 # linestyles = ["solid", "dashed", "dotted"]
-colors = ["C1", "C2", "C3", "C4"]
+colors=[f"C{i}" for i in range(10)]
+# colors = ["C1", "C2", "C3", "C4"]
 
 
 def spectra_data(
@@ -96,10 +97,10 @@ def create_plot(mode):
                 verticalalignment="top",
                 transform=ax.transAxes,
             )
-            for res in [128]:
+            for j, res in enumerate(resolutions[:-1] if mode == "cross" else resolutions):
                 ax.axvline(
                     k0 * res,
-                    color="gray",
+                    color=colors[j],
                     linestyle="dashed",
                     label=f"{res}",
                 )
@@ -123,15 +124,11 @@ def create_plot(mode):
                 comp_p1 = comp_data["P1"]
                 end_p1 /= comp_p1
 
-                ax_ics.loglog(ics_k, ics_p1, color=colors[j])
-                ax_end.loglog(end_k, end_p1, color=colors[j])
+                ax_ics.semilogx(ics_k, ics_p1, color=colors[j])
+                ax_end.semilogx(end_k, end_p1, color=colors[j])
                 for ax in [ax_ics, ax_end]:
-                    ax.axvline(
-                        k0 * resolution,
-                        color=colors[j],
-                        linestyle="dashed",
-                        label=f"{resolution}",
-                    )
+                    ax.set_ylim(0.9, 1.10)
+
 
         # fig.suptitle(f"Power Spectra {time}") #Not needed for paper
         # fig.tight_layout()
@@ -144,15 +141,15 @@ def create_plot(mode):
                 ics_k = ics_data["k [Mpc]"]
                 ics_pcross = ics_data["Pcross"]
 
-                ax_ics.semilogx(ics_k, ics_pcross, color=colors[j], label=f'{res1} vs {res2}')
+                ax_ics.semilogx(ics_k, ics_pcross, color=colors[j+3], label=f'{res1} vs {res2}')
 
                 end_data = spectra_data(waveform, res1, res2, Lbox, 'end')
                 end_k = end_data["k [Mpc]"]
                 end_pcross = end_data["Pcross"]
 
-                ax_end.semilogx(end_k, end_pcross, color=colors[j], label=f'{res1} vs {res2}')
+                ax_end.semilogx(end_k, end_pcross, color=colors[j+3], label=f'{res1} vs {res2}')
 
-            ax_end.set_xlim(right=k0 * 256)
+            ax_end.set_xlim(right=k0 * resolutions[-1])
             ax_end.set_ylim(0.8, 1.02)
         if bottom_row:
             ax_end.legend()

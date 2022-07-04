@@ -85,13 +85,11 @@ def compare_halo_resolutions(
         if ref_halo["cNFW"] < 0:
             print("NEGATIVE")
             print(ref_halo["cNFW"])
+            raise ValueError()
         if len(halo_particle_ids) < 50:
             # TODO: decide on a lower size limit (and also apply it to comparison halo?)
             print(f"halo is too small ({len(halo_particle_ids)}")
             print("skipping")
-            continue
-        if ref_halo_mass < 2:
-            print("skip weird, small mass halo")
             continue
         print("LEN", len(halo_particle_ids), ref_halo.Mass_tot)
         offset_x, offset_y = ref_halo.X, ref_halo.Y
@@ -132,6 +130,9 @@ def compare_halo_resolutions(
         if len(nearby_halos) < 10:
             print(f"only {len(nearby_halos)} halos, expanding to 50xRvir")
             nearby_halos = set(df_comp_halo.loc[halo_distances < ref_halo.Rvir * 50].index.to_list())
+        if len(nearby_halos) < 10:
+            print(f"only {len(nearby_halos)} halos, expanding to 150xRvir")
+            nearby_halos = set(df_comp_halo.loc[halo_distances < ref_halo.Rvir * 150].index.to_list())
 
         if not nearby_halos:
             raise Exception("no halos are nearby")  # TODO
@@ -204,9 +205,6 @@ def compare_halo_resolutions(
             # particles_in_comp_halo: DataFrame = df_comp.loc[df_comp["FOFGroupIDs"] == halo]
             particle_ids_in_comp_halo = comp_halo_lookup[halo_id]
             mass_factor_limit = 5
-            if comp_halo_masses[halo_id] < 2:
-                print("skip weird, small mass halo")
-                continue
 
             if not (1 / mass_factor_limit < (comp_halo_masses[halo_id] / ref_halo_mass) < mass_factor_limit):
                 # print("mass not similar, skipping")
@@ -216,7 +214,9 @@ def compare_halo_resolutions(
             halo_size = len(particle_ids_in_comp_halo)
             # df = particles_in_comp_halo.join(halo_particles, how="inner", rsuffix="ref")
             shared_particles = particle_ids_in_comp_halo.intersection(halo_particle_ids)
-            shared_size = len(shared_particles)
+            union_particles=particle_ids_in_comp_halo.union(halo_particle_ids)
+
+            shared_size = len(shared_particles)/len(union_particles)
             # print(shared_size)
             if not shared_size:
                 continue
@@ -225,6 +225,7 @@ def compare_halo_resolutions(
                 df = df_comp.loc[list(shared_particles)]
             if plot:
                 color = f"C{i + 1}"
+                comp_halo: pd.Series = df_comp_halo.loc[halo_id]
 
                 ax.scatter(apply_offset_to_list(df["X"], offset_x), apply_offset_to_list(df["Y"], offset_y), s=1,
                            alpha=.3, c=color)
@@ -253,7 +254,7 @@ def compare_halo_resolutions(
             np.array([ref_halo.X, ref_halo.Y, ref_halo.Z]) - np.array([comp_halo.X, comp_halo.Y, comp_halo.Z])
         ) / ref_halo.Rvir
         halo_data["distance"] = distance
-        halo_data["match"] = best_halo_match / len(halo_particle_ids)
+        halo_data["match"] = best_halo_match
         compared_halos.append(halo_data)
         # exit()
         if plot:
@@ -301,7 +302,7 @@ if __name__ == '__main__':
         reference_resolution=128,
         comparison_resolution=256,
         plot=False,
-        plot3d=False,
+        plot3d=True,
         plot_cic=False,
         velo_halos=True,
         single=False,
