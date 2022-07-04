@@ -1,5 +1,5 @@
 # Call with spectra_computation.py <time> <kind>
-# time = 'ics' for ICs, = 'end' for final results
+# time = 'ics' for ICs, = 'z=1' for redshift z=1, = 'end' for final results
 # kind = 'power' for power spectra comparing same resolution, 'cross' for comparing across all resolutions
 
 import itertools
@@ -29,7 +29,21 @@ def run_spectra(waveform: str, resolution_1: int, resolution_2: int, Lbox: int, 
             '--input',
             str(base_dir / f'{setup_2}/ics_{setup_2}.hdf5')
         ], check=True)
-        print("end")
+    
+    # #For evaluation of results at redshift z=1: time == 'z=1'
+    elif time == 'z=1':
+        subprocess.run([
+            str(spectra),
+            '--ngrid',
+            '1024',
+            '--format=3',
+            '--output',
+            str(base_dir / f'spectra/{waveform}_{Lbox}/{waveform}_{Lbox}_a2_{resolution_1}_{resolution_2}'),
+            '--input',
+            str(base_dir / f'{setup_1}/output_0002.hdf5'),
+            '--input',
+            str(base_dir / f'{setup_2}/output_0002.hdf5')
+        ], check=True)
 
     # #For evaluation of final results: time == 'end'
     elif time == 'end':
@@ -48,6 +62,7 @@ def run_spectra(waveform: str, resolution_1: int, resolution_2: int, Lbox: int, 
     else:
         raise ValueError(f"invalid time ({time})")
 
+    print("end")
 
 def power_run(waveforms: list, resolutions: list, Lbox: int, time: str):
     args = []
