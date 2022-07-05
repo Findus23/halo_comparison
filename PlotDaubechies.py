@@ -2,6 +2,7 @@
 originally created by Oliver Hahn
 in PlotDaubechies.ipynb
 """
+from math import pi
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -160,8 +161,8 @@ xdb16, phidb16, psidb16 = cascade_algorithm(h_DB16, g_DB16, maxit)
 ###################################
 
 fig: Figure
-fig, ax = plt.subplots(5, 2, figsize=(12, 12))  # ,gridspec_kw = {'wspace':0.025})
-label = ['Haar', 'DB2', 'DB4', 'DB8', 'DB16']
+fig, ax = plt.subplots(4, 2, figsize=(8, 12))  # ,gridspec_kw = {'wspace':0.025})
+labels = ['Haar', 'DB2', 'DB4', 'DB8', 'DB16']
 
 ax[0, 0].set_title('scaling functions $\\varphi$')
 ax[0, 1].set_title('wavelets $\\psi$')
@@ -178,20 +179,22 @@ ax[2, 1].plot(xdb4, psidb4, lw=1)
 ax[3, 0].plot(xdb8, phidb8, lw=1)
 ax[3, 1].plot(xdb8, psidb8, lw=1)
 
-ax[4, 0].plot(xdb16, phidb16, lw=1)
-ax[4, 1].plot(xdb16, psidb16, lw=1)
-
+# ax[4, 0].plot(xdb16, phidb16, lw=1)
+# ax[4, 1].plot(xdb16, psidb16, lw=1)
 for a in ax.flatten():
     a.set_xlabel('t')
 
-for a, i in zip(ax[:, 0], label):
-    a.set_ylabel('$\\varphi_{\\rm ' + i + '}[t]$')
+for a, label in zip(ax[:, 0], labels):
+    a.set_ylabel(r"$\varphi_{\textrm{LABEL}}$".replace("LABEL", label))
+    # a.set_ylabel('$\\varphi_{\\rm ' + i + '}[t]$')
     a.set_ylim([-1.0, 1.5])
 
-for a, i in zip(ax[:, 1], label):
-    a.set_ylabel('$\\psi_{\\rm ' + i + '}[t]$')
+for a, label in zip(ax[:, 1], labels):
+    a.set_ylabel(r"$\psi_{\textrm{LABEL}}$".replace("LABEL", label))
+    # a.set_ylabel('$\\psi_{\\rm ' + i + '}[t]$')
     a.set_ylim([-2, 2])
 
+fig.tight_layout()
 fig.savefig(Path(f"~/tmp/wavelets.pdf").expanduser(), bbox_inches='tight')
 
 # # Spectral Response of Scaling Functions and Wavelets
@@ -231,9 +234,21 @@ kdb8, fphidb8, fpsidb8 = fourier_wavelet(h_DB8, g_DB8, 256)
 ax.plot(kdb8, np.abs(fphidb8) ** 2, label='$\\hat\\varphi_{DB8}$', c="C3")
 ax.plot(kdb8, np.abs(fpsidb8) ** 2, label='$\\hat\\psi_{DB8}$', c="C3", linestyle="dashed")
 
-kdb16, fphidb16, fpsidb16 = fourier_wavelet(h_DB16, g_DB16, 256)
-ax.plot(kdb16, np.abs(fphidb16) ** 2, label='$\\hat\\varphi_{DB16}$', c="C4")
-ax.plot(kdb16, np.abs(fpsidb16) ** 2, label='$\\hat\\psi_{DB16}$', c="C4", linestyle="dashed")
+
+# all k* are np.linspace(0, np.pi, 256), so we can also use them for shannon
+
+def shannon(k):
+    y=np.zeros_like(k)
+    y[k > pi/2] = 1
+    return y
+
+
+ax.plot(kdb8, shannon(kdb8), label='$\\hat\\varphi_{shannon}$', c="C4")
+# ax.plot(kdb8, np.abs(fpsidb8) ** 2, label='$\\hat\\psi_{DB8}$', c="C3", linestyle="dashed")
+
+# kdb16, fphidb16, fpsidb16 = fourier_wavelet(h_DB16, g_DB16, 256)
+# ax.plot(kdb16, np.abs(fphidb16) ** 2, label='$\\hat\\varphi_{DB16}$', c="C4")
+# ax.plot(kdb16, np.abs(fpsidb16) ** 2, label='$\\hat\\psi_{DB16}$', c="C4", linestyle="dashed")
 ax.legend(frameon=False)
 ax.set_xlabel('k')
 ax.set_ylabel('P(k)')
