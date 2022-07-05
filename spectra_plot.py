@@ -29,7 +29,9 @@ columns = [
 ]
 
 # linestyles = ["solid", "dashed", "dotted"]
-colors=[f"C{i}" for i in range(10)]
+colors = [f"C{i}" for i in range(10)]
+
+
 # colors = ["C1", "C2", "C3", "C4"]
 
 
@@ -78,16 +80,22 @@ def create_plot(mode):
     fig: Figure
     combination_list = list(itertools.combinations(resolutions, 2))
     fig, axes = plt.subplots(
-        len(waveforms), 2, sharex=True, sharey=True,
+        len(waveforms), 3, sharex=True, sharey=True,
         constrained_layout=True, figsize=(9, 9),
     )
     for i, waveform in enumerate(waveforms):
         ax_ics: Axes = axes[i][0]
-        # ax_z1:  Axes = axes[i][1]
-        ax_end: Axes = axes[i][1]
+        ax_z1: Axes = axes[i][1]
+        ax_end: Axes = axes[i][2]
+        axes_names = {
+            # TODO: better names
+            ax_ics: "ics",
+            ax_z1: "z=1",
+            ax_end: "end"
+        }
         bottom_row = i == len(waveforms) - 1
         # for is_end, ax in enumerate([ax_ics, ax_z1]):
-        for is_end, ax in enumerate([ax_ics, ax_end]):
+        for is_end, ax in enumerate([ax_ics, ax_z1, ax_end]):
             if bottom_row:
                 ax.set_xlabel("k [Mpc$^{-1}$]")
             ax.text(
@@ -102,8 +110,7 @@ def create_plot(mode):
             ax.text(
                 0.98 if mode == "cross" else 0.93,
                 0.85,
-                # "z=1" if is_end else "ics",
-                "end" if is_end else "ics",
+                axes_names[ax],
                 size=13,
                 horizontalalignment="right",
                 verticalalignment="top",
@@ -136,18 +143,17 @@ def create_plot(mode):
                 comp_p1 = comp_data["P1"]
                 end_p1 /= comp_p1
 
-                # z1_data = spectra_data(waveform, resolution, resolution, Lbox, "z=1")
-                # z1_k = z1_data["k [Mpc]"]
-                # z1_p1 = z1_data["P1"]
-                # comp_data = spectra_data(waveform, 512, 512, Lbox, 'z=1')
-                # comp_p1 = comp_data["P1"]
-                # z1_p1 /= comp_p1
-                # ax_z1.semilogx(z1_k, z1_p1, color=colors[j])
+                z1_data = spectra_data(waveform, resolution, resolution, Lbox, "z=1")
+                z1_k = z1_data["k [Mpc]"]
+                z1_p1 = z1_data["P1"]
+                comp_data = spectra_data(waveform, 512, 512, Lbox, 'z=1')
+                comp_p1 = comp_data["P1"]
+                z1_p1 /= comp_p1
 
                 ax_ics.semilogx(ics_k, ics_p1, color=colors[j])
+                ax_z1.semilogx(z1_k, z1_p1, color=colors[j])
                 ax_end.semilogx(end_k, end_p1, color=colors[j])
-                for ax in [ax_ics, ax_end]:
-                # for ax in [ax_ics, ax_z1]:
+                for ax in [ax_ics, ax_z1, ax_end]:
                     ax.set_ylim(0.9, 1.10)
 
 
@@ -162,13 +168,20 @@ def create_plot(mode):
                 ics_k = ics_data["k [Mpc]"]
                 ics_pcross = ics_data["Pcross"]
 
-                ax_ics.semilogx(ics_k, ics_pcross, color=colors[j+3], label=f'{res1} vs {res2}')
+                ax_ics.semilogx(ics_k, ics_pcross, color=colors[j + 3], label=f'{res1} vs {res2}')
+
+                z1_data = spectra_data(waveform, res1, res2, Lbox, 'z=1')
+                z1_k = z1_data["k [Mpc]"]
+                z1_pcross = z1_data["Pcross"]
+
+                ax_z1.semilogx(z1_k, z1_pcross, color=colors[j + 3], label=f'{res1} vs {res2}')
+
 
                 end_data = spectra_data(waveform, res1, res2, Lbox, 'end')
                 end_k = end_data["k [Mpc]"]
                 end_pcross = end_data["Pcross"]
 
-                ax_end.semilogx(end_k, end_pcross, color=colors[j+3], label=f'{res1} vs {res2}')
+                ax_end.semilogx(end_k, end_pcross, color=colors[j + 3], label=f'{res1} vs {res2}')
 
             ax_end.set_xlim(right=k0 * resolutions[-1])
             ax_end.set_ylim(0.8, 1.02)
