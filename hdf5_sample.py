@@ -4,7 +4,7 @@ from sys import argv
 import numpy as np
 from h5py import File
 
-fraction = 0.05
+fraction = 0.01
 num_steps = 60
 
 file = Path(argv[1])
