@@ -47,6 +47,15 @@ def spectra_data(
             names=columns,
             skiprows=1,
         )
+    elif time == "z=1":
+        spectra_data = pd.read_csv(
+            f"{dir}/{waveform}_{Lbox}_a2_{resolution_1}_{resolution_2}_cross_spectrum.txt",
+            sep=" ",
+            skipinitialspace=True,
+            header=None,
+            names=columns,
+            skiprows=1,
+        )
     elif time == "end":
         spectra_data = pd.read_csv(
             f"{dir}/{waveform}_{Lbox}_a4_{resolution_1}_{resolution_2}_cross_spectrum.txt",
@@ -57,7 +66,7 @@ def spectra_data(
             skiprows=1,
         )
     else:
-        raise ValueError(f"invalid time ({time}) should be (ics|end)")
+        raise ValueError(f"invalid time ({time}) should be (ics|z=1|end)")
 
     # only consider rows above resolution limit
     spectra_data = spectra_data[spectra_data["k [Mpc]"] >= k0]
@@ -74,8 +83,10 @@ def create_plot(mode):
     )
     for i, waveform in enumerate(waveforms):
         ax_ics: Axes = axes[i][0]
+        # ax_z1:  Axes = axes[i][1]
         ax_end: Axes = axes[i][1]
         bottom_row = i == len(waveforms) - 1
+        # for is_end, ax in enumerate([ax_ics, ax_z1]):
         for is_end, ax in enumerate([ax_ics, ax_end]):
             if bottom_row:
                 ax.set_xlabel("k [Mpc$^{-1}$]")
@@ -91,6 +102,7 @@ def create_plot(mode):
             ax.text(
                 0.98 if mode == "cross" else 0.93,
                 0.85,
+                # "z=1" if is_end else "ics",
                 "end" if is_end else "ics",
                 size=13,
                 horizontalalignment="right",
@@ -124,9 +136,18 @@ def create_plot(mode):
                 comp_p1 = comp_data["P1"]
                 end_p1 /= comp_p1
 
+                # z1_data = spectra_data(waveform, resolution, resolution, Lbox, "z=1")
+                # z1_k = z1_data["k [Mpc]"]
+                # z1_p1 = z1_data["P1"]
+                # comp_data = spectra_data(waveform, 512, 512, Lbox, 'z=1')
+                # comp_p1 = comp_data["P1"]
+                # z1_p1 /= comp_p1
+                # ax_z1.semilogx(z1_k, z1_p1, color=colors[j])
+
                 ax_ics.semilogx(ics_k, ics_p1, color=colors[j])
                 ax_end.semilogx(end_k, end_p1, color=colors[j])
                 for ax in [ax_ics, ax_end]:
+                # for ax in [ax_ics, ax_z1]:
                     ax.set_ylim(0.9, 1.10)
 
 
@@ -152,6 +173,7 @@ def create_plot(mode):
             ax_end.set_xlim(right=k0 * resolutions[-1])
             ax_end.set_ylim(0.8, 1.02)
         if bottom_row:
+            # ax_z1.legend()
             ax_end.legend()
 
         # fig.suptitle(f"Cross Spectra {time}") #Not needed for paper

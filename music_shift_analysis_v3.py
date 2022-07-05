@@ -53,5 +53,5 @@ print(
     f"Highest centre values for same Music shift: {(centre_music_ics + maximum_positive_boundary_for_same_shift) * 100}"
 )
 print(
-    f'Difference between these limits: {(maximum_positive_boundary_for_same_shift + maximum_negative_boundary_for_same_shift) * 100}'
+    f"Difference between these limits: {(maximum_positive_boundary_for_same_shift + maximum_negative_boundary_for_same_shift) * 100}"
 )
