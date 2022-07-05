@@ -8,27 +8,26 @@ from matplotlib.colors import LogNorm
 from matplotlib.figure import Figure
 from matplotlib.patches import Circle
 
-from cic import Extent
+from halo_vis import Coords
 from paths import base_dir, vis_datafile
 from read_vr_files import read_velo_halos
 
 
-def increase_extent_1d(xmin: float, xmax: float, factor: float):
-    xrange = xmax - xmin
-    xcenter = (xmax + xmin) / 2
-    return xcenter - xrange / 2 * factor, xcenter + xrange / 2 * factor
+def coord_to_2d_extent(coords: Coords):
+    radius, X, Y, Z = coords
+    return X - radius, X + radius, Y - radius, Y + radius
 
 
-def increase_extent(extent: Extent, factor: float) -> Extent:
-    xmin, xmax, ymin, ymax = extent
-    xmin, xmax = increase_extent_1d(xmin, xmax, factor)
-    ymin, ymax = increase_extent_1d(ymin, ymax, factor)
-    return xmin, xmax, ymin, ymax
-
-
-def in_extent(extent: Extent, X, Y, factor=2) -> bool:
-    xmin, xmax, ymin, ymax = increase_extent(extent, factor)
-    return (xmin < X < xmax) and (ymin < Y < ymax)
+def in_area(coords: Coords, xobj, yobj, zobj, factor=1.3) -> bool:
+    radius, xcenter, ycenter, zcenter = coords
+    radius *= factor
+    return (
+            (xcenter - radius < xobj < xcenter + radius)
+            and
+            (ycenter - radius < yobj < ycenter + radius)
+            and
+            (zcenter - radius < zobj < zcenter + radius)
+    )
 
 
 def main():
@@ -36,7 +35,7 @@ def main():
     offset = 2
     columns = [128, 256, 512]
     fig: Figure = plt.figure(figsize=(9, 9))
-    axes: List[List[Axes]] = fig.subplots(len(rows), len(columns), sharex=True, sharey=True)
+    axes: List[List[Axes]] = fig.subplots(len(rows), len(columns), sharex="row", sharey="row")
     with h5py.File(vis_datafile) as vis_out:
         vmin, vmax = vis_out["vmin_vmax"]
         print(vmin, vmax)
@@ -46,21 +45,23 @@ def main():
                 halos = read_velo_halos(dir)
                 ax = axes[i][j]
                 rho = np.asarray(vis_out[f"{waveform}_{resolution}_rho"])
-                extent = tuple(vis_out[f"{waveform}_{resolution}_extent"])
+                # radius, X, Y, Z
+                coords: Coords = tuple(vis_out[f"{waveform}_{resolution}_coords"])
                 mass = vis_out[f"{waveform}_{resolution}_mass"][()]  # get scalar value from Dataset
                 main_halo_id = vis_out[f"{waveform}_{resolution}_halo_id"][()]
                 vmin_scaled = (vmin + offset) * mass
                 vmax_scaled = (vmax + offset) * mass
                 rho = (rho + offset) * mass
-
+                extent = coord_to_2d_extent(coords)
                 img = ax.imshow(rho.T, norm=LogNorm(vmin=vmin_scaled, vmax=vmax_scaled), extent=extent,
                                 origin="lower")
+                found_main_halo = False
                 for halo_id, halo in halos.iterrows():
-                    if halo["Vmax"] > 135:
-                        if in_extent(extent, halo.X, halo.Y):
+                    if halo["Vmax"] > 100:
+                        if in_area(coords, halo.X, halo.Y, halo.Z):
                             color = "red" if halo_id == main_halo_id else "white"
                             if halo_id == main_halo_id:
-                                print(halo_id == main_halo_id, halo_id, main_halo_id, halo["Rvir"])
+                                found_main_halo = True
                                 print("plotting main halo")
                             circle = Circle(
                                 (halo.X, halo.Y),
@@ -68,7 +69,7 @@ def main():
                                 linewidth=1, edgecolor=color, fill=None, alpha=.2
                             )
                             ax.add_artist(circle)
-
+                assert found_main_halo
                 print(img)
             #     break
             # break
