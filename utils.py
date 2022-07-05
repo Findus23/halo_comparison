@@ -29,3 +29,12 @@ def create_figure() -> Tuple[Figure, Axes]:
 def read_swift_config(dir: Path):
     with (dir / "used_parameters.yml").open() as f:
         return yaml.safe_load(f)
+
+
+def print_wall_time(dir: Path):
+    with(dir / "swift.log").open() as f:
+        last_line = f.readlines()[-1]
+    print(last_line)
+    assert "main: done. Bye." in last_line
+    seconds = float(last_line[1:].split("]")[0])
+    print(f"Runtime: {seconds / 60 / 60:.2f} hours")
