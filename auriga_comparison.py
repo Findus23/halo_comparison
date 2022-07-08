@@ -17,9 +17,8 @@ from cic import cic_from_radius
 from halo_mass_profile import halo_mass_profile
 from nfw import fit_nfw
 from paths import auriga_dir, richings_dir
-from read_vr_files import read_velo_halos
 from readfiles import read_file, read_halo_file, ParticlesMeta
-from utils import read_swift_config
+from utils import read_swift_config, print_wall_time
 
 
 class Mode(Enum):
@@ -27,11 +26,11 @@ class Mode(Enum):
     auriga6 = 2
 
 
-mode = Mode.auriga6
+mode = Mode.richings
 
 
 def dir_name_to_parameter(dir_name: str):
-    return map(int, dir_name.lstrip("auriga6_halo").lstrip("richings21_").split("_"))
+    return map(int, dir_name.lstrip("auriga6_halo").lstrip("richings21_").lstrip("bary_").split("_"))
 
 
 def levelmax_to_softening_length(levelmax: int) -> float:
@@ -77,7 +76,7 @@ for dir in sorted(root_dir.glob("*")):
     if not is_by_adrian:
         levelmin, levelmin_TF, levelmax = dir_name_to_parameter(dir.name)
         print(levelmin, levelmin_TF, levelmax)
-        # if levelmax != 12:
+        # if levelmax != 9:
         #     continue
 
     input_file = dir / "output_0007.hdf5"
@@ -89,14 +88,20 @@ for dir in sorted(root_dir.glob("*")):
     else:
         try:
             swift_conf = read_swift_config(dir)
+            print_wall_time(dir)
         except FileNotFoundError:
             continue
-        softening_length = swift_conf["Gravity"]["comoving_DM_softening"]
-        assert softening_length == swift_conf["Gravity"]["max_physical_DM_softening"]
+        gravity_conf = swift_conf["Gravity"]
+        softening_length = gravity_conf["comoving_DM_softening"]
+        assert softening_length == gravity_conf["max_physical_DM_softening"]
+        if "max_physical_baryon_softening" in gravity_conf:
+            assert softening_length == gravity_conf["max_physical_baryon_softening"]
+            assert softening_length == gravity_conf["comoving_baryon_softening"]
+
         ideal_softening_length = levelmax_to_softening_length(levelmax)
-        # if not np.isclose(softening_length, levelmax_to_softening_length(levelmax)):
-        #     raise ValueError(f"softening length for levelmax {levelmax} should be {ideal_softening_length} "
-        #                      f"but is {softening_length}")
+        if not np.isclose(softening_length, levelmax_to_softening_length(levelmax)):
+            raise ValueError(f"softening length for levelmax {levelmax} should be {ideal_softening_length} "
+                             f"but is {softening_length}")
     print(input_file)
     if mode == Mode.richings and is_by_adrian:
         h = 0.6777
@@ -108,7 +113,7 @@ for dir in sorted(root_dir.glob("*")):
     else:
         df, particles_meta = read_file(input_file)
         df_halos = read_halo_file(input_file.with_name("fof_" + input_file.name))
-        vr_halo = read_velo_halos(dir, veloname="velo_out").loc[1]
+        # vr_halo = read_velo_halos(dir, veloname="velo_out").loc[1]
         # particles_in_halo = df.loc[df["FOFGroupIDs"] == 3]
 
         halo_id = 1
@@ -162,8 +167,8 @@ for dir in sorted(root_dir.glob("*")):
     if softening_length:
         for ax in [ax1, ax2]:
             ax.axvline(4 * softening_length, color=f"C{i}", linestyle="dotted")
-    for ax in [ax1, ax2]:
-        ax.axvline(vr_halo.Rvir, color=f"C{i}", linestyle="dashed")
+    # for ax in [ax1, ax2]:
+    #     ax.axvline(vr_halo.Rvir, color=f"C{i}", linestyle="dashed")
 
     X, Y, Z = df.X.to_numpy(), df.Y.to_numpy(), df.Z.to_numpy()
 

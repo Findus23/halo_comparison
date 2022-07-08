@@ -3,6 +3,7 @@ from pathlib import Path
 from sys import argv
 
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
@@ -83,6 +84,7 @@ def create_plot(mode):
         len(waveforms), 3, sharex=True, sharey=True,
         constrained_layout=True, figsize=(9, 9),
     )
+    crossings = np.zeros((len(waveforms), len(combination_list)))
     for i, waveform in enumerate(waveforms):
         ax_ics: Axes = axes[i][0]
         ax_z1: Axes = axes[i][1]
@@ -167,7 +169,10 @@ def create_plot(mode):
                 ics_data = spectra_data(waveform, res1, res2, Lbox, 'ics')
                 ics_k = ics_data["k [Mpc]"]
                 ics_pcross = ics_data["Pcross"]
-
+                smaller_res = min(res1, res2)
+                crossing_index = np.searchsorted(ics_k.to_list(), k0 * smaller_res)
+                crossing_value = ics_pcross[crossing_index]
+                crossings[i][j] = crossing_value
                 ax_ics.semilogx(ics_k, ics_pcross, color=colors[j + 3], label=f'{res1} vs {res2}')
 
                 z1_data = spectra_data(waveform, res1, res2, Lbox, 'z=1')
@@ -175,7 +180,6 @@ def create_plot(mode):
                 z1_pcross = z1_data["Pcross"]
 
                 ax_z1.semilogx(z1_k, z1_pcross, color=colors[j + 3], label=f'{res1} vs {res2}')
-
 
                 end_data = spectra_data(waveform, res1, res2, Lbox, 'end')
                 end_k = end_data["k [Mpc]"]
@@ -191,6 +195,10 @@ def create_plot(mode):
 
         # fig.suptitle(f"Cross Spectra {time}") #Not needed for paper
         # fig.tight_layout()
+    print(crossings)
+    crossings_df = pd.DataFrame(crossings, columns=combination_list, index=waveforms)
+    # print(crossings_df.to_markdown())
+    print(crossings_df.to_latex())
     fig.savefig(Path(f"~/tmp/spectra_{mode}.pdf").expanduser())
 
 
