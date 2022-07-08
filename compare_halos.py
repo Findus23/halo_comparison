@@ -85,7 +85,8 @@ def compare_halo_resolutions(
         if ref_halo["cNFW"] < 0:
             print("NEGATIVE")
             print(ref_halo["cNFW"])
-            raise ValueError()
+            # raise ValueError()
+            continue
         if len(halo_particle_ids) < 50:
             # TODO: decide on a lower size limit (and also apply it to comparison halo?)
             print(f"halo is too small ({len(halo_particle_ids)}")
@@ -302,7 +303,7 @@ if __name__ == '__main__':
         reference_resolution=128,
         comparison_resolution=256,
         plot=False,
-        plot3d=True,
+        plot3d=False,
         plot_cic=False,
         velo_halos=True,
         single=False,
