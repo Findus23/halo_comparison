@@ -18,12 +18,12 @@ fig: Figure = plt.figure()
 ax: Axes = fig.gca()
 # hist2d, log?
 
-matches:pd.DataFrame=df["match"]
+matches: pd.DataFrame = df["match"]
 # print(matches)
 # exit()
 print(matches.median())
 print(matches.std())
-exit()
+# exit()
 
 # x_col = "ref_cNFW"
 # y_col = "comp_cNFW"
@@ -33,6 +33,10 @@ y_col = "comp_Mvir"
 
 min_x = min([min(df[x_col]), min(df[y_col])])
 max_x = max([max(df[x_col]), max(df[y_col])])
+
+df_odd: pd.DataFrame = df.loc[df.ref_cNFW < 1.8*df.comp_cNFW]
+
+df_odd.to_csv("out.csv")
 
 bins = np.geomspace(min_x, max_x, 100)
 
