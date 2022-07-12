@@ -85,8 +85,8 @@ def compare_halo_resolutions(
         if ref_halo["cNFW"] < 0:
             print("NEGATIVE")
             print(ref_halo["cNFW"])
-            # raise ValueError()
-            continue
+            raise ValueError()
+            # continue
         if len(halo_particle_ids) < 50:
             # TODO: decide on a lower size limit (and also apply it to comparison halo?)
             print(f"halo is too small ({len(halo_particle_ids)}")
