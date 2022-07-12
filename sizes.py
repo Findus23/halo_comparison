@@ -46,7 +46,7 @@ def concentration(row):
                 else:
                     cnfw[i] = r_200crit / rmax
                     colour[i] = 'purple'
-
+        assert np.isclose(cnfw[i], row[f'{halo_type}_cNFW'])
     return cnfw, colour
 
 
@@ -66,9 +66,9 @@ def plot_comparison_hist2d(file: Path, property: str, mode: str):
     fig: Figure = plt.figure()
     ax: Axes = fig.gca()
     bins = np.geomspace(min_x, max_x, 100)
-    if mode == "concentration_bla" and property=='cNFW':
+    if mode == "concentration_bla" and property == 'cNFW':
         colors = []
-        for i,row in df.iterrows():
+        for i, row in df.iterrows():
             cnfw, colour = concentration(row)
             colors.append(colour[0])
         ax.scatter(df[x_col], df[y_col], c=colors, s=1, alpha=.3)
@@ -80,7 +80,6 @@ def plot_comparison_hist2d(file: Path, property: str, mode: str):
     ax.set_xlabel(x_col)
     ax.set_ylabel(y_col)
     # ax.set_yscale("log")
-
 
     ax.loglog([min_x, max_x], [min_x, max_x], linewidth=1, color="C2")
     ax.set_title(file.name)
@@ -107,7 +106,6 @@ def plot_comparison_hist(file: Path, property: str, mode: str):
 
 
 file = Path(argv[1])
-
 
 # properties = ['group_size', 'Mass_200crit', 'Mass_tot', 'Mvir', 'R_200crit', 'Rvir', 'Vmax', 'cNFW', 'q', 's'] #Mass_FOF and cNFW_200crit don't work, rest looks normal except for cNFW
 properties = ['cNFW']
@@ -138,7 +136,6 @@ for property in properties:
 
 # print(all_ref_structure_types.mean(), all_comp_structure_types.mean())
 # print(odd_ref_structure_types.mean(), odd_comp_structure_types.mean())
-
 
 
 # ref_colour = []
