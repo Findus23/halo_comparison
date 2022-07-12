@@ -10,6 +10,7 @@ from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from pandas import DataFrame
 
+from halo_mass_profile import V
 from paths import base_dir
 from readfiles import read_file
 from utils import print_progress
@@ -153,6 +154,23 @@ def read_velo_halo_particles(
         halo_unbound_offsets = dict(df["offset_unbound"])
         halo_particle_unbound_ids = particles_in_halo(halo_unbound_offsets, particle_ids_unbound)
     return df, halo_particle_ids, halo_particle_unbound_ids
+
+
+def read_velo_profiles(directory: Path):
+    if (directory / f"vroutput.profiles.0").exists():
+        suffix = ".0"
+    else:
+        suffix = ""
+    profiles_file = h5py.File(directory / f"vroutput.profiles{suffix}")
+    bin_edges = profiles_file["Radial_bin_edges"][1:]
+
+    bin_volumes = V(bin_edges)
+
+    mass_profiles = profiles_file["Mass_profile"][:]
+
+    density_profiles = mass_profiles / bin_volumes
+
+    return bin_edges, mass_profiles, density_profiles
 
 
 def main():
