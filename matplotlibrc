@@ -6,7 +6,7 @@ font.sans-serif: Computer Modern Sans Serif
 font.monospace : Computer Modern Typewriter
 
 axes.axisbelow: False
-axes.titlesize: 24
+axes.titlesize: 15
 axes.labelsize: 20
 
 lines.linewidth: 2
