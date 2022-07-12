@@ -238,12 +238,13 @@ ax.plot(kdb8, np.abs(fpsidb8) ** 2, label='$\\hat\\psi_{DB8}$', c="C3", linestyl
 # all k* are np.linspace(0, np.pi, 256), so we can also use them for shannon
 
 def shannon(k):
-    y=np.zeros_like(k)
-    y[k > pi/2] = 1
+    y = np.zeros_like(k)
+    y[k > pi / 2] = 1
     return y
 
 
 ax.plot(kdb8, shannon(kdb8), label='$\\hat\\varphi_{shannon}$', c="C4")
+ax.plot(kdb8, 1 - shannon(kdb8), label='$\\hat\\psi_{shannon}$', c="C4", linestyle="dashed")
 # ax.plot(kdb8, np.abs(fpsidb8) ** 2, label='$\\hat\\psi_{DB8}$', c="C3", linestyle="dashed")
 
 # kdb16, fphidb16, fpsidb16 = fourier_wavelet(h_DB16, g_DB16, 256)
@@ -252,6 +253,8 @@ ax.plot(kdb8, shannon(kdb8), label='$\\hat\\varphi_{shannon}$', c="C4")
 ax.legend(frameon=False)
 ax.set_xlabel('k')
 ax.set_ylabel('P(k)')
+ax.set_xticks([0, pi / 2, pi])
+ax.set_xticklabels(["0", r"$k_\textrm{coarse}^\textrm{ny}$", r"$k_\textrm{fine}^\textrm{ny}$"])
 
 # plt.semilogy()
 # plt.ylim([1e-4,2.0])
