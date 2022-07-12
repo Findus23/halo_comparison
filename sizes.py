@@ -59,8 +59,9 @@ def plot_comparison_hist(file: Path, property:str, mode: str):
     plt.show()
 
 file = Path(argv[1])
-properties = ['group_size', 'Mass_200crit', 'Mass_tot', 'Mvir', 'R_200crit', 'Rvir', 'Vmax', 'cNFW', 'q', 's'] #Mass_FOF and cNFW_200crit don't work, rest looks normal except for cNFW
-mode = 'concentration_analysis'
+
+# properties = ['group_size', 'Mass_200crit', 'Mass_tot', 'Mvir', 'R_200crit', 'Rvir', 'Vmax', 'cNFW', 'q', 's'] #Mass_FOF and cNFW_200crit don't work, rest looks normal except for cNFW
+# mode = 'concentration_analysis'
 
 # for property in properties:
 #     plot_comparison_hist2d(file, property, mode)
@@ -73,19 +74,78 @@ mode = 'concentration_analysis'
 
 # plot_comparison_hist2d(file, 'cNFW_200mean', mode)
 
-ref_property = 'ref_cNFW_200crit'
-comp_property = 'comp_cNFW_200crit'
+# ref_property = 'ref_cNFW_200crit'
+# comp_property = 'comp_cNFW_200crit'
 
+# df = pd.read_csv(file)
+# all_ref_structure_types: pd.DataFrame = df[ref_property]
+# all_comp_structure_types: pd.DataFrame = df[comp_property]
+
+# df_odd: pd.DataFrame = df.loc[2 * df.ref_cNFW < df.comp_cNFW]
+# odd_ref_structure_types: pd.DataFrame = df_odd[ref_property]
+# odd_comp_structure_types: pd.DataFrame = df_odd[comp_property]
+
+# print(all_ref_structure_types.mean(), all_comp_structure_types.mean())
+# print(odd_ref_structure_types.mean(), odd_comp_structure_types.mean())
+
+def concentration(row):
+    cnfw = [0., 0.]
+    colour = ['ref', 'comp']
+    for i, halo_type in enumerate(['ref', 'comp']):
+        r_200crit = row[f'{halo_type}_R_200crit']
+        if r_200crit <= 0: 
+            cnfw[i] = -1
+            colour[i] = 'orange'
+            continue
+    
+        r_size = row[f'{halo_type}_R_size'] #largest difference from center of mass to any halo particle
+        m_200crit = row[f'{halo_type}_Mass_200crit']
+        vmax = row[f'{halo_type}_Vmax'] #largest velocity coming from enclosed mass profile calculation
+        rmax = row[f'{halo_type}_Rmax']
+        npart = row[f'{halo_type}_npart']
+        VmaxVvir2 = vmax ** 2 * r_200crit / (G * m_200crit)
+        if VmaxVvir2 <= 1.05:
+            if m_200crit == 0:
+                cnfw[i] = r_size / rmax
+                colour[i] = 'red' 
+            else:
+                cnfw[i] = r_200crit / rmax
+                colour[i] = 'green'
+        else:
+            if npart >= 100: #only calculate cnfw for groups with more than 100 particles
+                cnfw[i] = row[f'{halo_type}_cNFW']
+                colour[i] = 'black'
+            else:
+                if m_200crit == 0:
+                    cnfw[i] = r_size / rmax
+                    colour[i] = 'blue'
+                else:
+                    cnfw[i] = r_200crit / rmax
+                    colour[i] = 'purple'
+    
+    return cnfw, colour
+        
+    
+
+
+#density like in Vr:
+G = 43.022682 # in Mpc (km/s)^2 / (10^10 Msun)
+ref_colour = []
+comp_colour = []
+ref_cnfw = []
+comp_cnfw = []
 df = pd.read_csv(file)
-all_ref_structure_types: pd.DataFrame = df[ref_property]
-all_comp_structure_types: pd.DataFrame = df[comp_property]
 
-df_odd: pd.DataFrame = df.loc[2 * df.ref_cNFW < df.comp_cNFW]
-odd_ref_structure_types: pd.DataFrame = df_odd[ref_property]
-odd_comp_structure_types: pd.DataFrame = df_odd[comp_property]
 
-print(all_ref_structure_types.mean(), all_comp_structure_types.mean())
-print(odd_ref_structure_types.mean(), odd_comp_structure_types.mean())
+for index, row in df.iterrows():
+    cnfw, colour = concentration(row)
+    ref_cnfw.append(cnfw[0])
+    ref_colour.append(colour[0])
+    comp_cnfw.append(cnfw[1])
+    comp_colour.append(colour[1])
+
+plt.scatter(ref_cnfw, comp_cnfw, s=1, c=comp_colour, alpha=.3)
+plt.show()
 
 
 # #Maybe for later:
