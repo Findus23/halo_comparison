@@ -12,41 +12,40 @@ from matplotlib.figure import Figure
 G = 43.022682  # in Mpc (km/s)^2 / (10^10 Msun)
 
 
-def concentration(row):
-    cnfw = [0., 0.]
-    colour = ['ref', 'comp']
-    for i, halo_type in enumerate(['ref', 'comp']):
-        r_200crit = row[f'{halo_type}_R_200crit']
-        if r_200crit <= 0:
-            cnfw[i] = -1
-            colour[i] = 'orange'
-            continue
+def concentration(row, halo_type: str):
+    r_200crit = row[f'{halo_type}_R_200crit']
+    if r_200crit <= 0:
+        cnfw = -1
+        colour = 'orange'
+        return cnfw, colour
 
-        r_size = row[f'{halo_type}_R_size']  # largest difference from center of mass to any halo particle
-        m_200crit = row[f'{halo_type}_Mass_200crit']
-        vmax = row[f'{halo_type}_Vmax']  # largest velocity coming from enclosed mass profile calculation
-        rmax = row[f'{halo_type}_Rmax']
-        npart = row[f'{halo_type}_npart']
-        VmaxVvir2 = vmax ** 2 * r_200crit / (G * m_200crit)
-        if VmaxVvir2 <= 1.05:
-            if m_200crit == 0:
-                cnfw[i] = r_size / rmax
-                colour[i] = 'red'
-            else:
-                cnfw[i] = r_200crit / rmax
-                colour[i] = 'green'
+    r_size = row[f'{halo_type}_R_size']  # largest difference from center of mass to any halo particle
+    m_200crit = row[f'{halo_type}_Mass_200crit']
+    vmax = row[f'{halo_type}_Vmax']  # largest velocity coming from enclosed mass profile calculation
+    rmax = row[f'{halo_type}_Rmax']
+    npart = row[f'{halo_type}_npart']
+    VmaxVvir2 = vmax ** 2 * r_200crit / (G * m_200crit)
+    if VmaxVvir2 <= 1.05:
+        if m_200crit == 0:
+            cnfw = r_size / rmax
+            colour = 'red'
         else:
-            if npart >= 100:  # only calculate cnfw for groups with more than 100 particles
-                cnfw[i] = row[f'{halo_type}_cNFW']
-                colour[i] = 'black'
+            cnfw = r_200crit / rmax
+            colour = 'green'
+    else:
+        if npart >= 100:  # only calculate cnfw for groups with more than 100 particles
+            cnfw = row[f'{halo_type}_cNFW']
+            colour = 'black'
+        else:
+            if m_200crit == 0:
+                cnfw = r_size / rmax
+                colour = 'blue'
             else:
-                if m_200crit == 0:
-                    cnfw[i] = r_size / rmax
-                    colour[i] = 'blue'
-                else:
-                    cnfw[i] = r_200crit / rmax
-                    colour[i] = 'purple'
-        assert np.isclose(cnfw[i], row[f'{halo_type}_cNFW'])
+                cnfw = r_200crit / rmax
+                colour = 'purple'
+    assert np.isclose(cnfw, row[f'{halo_type}_cNFW'])
+
+
     return cnfw, colour
 
 
@@ -69,8 +68,8 @@ def plot_comparison_hist2d(file: Path, property: str, mode: str):
     if mode == "concentration_bla" and property == 'cNFW':
         colors = []
         for i, row in df.iterrows():
-            cnfw, colour = concentration(row)
-            colors.append(colour[0])
+            cnfw, colour = concentration(row, halo_type="ref") # or comp
+            colors.append(colour)
         ax.scatter(df[x_col], df[y_col], c=colors, s=1, alpha=.3)
     else:
         _, _, _, hist = ax.hist2d(df[x_col], df[y_col], bins=(bins, bins), norm=LogNorm())
