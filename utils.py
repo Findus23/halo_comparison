@@ -38,3 +38,15 @@ def print_wall_time(dir: Path):
     assert "main: done. Bye." in last_line
     seconds = float(last_line[1:].split("]")[0])
     print(f"Runtime: {seconds / 60 / 60:.2f} hours")
+
+
+def figsize_from_page_fraction(columns=1, height_to_width=3/4):
+    cm = 1 / 2.54  # centimeters in inches
+    # \printinunitsof{cm}\prntlen{\linewidth}
+    two_column_width = 17.85162  # cm
+    one_colum_width = 8.5744  # cm
+    upscale_factor = 1.3
+
+    width = two_column_width if columns == 2 else one_colum_width
+    height = width * height_to_width
+    return width * cm * upscale_factor, height * cm * upscale_factor

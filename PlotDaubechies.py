@@ -11,7 +11,6 @@ import numpy as np
 from matplotlib.figure import Figure
 from pyvista import Axes
 
-
 # # The Cascade Algorithm to Compute the Wavelet and the Scaling Function
 # Algorithm adapted from [this webpage](https://cnx.org/contents/0nnvPGYf@7/Computing-the-Scaling-Function-The-Cascade-Algorithm). The iterations are defined by
 # $$ \varphi^{(k+1)}(t)=\sqrt{2} \;\sum_{n=0}^{N-1} h[n]\, \varphi^{(k)} (2t-n) $$
@@ -44,6 +43,7 @@ from pyvista import Axes
 # $$
 # which can be applied in the cascade algorithm in the last iteration to obtain the wavelet rather than the scaling function.
 #
+from utils import figsize_from_page_fraction
 
 
 def upsample(sig):
@@ -161,7 +161,9 @@ xdb16, phidb16, psidb16 = cascade_algorithm(h_DB16, g_DB16, maxit)
 ###################################
 
 fig: Figure
-fig, ax = plt.subplots(4, 2, figsize=(8, 12))  # ,gridspec_kw = {'wspace':0.025})
+fig, ax = plt.subplots(4, 2,
+                       figsize=figsize_from_page_fraction(height_to_width=12 / 8)
+                       )
 labels = ['Haar', 'DB2', 'DB4', 'DB8', 'DB16']
 
 ax[0, 0].set_title('scaling functions $\\varphi$')
@@ -195,12 +197,12 @@ for a, label in zip(ax[:, 1], labels):
     a.set_ylim([-2, 2])
 
 fig.tight_layout()
-fig.savefig(Path(f"~/tmp/wavelets.pdf").expanduser(), bbox_inches='tight')
+fig.savefig(Path(f"~/tmp/wavelets.pdf").expanduser())
 
 # # Spectral Response of Scaling Functions and Wavelets
 
 
-fig2: Figure = plt.figure(figsize=(8, 5))
+fig2: Figure = plt.figure(figsize=figsize_from_page_fraction())
 ax: Axes = fig2.gca()
 
 
@@ -258,6 +260,6 @@ ax.set_xticklabels(["0", r"$k_\textrm{coarse}^\textrm{ny}$", r"$k_\textrm{fine}^
 
 # plt.semilogy()
 # plt.ylim([1e-4,2.0])
-
-fig2.savefig(Path(f"~/tmp/wavelet_power.pdf").expanduser(), bbox_inches='tight')
+fig2.tight_layout()
+fig2.savefig(Path(f"~/tmp/wavelet_power.pdf").expanduser())
 plt.show()

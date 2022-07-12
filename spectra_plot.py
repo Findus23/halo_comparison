@@ -9,6 +9,7 @@ from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 
 from paths import base_dir
+from utils import figsize_from_page_fraction
 
 Lbox = 100
 h = 0.690021
@@ -82,7 +83,7 @@ def create_plot(mode):
     combination_list = list(itertools.combinations(resolutions, 2))
     fig, axes = plt.subplots(
         len(waveforms), 3, sharex=True, sharey=True,
-        constrained_layout=True, figsize=(9, 9),
+        constrained_layout=True, figsize=figsize_from_page_fraction(columns=2),
     )
     crossings = np.zeros((len(waveforms), len(combination_list)))
     for i, waveform in enumerate(waveforms):
@@ -104,7 +105,6 @@ def create_plot(mode):
                 0.02,
                 0.85,
                 f"{waveform}",
-                size=13,
                 horizontalalignment="left",
                 verticalalignment="top",
                 transform=ax.transAxes,
@@ -113,7 +113,6 @@ def create_plot(mode):
                 0.98 if mode == "cross" else 0.93,
                 0.85,
                 axes_names[ax],
-                size=13,
                 horizontalalignment="right",
                 verticalalignment="top",
                 transform=ax.transAxes,
@@ -199,6 +198,7 @@ def create_plot(mode):
     crossings_df = pd.DataFrame(crossings, columns=combination_list, index=waveforms)
     # print(crossings_df.to_markdown())
     print(crossings_df.to_latex())
+    # fig.tight_layout()
     fig.savefig(Path(f"~/tmp/spectra_{mode}.pdf").expanduser())
 
 

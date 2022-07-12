@@ -5,19 +5,3 @@ font.serif     : Computer Modern Roman
 font.sans-serif: Computer Modern Sans Serif
 font.monospace : Computer Modern Typewriter
 
-axes.axisbelow: False
-axes.titlesize: 15
-axes.labelsize: 20
-
-lines.linewidth: 2
-
-xtick.labelsize: 16
-ytick.labelsize: 16
-xtick.major.size: 10
-ytick.major.size: 10
-xtick.minor.size: 5
-ytick.minor.size: 5
-xtick.direction: in
-ytick.direction: in
-
-legend.fontsize: x-large
