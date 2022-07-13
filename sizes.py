@@ -68,7 +68,7 @@ def plot_comparison_hist2d(file: Path, property: str, mode: str):
     if mode == "concentration_bla" and property == 'cNFW':
         colors = []
         for i, row in df.iterrows():
-            cnfw, colour = concentration(row, halo_type="ref") # or comp
+            cnfw, colour = concentration(row, halo_type="comp") # ref or comp
             colors.append(colour)
         ax.scatter(df[x_col], df[y_col], c=colors, s=1, alpha=.3)
     else:
