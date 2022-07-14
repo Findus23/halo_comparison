@@ -131,12 +131,13 @@ def compare_halo_resolutions(
         if len(nearby_halos) < 10:
             print(f"only {len(nearby_halos)} halos, expanding to 50xRvir")
             nearby_halos = set(df_comp_halo.loc[halo_distances < ref_halo.Rvir * 50].index.to_list())
+        # TODO: if still no found: further expand or skip?
         if len(nearby_halos) < 10:
             print(f"only {len(nearby_halos)} halos, expanding to 150xRvir")
             nearby_halos = set(df_comp_halo.loc[halo_distances < ref_halo.Rvir * 150].index.to_list())
 
         if not nearby_halos:
-            raise Exception("no halos are nearby")  # TODO
+            raise Exception("no halos are nearby")
             # continue
         print(f"found {len(nearby_halos)} halos")
         if plot or plot3d or plot_cic or (not velo_halos):
@@ -215,12 +216,12 @@ def compare_halo_resolutions(
             halo_size = len(particle_ids_in_comp_halo)
             # df = particles_in_comp_halo.join(halo_particles, how="inner", rsuffix="ref")
             shared_particles = particle_ids_in_comp_halo.intersection(halo_particle_ids)
-            union_particles=particle_ids_in_comp_halo.union(halo_particle_ids)
+            union_particles = particle_ids_in_comp_halo.union(halo_particle_ids)
 
-            shared_size = len(shared_particles)/len(union_particles)
+            similarity = len(shared_particles) / len(union_particles)
             # print(shared_size)
-            if not shared_size:
-                continue
+            # if not similarity:
+            #     continue
 
             if plot or plot3d:
                 df = df_comp.loc[list(shared_particles)]
@@ -237,8 +238,8 @@ def compare_halo_resolutions(
                 ax.add_artist(circle)
             if plot3d:
                 plotdf3d(pl, df, color="#fed9a6")  # light orange
-            if shared_size > best_halo_match:
-                best_halo_match = shared_size
+            if similarity > best_halo_match:
+                best_halo_match = similarity
                 best_halo = halo_id
         print(f"skipped {num_skipped_for_mass} halos due to mass ratio")
         if not best_halo:
