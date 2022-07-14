@@ -11,7 +11,7 @@ from paths import base_dir, vis_datafile, has_1024_simulations
 from read_vr_files import read_velo_halo_particles
 from readfiles import read_file
 
-all_in_area = False
+all_in_area = True
 
 Coords = Tuple[float, float, float, float]  # radius, X, Y, Z
 
