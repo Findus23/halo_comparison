@@ -14,7 +14,7 @@ from utils import figsize_from_page_fraction
 Lbox = 100
 h = 0.690021
 k0 = 3.14159265358979323846264338327950 / Lbox
-resolutions = [128, 256, 512]
+resolutions = [128, 256, 512, 1024]
 waveforms = ["DB2", "DB4", "DB8", "shannon"]
 
 # Careful: k is actually in Mpc^-1, the column is just named weirdly.
@@ -110,7 +110,7 @@ def create_plot(mode):
                 transform=ax.transAxes,
             )
             ax.text(
-                0.98 if mode == "cross" else 0.93,
+                0.98,
                 0.85,
                 axes_names[ax],
                 horizontalalignment="right",
@@ -122,7 +122,7 @@ def create_plot(mode):
                     k0 * res,
                     color=colors[j],
                     linestyle="dashed",
-                    label=f"{res}",
+                    label=f"$k_\\mathrm{{ny, {res}}}$" if mode =="power" else None,
                 )
             # ax.set_xticklabels([])
             # ax.set_yticklabels([])
@@ -133,21 +133,21 @@ def create_plot(mode):
                 ics_data = spectra_data(waveform, resolution, resolution, Lbox, "ics")
                 ics_k = ics_data["k [Mpc]"]
                 ics_p1 = ics_data["P1"]
-                comp_data = spectra_data(waveform, 512, 512, Lbox, "ics")
+                comp_data = spectra_data(waveform, resolutions[-1], resolutions[-1], Lbox, "ics")
                 comp_p1 = comp_data["P1"]
                 ics_p1 /= comp_p1
 
                 end_data = spectra_data(waveform, resolution, resolution, Lbox, "end")
                 end_k = end_data["k [Mpc]"]
                 end_p1 = end_data["P1"]
-                comp_data = spectra_data(waveform, 512, 512, Lbox, "end")
+                comp_data = spectra_data(waveform, resolutions[-1], resolutions[-1], Lbox, "end")
                 comp_p1 = comp_data["P1"]
                 end_p1 /= comp_p1
 
                 z1_data = spectra_data(waveform, resolution, resolution, Lbox, "z=1")
                 z1_k = z1_data["k [Mpc]"]
                 z1_p1 = z1_data["P1"]
-                comp_data = spectra_data(waveform, 512, 512, Lbox, 'z=1')
+                comp_data = spectra_data(waveform, resolutions[-1], resolutions[-1], Lbox, 'z=1')
                 comp_p1 = comp_data["P1"]
                 z1_p1 /= comp_p1
 
@@ -190,7 +190,7 @@ def create_plot(mode):
             ax_end.set_ylim(0.8, 1.02)
         if bottom_row:
             # ax_z1.legend()
-            ax_end.legend(loc="lower left")
+            ax_ics.legend(loc='lower left')
 
         # fig.suptitle(f"Cross Spectra {time}") #Not needed for paper
         # fig.tight_layout()

@@ -28,10 +28,10 @@ def concentration(row, halo_type: str):
     if VmaxVvir2 <= 1.05:
         if m_200crit == 0:
             cnfw = r_size / rmax
-            colour = 'red'
+            colour = 'white'
         else:
             cnfw = r_200crit / rmax
-            colour = 'green'
+            colour = 'white'
     else:
         if npart >= 100:  # only calculate cnfw for groups with more than 100 particles
             cnfw = row[f'{halo_type}_cNFW']
@@ -39,10 +39,10 @@ def concentration(row, halo_type: str):
         else:
             if m_200crit == 0:
                 cnfw = r_size / rmax
-                colour = 'blue'
+                colour = 'white'
             else:
                 cnfw = r_200crit / rmax
-                colour = 'purple'
+                colour = 'white'
     assert np.isclose(cnfw, row[f'{halo_type}_cNFW'])
 
 
@@ -68,8 +68,12 @@ def plot_comparison_hist2d(file: Path, property: str, mode: str):
     if mode == "concentration_bla" and property == 'cNFW':
         colors = []
         for i, row in df.iterrows():
-            cnfw, colour = concentration(row, halo_type="ref") # or comp
-            colors.append(colour)
+            comp_cnfw, comp_colour = concentration(row, halo_type="comp") # ref or comp
+            ref_cnfw, ref_colour = concentration(row, halo_type='ref')
+            if comp_colour == 'white' or ref_colour == 'white':
+                colors.append('white')
+            else:
+                colors.append('black')
         ax.scatter(df[x_col], df[y_col], c=colors, s=1, alpha=.3)
     else:
         _, _, _, hist = ax.hist2d(df[x_col], df[y_col], bins=(bins, bins), norm=LogNorm())
