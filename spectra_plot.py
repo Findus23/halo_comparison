@@ -190,7 +190,7 @@ def create_plot(mode):
             ax_end.set_ylim(0.8, 1.02)
         if bottom_row:
             # ax_z1.legend()
-            ax_end.legend()
+            ax_end.legend(loc="lower left")
 
         # fig.suptitle(f"Cross Spectra {time}") #Not needed for paper
         # fig.tight_layout()
