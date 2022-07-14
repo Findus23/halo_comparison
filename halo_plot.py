@@ -1,3 +1,5 @@
+from pathlib import Path
+from sys import argv
 from typing import List
 
 import h5py
@@ -7,10 +9,12 @@ from matplotlib.axes import Axes
 from matplotlib.colors import LogNorm
 from matplotlib.figure import Figure
 from matplotlib.patches import Circle
+from mpl_toolkits.axes_grid1.anchored_artists import AnchoredSizeBar
 
 from halo_vis import Coords
-from paths import base_dir, vis_datafile
+from paths import base_dir, vis_datafile, has_1024_simulations
 from read_vr_files import read_velo_halos
+from utils import figsize_from_page_fraction
 
 
 def coord_to_2d_extent(coords: Coords):
@@ -34,21 +38,27 @@ def main():
     rows = ["shannon", "DB8", "DB4", "DB2"]
     offset = 2
     columns = [128, 256, 512]
-    fig: Figure = plt.figure(figsize=(9, 9))
+    initial_halo_id = int(argv[1])
+    if has_1024_simulations:
+        columns.append(1024)
+    fig: Figure = plt.figure(figsize=figsize_from_page_fraction(columns=2, height_to_width=1))
     axes: List[List[Axes]] = fig.subplots(len(rows), len(columns), sharex="row", sharey="row")
     with h5py.File(vis_datafile) as vis_out:
-        vmin, vmax = vis_out["vmin_vmax"]
+        halo_group = vis_out[str(initial_halo_id)]
+
+        vmin, vmax = halo_group["vmin_vmax"]
         print(vmin, vmax)
         for i, waveform in enumerate(rows):
             for j, resolution in enumerate(columns):
                 dir = base_dir / f"{waveform}_{resolution}_100"
                 halos = read_velo_halos(dir)
                 ax = axes[i][j]
-                rho = np.asarray(vis_out[f"{waveform}_{resolution}_rho"])
+                dataset_group = halo_group[f"{waveform}_{resolution}"]
+                rho = np.asarray(dataset_group["rho"])
                 # radius, X, Y, Z
-                coords: Coords = tuple(vis_out[f"{waveform}_{resolution}_coords"])
-                mass = vis_out[f"{waveform}_{resolution}_mass"][()]  # get scalar value from Dataset
-                main_halo_id = vis_out[f"{waveform}_{resolution}_halo_id"][()]
+                coords: Coords = tuple(dataset_group["coords"])
+                mass = dataset_group["mass"][()]  # get scalar value from Dataset
+                main_halo_id = dataset_group["halo_id"][()]
                 vmin_scaled = (vmin + offset) * mass
                 vmax_scaled = (vmax + offset) * mass
                 rho = (rho + offset) * mass
@@ -57,9 +67,14 @@ def main():
                                 origin="lower")
                 found_main_halo = False
                 for halo_id, halo in halos.iterrows():
-                    if halo["Vmax"] > 100:
+                    if halo["Vmax"] > 140:
                         if in_area(coords, halo.X, halo.Y, halo.Z):
-                            color = "red" if halo_id == main_halo_id else "white"
+                            if halo_id == main_halo_id:
+                                color = "red"
+                            elif halo["Structuretype"] > 10:
+                                color = "green"
+                            else:
+                                color = "white"
                             if halo_id == main_halo_id:
                                 found_main_halo = True
                                 print("plotting main halo")
@@ -69,8 +84,22 @@ def main():
                                 linewidth=1, edgecolor=color, fill=None, alpha=.2
                             )
                             ax.add_artist(circle)
-                assert found_main_halo
+                # assert found_main_halo
                 print(img)
+
+                # ax.set_axis_off()
+                ax.set_xticks([])
+                ax.set_yticks([])
+                if j == 0:
+                    scalebar = AnchoredSizeBar(
+                        ax.transData,
+                        1, '1 Mpc', 'lower left',
+                        # pad=0.1,
+                        color='white',
+                        frameon=False,
+                        # size_vertical=1
+                    )
+                    ax.add_artist(scalebar)
             #     break
             # break
     pad = 5
@@ -80,15 +109,19 @@ def main():
                     xycoords='axes fraction', textcoords='offset points',
                     size='large', ha='center', va='baseline')
     for ax, row in zip(axes[:, 0], rows):
+        ax: Axes
         ax.annotate(row, xy=(0, 0.5), xytext=(-ax.yaxis.labelpad - pad, 0),
                     xycoords=ax.yaxis.label, textcoords='offset points',
                     size='large', ha='right', va='center')
+
     fig.tight_layout()
     fig.subplots_adjust(right=0.825)
-    cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
+    cbar_ax = fig.add_axes([0.85, 0.05, 0.05, 0.9])
     fig.colorbar(img, cax=cbar_ax)
 
-    fig.savefig("halo_plot.png", dpi=600)
+    fig.savefig(Path(f"~/tmp/halo_plot_{initial_halo_id}.pdf").expanduser())
+    fig.savefig(Path(f"~/tmp/halo_plot_{initial_halo_id}.png").expanduser())
+
     plt.show()
 
 

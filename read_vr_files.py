@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Optional
 
 import h5py
 import numpy as np
@@ -122,8 +122,8 @@ def read_velo_halos(directory: Path, veloname="vroutput"):
 
 
 def read_velo_halo_particles(
-        directory: Path, recursivly=False, skip_unbound=True
-) -> Tuple[DataFrame, HaloParticleMapping, HaloParticleMapping]:
+        directory: Path, skip_halo_particle_ids=False, skip_unbound=True
+) -> Tuple[DataFrame, Optional[HaloParticleMapping], Optional[HaloParticleMapping]]:
     """
     This reads the output files of VELOCIraptor
     and returns the halo data from read_velo_halos
@@ -141,7 +141,8 @@ def read_velo_halo_particles(
         directory / f"vroutput.catalog_particles.unbound{suffix}"
     )
     particle_ids_unbound = particle_catalog_unbound["Particle_IDs"][:]
-
+    if skip_halo_particle_ids:
+        return df, None, None
     print("look up bound particle IDs")
     # particle_cache_file = directory / "vrbound.cache.hdf5"
     # ub_particle_cache_file = directory / "vrunbound.cache.hdf5"

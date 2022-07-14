@@ -1,3 +1,4 @@
+from sys import argv
 from typing import Tuple
 
 import h5py
@@ -6,7 +7,7 @@ import pandas as pd
 from matplotlib import pyplot as plt
 
 from cic import cic_from_radius
-from paths import base_dir, vis_datafile
+from paths import base_dir, vis_datafile, has_1024_simulations
 from read_vr_files import read_velo_halo_particles
 from readfiles import read_file
 
@@ -18,7 +19,7 @@ Coords = Tuple[float, float, float, float]  # radius, X, Y, Z
 def load_halo_data(waveform: str, resolution: int, halo_id: int, coords: Coords):
     dir = base_dir / f"{waveform}_{resolution}_100"
     df, meta = read_file(dir / "output_0004.hdf5")
-    df_halo, halo_lookup, unbound = read_velo_halo_particles(dir, recursivly=False)
+    df_halo, halo_lookup, unbound = read_velo_halo_particles(dir, skip_halo_particle_ids=all_in_area)
 
     halo = df_halo.loc[halo_id]
     if coords:
@@ -68,7 +69,10 @@ def imsave(rho, file_name: str):
 
 def main():
     waveforms = ["shannon", "DB2", "DB4", "DB8"]
-    initial_halo_id = 1
+    resolutions = [128, 256, 512]
+    if has_1024_simulations:
+        resolutions.append(1024)
+    initial_halo_id = int(argv[1])
     first_halo = True
     rhos = {}
     ref_waveform = "shannon"
@@ -78,11 +82,10 @@ def main():
         coords[wf] = None
     vmin = np.Inf
     vmax = -np.Inf
-    if vis_datafile.exists():
-        input("confirm to overwrite file")
-    with h5py.File(vis_datafile, "w") as vis_out:
+    with h5py.File(vis_datafile, "a") as vis_out:
+        halo_group = vis_out.create_group(str(initial_halo_id))
         for waveform in waveforms:
-            for resolution in [128, 256, 512]:
+            for resolution in resolutions:
                 if first_halo:
                     assert ref_resolution == resolution
                     assert ref_waveform == waveform
@@ -90,7 +93,8 @@ def main():
                     first_halo = False
                 else:
                     halo_id = map_halo_id(initial_halo_id, ref_waveform, ref_resolution, waveform, resolution)
-                halo, halo_particles, meta, image_coords = load_halo_data(waveform, resolution, halo_id, coords[waveform])
+                halo, halo_particles, meta, image_coords = load_halo_data(waveform, resolution, halo_id,
+                                                                          coords[waveform])
                 if not coords[waveform]:
                     coords[waveform] = image_coords
                 print(coords[waveform])
@@ -104,12 +108,13 @@ def main():
                 rhos[(waveform, resolution)] = rho
                 vmin = min(rho.min(), vmin)
                 vmax = max(rho.max(), vmax)
-                vis_out.create_dataset(f"{waveform}_{resolution}_rho", data=rho, compression='gzip', compression_opts=5)
-                vis_out.create_dataset(f"{waveform}_{resolution}_coords", data=coords[waveform])
-                vis_out.create_dataset(f"{waveform}_{resolution}_mass", data=meta.particle_mass)
-                vis_out.create_dataset(f"{waveform}_{resolution}_halo_id", data=halo_id)
+                dataset_group = halo_group.create_group(f"{waveform}_{resolution}")
+                dataset_group.create_dataset("rho", data=rho, compression='gzip', compression_opts=5)
+                dataset_group.create_dataset("coords", data=coords[waveform])
+                dataset_group.create_dataset("mass", data=meta.particle_mass)
+                dataset_group.create_dataset("halo_id", data=halo_id)
                 imsave(rho, f"out_halo{initial_halo_id}_{waveform}_{resolution}_{halo_id}.png")
-        vis_out.create_dataset("vmin_vmax", data=[vmin, vmax])
+        halo_group.create_dataset("vmin_vmax", data=[vmin, vmax])
 
 
 if __name__ == '__main__':
