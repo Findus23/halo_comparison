@@ -67,14 +67,14 @@ def main():
                                 origin="lower")
                 found_main_halo = False
                 for halo_id, halo in halos.iterrows():
-                    if halo["Vmax"] > 140:
+                    if halo["Mvir"] > 20:
                         if in_area(coords, halo.X, halo.Y, halo.Z):
                             if halo_id == main_halo_id:
                                 color = "red"
                             elif halo["Structuretype"] > 10:
-                                color = "green"
+                                color = "lightgreen"
                             else:
-                                color = "white"
+                                color = "lightblue"
                             if halo_id == main_halo_id:
                                 found_main_halo = True
                                 print("plotting main halo")
