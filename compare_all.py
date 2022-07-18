@@ -1,3 +1,5 @@
+import traceback
+
 from compare_halos import compare_halo_resolutions
 
 something_failed = False
@@ -15,7 +17,8 @@ for wf in ["DB2", "DB4", "DB8", "shannon"]:
                     velo_halos=True,
                     single=False
                 )
-            except:
+            except Exception as e:
+                traceback.print_exc()
                 something_failed = True
                 continue
 
