@@ -1,14 +1,18 @@
 from pathlib import Path
-from sys import argv
 
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
+from matplotlib.collections import QuadMesh
 from matplotlib.colors import LogNorm
 from matplotlib.figure import Figure
 
 # density like in Vr:
+from halo_vis import get_comp_id
+from paths import base_dir
+from utils import figsize_from_page_fraction, rowcolumn_labels
+
 G = 43.022682  # in Mpc (km/s)^2 / (10^10 Msun)
 
 
@@ -45,11 +49,10 @@ def concentration(row, halo_type: str):
                 colour = 'white'
     assert np.isclose(cnfw, row[f'{halo_type}_cNFW'])
 
-
     return cnfw, colour
 
 
-def plot_comparison_hist2d(file: Path, property: str, mode: str):
+def plot_comparison_hist2d(ax: Axes, file: Path, property: str, mode: str):
     print("WARNING: Can only plot hist2d of properties with comp_ or ref_ right now!")
     print(f"         Selected property: {property}")
     x_col = f"ref_{property}"
@@ -62,13 +65,11 @@ def plot_comparison_hist2d(file: Path, property: str, mode: str):
     else:
         min_x = min([min(df[x_col]), min(df[y_col])])
         max_x = max([max(df[x_col]), max(df[y_col])])
-    fig: Figure = plt.figure()
-    ax: Axes = fig.gca()
     bins = np.geomspace(min_x, max_x, 100)
     if mode == "concentration_bla" and property == 'cNFW':
         colors = []
         for i, row in df.iterrows():
-            comp_cnfw, comp_colour = concentration(row, halo_type="comp") # ref or comp
+            comp_cnfw, comp_colour = concentration(row, halo_type="comp")  # ref or comp
             ref_cnfw, ref_colour = concentration(row, halo_type='ref')
             if comp_colour == 'white' or ref_colour == 'white':
                 colors.append('white')
@@ -76,19 +77,41 @@ def plot_comparison_hist2d(file: Path, property: str, mode: str):
                 colors.append('black')
         ax.scatter(df[x_col], df[y_col], c=colors, s=1, alpha=.3)
     else:
-        _, _, _, hist = ax.hist2d(df[x_col], df[y_col], bins=(bins, bins), norm=LogNorm())
-        fig.colorbar(hist)
+        rep_row = 20
+        rep_x_left = bins[rep_row]
+        rep_x_right = bins[rep_row] + 1
+        rep_bin = (rep_x_left < df[x_col]) & (df[x_col] < rep_x_right)
+        rep_values = df.loc[rep_bin][y_col]
+        mean = rep_values.mean()
+        std = rep_values.std()
+        print(rep_values.describe())
+        image: QuadMesh
+        xedges: np.ndarray  # 1d
+        yedges: np.ndarray  # 1d
+        hist: np.ndarray  # 2d
+        hist, xedges, yedges, image = ax.hist2d(df[x_col], df[y_col], bins=(bins, bins), norm=LogNorm())
+        ax.plot([rep_x_left, rep_x_left], [mean - std, mean + std], c="C1")
+        ax.annotate(
+            text=f"std={std:.2f}", xy=(rep_x_left, mean + std),
+            textcoords="axes fraction", xytext=(0.1, 0.9),
+            arrowprops={}
+        )
+        print(mean - std, mean + std)
+        # print(hist)
+        # print(list(hist[rep_row]))
+        # print(rep_x_left)
+        # exit()
+        print("vmin/vmax", image.norm.vmin, image.norm.vmax)
+        # fig.colorbar(hist)
 
     # ax.set_xscale("log")
-    ax.set_xlabel(x_col)
-    ax.set_ylabel(y_col)
     # ax.set_yscale("log")
 
     ax.loglog([min_x, max_x], [min_x, max_x], linewidth=1, color="C2")
-    ax.set_title(file.name)
+    return x_col, y_col
+    # ax.set_title(file.name)
     # fig.savefig(Path(f"~/tmp/comparison_{file.stem}.pdf").expanduser())
-    fig.suptitle
-    plt.show()
+    # fig.suptitle
 
 
 def plot_comparison_hist(file: Path, property: str, mode: str):
@@ -103,21 +126,48 @@ def plot_comparison_hist(file: Path, property: str, mode: str):
     ax2.hist(df[property][df[property] < 50], bins=100)
     ax2.set_xlabel(property)
     ax2.set_title(file.name)
+    ax.set_aspect("scaled")
     # fig2.savefig(Path(f"~/tmp/distances_{file.stem}.pdf").expanduser())
     fig2.suptitle
     plt.show()
 
 
-file = Path(argv[1])
+comparisons_dir = base_dir / "comparisons"
 
-# properties = ['group_size', 'Mass_200crit', 'Mass_tot', 'Mvir', 'R_200crit', 'Rvir', 'Vmax', 'cNFW', 'q', 's'] #Mass_FOF and cNFW_200crit don't work, rest looks normal except for cNFW
-properties = ['cNFW']
+# properties = ['group_size', 'Mass_200crit', 'Mass_tot', 'Mvir', 'R_200crit', 'Rvir', 'Vmax', 'cNFW', 'q',
+#               's']  # Mass_FOF and cNFW_200crit don't work, rest looks normal except for cNFW
+properties = ['Mvir']
 # mode = 'concentration_analysis'
-mode = 'concentration_bla'
+mode = 'normal'
+waveforms = ["DB2", "DB4", "DB8", "shannon"]
+
+comparisons = [(256, 512), (256, 1024)]  # , (512, 1024)
 
 for property in properties:
-    plot_comparison_hist2d(file, property, mode)
+    fig: Figure
+    fig, axes = plt.subplots(
+        len(waveforms), len(comparisons),
+        sharey="all", sharex="all",
+        figsize=figsize_from_page_fraction(columns=2)
+    )
+    for i, waveform in enumerate(waveforms):
+        for j, (ref_res, comp_res) in enumerate(comparisons):
+            file_id = get_comp_id(waveform, ref_res, waveform, comp_res)
+            file = comparisons_dir / file_id
+            print(file)
+            ax: Axes = axes[i, j]
+            x_col, y_col = plot_comparison_hist2d(ax, file, property, mode)
+            if i == len(waveforms) - 1:
+                ax.set_xlabel(x_col)
+            if j == 0:
+                ax.set_ylabel(y_col)
+    pad = 5
+    rowcolumn_labels(axes, comparisons, isrow=False)
+    rowcolumn_labels(axes, waveforms, isrow=True)
 
+    fig.tight_layout()
+    fig.savefig(Path(f"~/tmp/comparison_{property}.pdf").expanduser())
+    plt.show()
 # axis_ratios = ['q', 's'] #they look normal
 
 # for property in axis_ratios:

@@ -14,7 +14,7 @@ from mpl_toolkits.axes_grid1.anchored_artists import AnchoredSizeBar
 from halo_vis import Coords
 from paths import base_dir, vis_datafile, has_1024_simulations
 from read_vr_files import read_velo_halos
-from utils import figsize_from_page_fraction
+from utils import figsize_from_page_fraction, rowcolumn_labels
 
 
 def coord_to_2d_extent(coords: Coords):
@@ -102,17 +102,8 @@ def main():
                     ax.add_artist(scalebar)
             #     break
             # break
-    pad = 5
-    # based on https://stackoverflow.com/a/25814386/4398037
-    for ax, col in zip(axes[0], columns):
-        ax.annotate(col, xy=(0.5, 1), xytext=(0, pad),
-                    xycoords='axes fraction', textcoords='offset points',
-                    size='large', ha='center', va='baseline')
-    for ax, row in zip(axes[:, 0], rows):
-        ax: Axes
-        ax.annotate(row, xy=(0, 0.5), xytext=(-ax.yaxis.labelpad - pad, 0),
-                    xycoords=ax.yaxis.label, textcoords='offset points',
-                    size='large', ha='right', va='center')
+    rowcolumn_labels(axes, rows, isrow=True)
+    rowcolumn_labels(axes, columns, isrow=False)
 
     fig.tight_layout()
     fig.subplots_adjust(right=0.825)

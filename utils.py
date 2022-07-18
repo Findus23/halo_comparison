@@ -40,7 +40,7 @@ def print_wall_time(dir: Path):
     print(f"Runtime: {seconds / 60 / 60:.2f} hours")
 
 
-def figsize_from_page_fraction(columns=1, height_to_width=3/4):
+def figsize_from_page_fraction(columns=1, height_to_width=3 / 4):
     cm = 1 / 2.54  # centimeters in inches
     # \printinunitsof{cm}\prntlen{\linewidth}
     two_column_width = 17.85162  # cm
@@ -50,3 +50,27 @@ def figsize_from_page_fraction(columns=1, height_to_width=3/4):
     width = two_column_width if columns == 2 else one_colum_width
     height = width * height_to_width
     return width * cm * upscale_factor, height * cm * upscale_factor
+
+
+def rowcolumn_labels(axes, labels, isrow: bool, pad=5) -> None:
+    """
+    based on https://stackoverflow.com/a/25814386/4398037
+    """
+    axs = axes[:, 0] if isrow else axes[0]
+    for ax, label in zip(axs, labels):
+        ax: Axes
+        if isrow:
+            xy = (0, 0.5)
+            xytext = (-ax.yaxis.labelpad - pad, 0)
+            xycoords = ax.yaxis.label
+            ha = 'right'
+            va = 'center'
+        else:
+            xy = (0.5, 1)
+            xytext = (0, pad)
+            xycoords = 'axes fraction'
+            ha = 'center'
+            va = 'baseline'
+        ax.annotate(label, xy=xy, xytext=xytext,
+                    xycoords=xycoords, textcoords='offset points',
+                    size='large', ha=ha, va=va)
