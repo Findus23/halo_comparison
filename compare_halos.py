@@ -55,14 +55,14 @@ def compare_halo_resolutions(
     print("reading reference file")
     df_ref, ref_meta = read_file(reference_dir / "output_0004.hdf5")
     if velo_halos:
-        df_ref_halo, ref_halo_lookup, ref_unbound = read_velo_halo_particles(reference_dir, recursivly=False)
+        df_ref_halo, ref_halo_lookup, ref_unbound = read_velo_halo_particles(reference_dir)
     else:
         df_ref_halo = read_halo_file(reference_dir / "fof_output_0004.hdf5")
 
     print("reading comparison file")
     df_comp, comp_meta = read_file(comparison_dir / "output_0004.hdf5")
     if velo_halos:
-        df_comp_halo, comp_halo_lookup, comp_unbound = read_velo_halo_particles(comparison_dir, recursivly=False)
+        df_comp_halo, comp_halo_lookup, comp_unbound = read_velo_halo_particles(comparison_dir)
 
     else:
         df_comp_halo = read_halo_file(comparison_dir / "fof_output_0004.hdf5")
