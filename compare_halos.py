@@ -235,9 +235,12 @@ def compare_halo_resolutions(
             halo_size = len(particle_ids_in_comp_halo)
             # df = particles_in_comp_halo.join(halo_particles, how="inner", rsuffix="ref")
             shared_particles = particle_ids_in_comp_halo.intersection(halo_particle_ids)
-            union_particles = particle_ids_in_comp_halo.union(halo_particle_ids)
+            # union_particles = particle_ids_in_comp_halo.union(halo_particle_ids)
 
-            similarity = len(shared_particles) / len(union_particles)
+            # similarity = len(shared_particles) / len(union_particles)
+            similarity = len(shared_particles) / (
+                        len(halo_particle_ids) + len(particle_ids_in_comp_halo) - len(shared_particles))
+            # assert similarity_orig == similarity
             # print(shared_size)
             # if not similarity:
             #     continue
@@ -289,7 +292,7 @@ def compare_halo_resolutions(
             pl.show()
         if single:
             break
-    counters.num_matches=len(compared_halos)
+    counters.num_matches = len(compared_halos)
     df = pd.concat(compared_halos, axis=1).T
     print(df)
     print(f"saving to {outfile}")
