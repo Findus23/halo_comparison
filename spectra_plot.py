@@ -168,10 +168,7 @@ def create_plot(mode):
                 ics_data = spectra_data(waveform, res1, res2, Lbox, 'ics')
                 ics_k = ics_data["k [Mpc]"]
                 ics_pcross = ics_data["Pcross"]
-                smaller_res = min(res1, res2)
-                crossing_index = np.searchsorted(ics_k.to_list(), k0 * smaller_res)
-                crossing_value = ics_pcross[crossing_index]
-                crossings[i][j] = crossing_value
+
                 ax_ics.semilogx(ics_k, ics_pcross, color=colors[j + 3], label=f'{res1} vs {res2}')
 
                 z1_data = spectra_data(waveform, res1, res2, Lbox, 'z=1')
@@ -185,6 +182,12 @@ def create_plot(mode):
                 end_pcross = end_data["Pcross"]
 
                 ax_end.semilogx(end_k, end_pcross, color=colors[j + 3], label=f'{res1} vs {res2}')
+
+                # #Put this here to enable changing time of crossing measurement more easily
+                smaller_res = min(res1, res2)
+                crossing_index = np.searchsorted(end_k.to_list(), k0 * smaller_res) # change here
+                crossing_value = end_pcross[crossing_index] # and here
+                crossings[i][j] = crossing_value
 
             ax_end.set_xlim(right=k0 * resolutions[-1])
             ax_end.set_ylim(0.8, 1.02)
