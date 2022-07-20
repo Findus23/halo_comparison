@@ -1,4 +1,6 @@
 import copy
+import json
+from dataclasses import dataclass
 from typing import Dict
 
 import matplotlib.pyplot as plt
@@ -17,6 +19,17 @@ from readfiles import read_file, read_halo_file
 from remap_particle_IDs import IDScaler
 from threed import plotdf3d
 from utils import print_progress, memory_usage
+
+
+@dataclass
+class Counterset:
+    all_refhalos: int = 0
+    no_match: int = 0
+    negative_cnfw: int = 0
+    too_small_halo: int = 0
+    checking_50: int = 0
+    checking_150: int = 0
+    num_matches: int = 0
 
 
 def apply_offset_to_list(value_list, offset):
@@ -50,7 +63,6 @@ def compare_halo_resolutions(
         return
 
     compared_halos = []
-    skip_counter = 0
 
     print("reading reference file")
     df_ref, ref_meta = read_file(reference_dir / "output_0004.hdf5")
@@ -77,6 +89,10 @@ def compare_halo_resolutions(
 
     comp_halo_masses = dict(df_comp_halo["Mvir"])
 
+    counters = Counterset()
+
+    counters.all_refhalos = len(df_ref_halo)
+
     for index, original_halo in df_ref_halo.iterrows():
         print(f"{index} of {len(df_ref_halo)} original halos")
         halo_particle_ids = ref_halo_lookup[int(index)]
@@ -85,12 +101,13 @@ def compare_halo_resolutions(
         if ref_halo["cNFW"] < 0:
             print("NEGATIVE")
             print(ref_halo["cNFW"])
-            # raise ValueError()
+            counters.negative_cnfw += 1
             continue
         if len(halo_particle_ids) < 50:
             # TODO: decide on a lower size limit (and also apply it to comparison halo?)
             print(f"halo is too small ({len(halo_particle_ids)}")
             print("skipping")
+            counters.too_small_halo += 1
             continue
         print("LEN", len(halo_particle_ids), ref_halo.Mass_tot)
         offset_x, offset_y = ref_halo.X, ref_halo.Y
@@ -131,10 +148,12 @@ def compare_halo_resolutions(
         if len(nearby_halos) < 10:
             print(f"only {len(nearby_halos)} halos, expanding to 50xRvir")
             nearby_halos = set(df_comp_halo.loc[halo_distances < ref_halo.Rvir * 50].index.to_list())
+            counters.checking_50 += 1
         # TODO: if still no found: further expand or skip?
         if len(nearby_halos) < 10:
             print(f"only {len(nearby_halos)} halos, expanding to 150xRvir")
             nearby_halos = set(df_comp_halo.loc[halo_distances < ref_halo.Rvir * 150].index.to_list())
+            counters.checking_150 += 1
 
         if not nearby_halos:
             raise Exception("no halos are nearby")
@@ -243,7 +262,7 @@ def compare_halo_resolutions(
                 best_halo = halo_id
         print(f"skipped {num_skipped_for_mass} halos due to mass ratio")
         if not best_halo:
-            skip_counter += 1
+            counters.no_match += 1
             continue
         comp_halo: pd.Series = df_comp_halo.loc[best_halo]
 
@@ -257,6 +276,7 @@ def compare_halo_resolutions(
         ) / ref_halo.Rvir
         halo_data["distance"] = distance
         halo_data["match"] = best_halo_match
+        halo_data["num_skipped_for_mass"] = num_skipped_for_mass
         compared_halos.append(halo_data)
         # exit()
         if plot:
@@ -269,13 +289,14 @@ def compare_halo_resolutions(
             pl.show()
         if single:
             break
-
+    counters.num_matches=len(compared_halos)
     df = pd.concat(compared_halos, axis=1).T
     print(df)
     print(f"saving to {outfile}")
     df.to_csv(outfile, index=False)
     df.to_hdf(outfile.with_suffix(".hdf5"), key="comparison", complevel=5)
-    print(skip_counter)
+    with outfile.with_suffix(".json").open("w") as f:
+        json.dump(counters.__dict__, f)
     return df, reference_dir.name + "_" + comparison_dir.name
 
 
