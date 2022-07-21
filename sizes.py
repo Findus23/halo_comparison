@@ -1,4 +1,5 @@
 from pathlib import Path
+from sys import argv
 
 import numpy as np
 import pandas as pd
@@ -93,14 +94,13 @@ def plot_comparison_hist2d(ax: Axes, ax_scatter: Axes, file: Path, property: str
         ax_scatter.step(bins, stds, label=f"{file.stem}")
 
         image: QuadMesh
-        _, _, _, image = ax.hist2d(df[x_col], df[y_col], bins=(bins, bins), norm=LogNorm())
+        _, _, _, image = ax.hist2d(df[x_col], df[y_col], bins=(bins, bins), norm=LogNorm())  # TODO: set vmin/vmax
         # ax.plot([rep_x_left, rep_x_left], [mean - std, mean + std], c="C1")
         # ax.annotate(
         #     text=f"std={std:.2f}", xy=(rep_x_left, mean + std),
         #     textcoords="axes fraction", xytext=(0.1, 0.9),
         #     arrowprops={}
         # )
-        print(mean - std, mean + std)
         print("vmin/vmax", image.norm.vmin, image.norm.vmax)
         # fig.colorbar(hist)
 
@@ -108,70 +108,93 @@ def plot_comparison_hist2d(ax: Axes, ax_scatter: Axes, file: Path, property: str
     # ax.set_yscale("log")
 
     ax.loglog([min_x, max_x], [min_x, max_x], linewidth=1, color="C2")
+    # ax.axis('scaled')
+
     return x_col, y_col
     # ax.set_title(file.name)
     # fig.savefig(Path(f"~/tmp/comparison_{file.stem}.pdf").expanduser())
     # fig.suptitle
 
 
-def plot_comparison_hist(file: Path, property: str, mode: str):
+def plot_comparison_hist(ax: Axes, file: Path, property: str, mode: str):
     print("WARNING: Can only plot hist of properties w/o comp_ or ref_ right now!")
     print(f"         Selected property: {property}")
     df = pd.read_csv(file)
     if mode == 'concentration_analysis':
         df = df.loc[2 * df.ref_cNFW < df.comp_cNFW]
-    fig2: Figure = plt.figure()
-    ax2: Axes = fig2.gca()
 
-    ax2.hist(df[property][df[property] < 50], bins=100)
-    ax2.set_xlabel(property)
-    ax2.set_title(file.name)
-    ax.set_aspect("scaled")
-    # fig2.savefig(Path(f"~/tmp/distances_{file.stem}.pdf").expanduser())
-    fig2.suptitle
-    plt.show()
+    ax.hist(df[property][df[property] < 50], bins=100)
+    ax.set_xlabel(property)
+    # ax.set_title(file.name)
+    # plt.show()
 
 
 comparisons_dir = base_dir / "comparisons"
-
-# properties = ['group_size', 'Mass_200crit', 'Mass_tot', 'Mvir', 'R_200crit', 'Rvir', 'Vmax', 'cNFW', 'q',
-#               's']  # Mass_FOF and cNFW_200crit don't work, rest looks normal except for cNFW
-properties = ['Mvir']
-# mode = 'concentration_analysis'
-mode = 'normal'
+hist_properties = ["distance", "match", "num_skipped_for_mass"]
 
 comparisons = [(256, 512), (256, 1024)]  # , (512, 1024)
 
-for property in properties:
+
+def compare_property(property, mode):
+    is_hist_property = property in hist_properties
     fig: Figure
     fig, axes = plt.subplots(
         len(waveforms), len(comparisons),
         sharey="all", sharex="all",
         figsize=figsize_from_page_fraction(columns=2)
     )
-    fig_scatter: Figure = plt.figure(figsize=figsize_from_page_fraction())
-    ax_scatter: Axes = fig_scatter.gca()
-    ax_scatter.set_xscale("log")
+    if not is_hist_property:
+        fig_scatter: Figure = plt.figure(figsize=figsize_from_page_fraction())
+        ax_scatter: Axes = fig_scatter.gca()
+        ax_scatter.set_xscale("log")
     for i, waveform in enumerate(waveforms):
         for j, (ref_res, comp_res) in enumerate(comparisons):
             file_id = get_comp_id(waveform, ref_res, waveform, comp_res)
             file = comparisons_dir / file_id
             print(file)
             ax: Axes = axes[i, j]
-            x_col, y_col = plot_comparison_hist2d(ax, ax_scatter, file, property, mode)
-            if i == len(waveforms) - 1:
-                ax.set_xlabel(x_col)
-            if j == 0:
-                ax.set_ylabel(y_col)
-    pad = 5
+            is_bottom_row = i == len(waveforms) - 1
+            is_left_col = j == 0
+            if not is_hist_property:
+                x_col, y_col = plot_comparison_hist2d(ax, ax_scatter, file, property, mode)
+                if is_bottom_row:
+                    ax.set_xlabel(x_col)
+                if is_left_col:
+                    ax.set_ylabel(y_col)
+            else:
+                plot_comparison_hist(ax, file, property, mode)
+                if is_bottom_row:
+                    ax.set_xlabel(property)
+                if is_left_col:
+                    ax.set_ylabel(r"\#")
+
     rowcolumn_labels(axes, comparisons, isrow=False)
     rowcolumn_labels(axes, waveforms, isrow=True)
-
     fig.tight_layout()
     fig.savefig(Path(f"~/tmp/comparison_{property}.pdf").expanduser())
-    ax_scatter.legend()
-    fig_scatter.tight_layout()
+    if not is_hist_property:
+        ax_scatter.legend()
+        fig_scatter.tight_layout()
     plt.show()
+
+
+def main():
+    # properties = ['group_size', 'Mass_200crit', 'Mass_tot', 'Mvir', 'R_200crit', 'Rvir', 'Vmax', 'cNFW', 'q',
+    #               's']  # Mass_FOF and cNFW_200crit don't work, rest looks normal except for cNFW
+    if len(argv) > 1:
+        properties = argv[1:]
+    else:
+        properties = ['match']
+    # mode = 'concentration_analysis'
+
+    mode = 'normal'
+
+    for property in properties:
+        compare_property(property, mode)
+
+
+if __name__ == '__main__':
+    main()
 # axis_ratios = ['q', 's'] #they look normal
 
 # for property in axis_ratios:
