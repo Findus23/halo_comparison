@@ -25,10 +25,12 @@ def monofonic_tests():
     fig: Figure = plt.figure(figsize=figsize_from_page_fraction())
     ax: Axes = fig.gca()
 
-    linestyles = ["solid", "dashed", "dotted", "dashdot"]
-    resolutions = [128, 256, 512]
+    linestyles = ["solid", "dotted"]
+    resolutions = [128]
     if has_1024_simulations:
         resolutions.append(1024)
+    else:
+        resolutions.append(512)
 
     for i, waveform in enumerate(["DB2", "shannon"]):
         for j, resolution in enumerate(resolutions):
