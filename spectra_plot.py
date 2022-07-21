@@ -9,13 +9,12 @@ from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 
 from paths import base_dir
-from utils import figsize_from_page_fraction
+from utils import figsize_from_page_fraction, waveforms
 
 Lbox = 100
 h = 0.690021
 k0 = 3.14159265358979323846264338327950 / Lbox
 resolutions = [128, 256, 512, 1024]
-waveforms = ["DB2", "DB4", "DB8", "shannon"]
 
 # Careful: k is actually in Mpc^-1, the column is just named weirdly.
 columns = [
