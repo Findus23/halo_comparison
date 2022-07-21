@@ -3,8 +3,8 @@ from pathlib import Path
 from sys import argv
 
 import numpy as np
-from colossus.cosmology import cosmology
-from colossus.lss import mass_function
+# from colossus.cosmology import cosmology
+# from colossus.lss import mass_function
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
@@ -23,7 +23,7 @@ def counts_without_inf(number_halos):
     return number_halos_inverse
 
 
-def main():
+def monofonic_tests():
     fig: Figure = plt.figure()
     ax: Axes = fig.gca()
 
@@ -36,7 +36,6 @@ def main():
             dir = base_dir / f"{waveform}_{resolution}_100"
             halos = read_velo_halos(dir)
 
-            halos = halos[halos["Mvir"] > 2]  # there seem to be multiple halos with a mass of 1.88196993
 
             # halos.to_csv("weird_halos.csv")
             halo_masses: np.ndarray = halos["Mvir"].to_numpy()
@@ -155,5 +154,5 @@ def hmf_from_rockstar_tree(file: Path):
 
 
 if __name__ == '__main__':
-    # main()
-    hmf_from_rockstar_tree(Path(argv[1]))
+    monofonic_tests()
+    # hmf_from_rockstar_tree(Path(argv[1]))
