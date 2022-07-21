@@ -71,7 +71,7 @@ def halo_mass_function(halo_masses, num_bins=30, sim_volume=100 ** 3):
     Ns = []
     deltas = []
     for bin_id in range(num_bins):
-        print_progress(bin_id, num_bins)
+        print_progress(bin_id+1, num_bins)
         mass_low = bins[bin_id]
         mass_high = bins[bin_id + 1]
         counter = 0
