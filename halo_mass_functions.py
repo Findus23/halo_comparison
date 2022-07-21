@@ -57,6 +57,7 @@ def monofonic_tests():
             # break
         # break
     plt.legend()
+    fig.savefig(Path(f"~/tmp/halo_mass_function.pdf").expanduser())
     plt.show()
 
 
