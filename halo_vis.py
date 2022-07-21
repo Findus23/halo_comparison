@@ -68,7 +68,7 @@ def imsave(rho, file_name: str):
 
 
 def main():
-    waveforms = ["shannon", "DB2", "DB4", "DB8"]
+    waveforms = ["DB2", "DB4", "DB8", "shannon"]
     resolutions = [128, 256, 512]
     if has_1024_simulations:
         resolutions.append(1024)
