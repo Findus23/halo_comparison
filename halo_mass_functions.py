@@ -1,6 +1,5 @@
-from math import log10, log
+from math import log
 from pathlib import Path
-from sys import argv
 
 import numpy as np
 # from colossus.cosmology import cosmology
@@ -8,9 +7,8 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
-from scipy.interpolate import interp1d
 
-from paths import base_dir
+from paths import base_dir, has_1024_simulations
 from read_vr_files import read_velo_halos
 from utils import print_progress
 
@@ -27,15 +25,16 @@ def monofonic_tests():
     fig: Figure = plt.figure()
     ax: Axes = fig.gca()
 
-    linestyles = ["solid", "dashed", "dotted"]
-    colors = ["C1", "C2"]
+    linestyles = ["solid", "dashed", "dotted", "dashdot"]
+    resolutions = [128, 256, 512]
+    if has_1024_simulations:
+        resolutions.append(1024)
 
     for i, waveform in enumerate(["DB2", "shannon"]):
         for j, resolution in enumerate([128, 256, 512]):
             print(waveform, resolution)
             dir = base_dir / f"{waveform}_{resolution}_100"
             halos = read_velo_halos(dir)
-
 
             # halos.to_csv("weird_halos.csv")
             halo_masses: np.ndarray = halos["Mvir"].to_numpy()
@@ -48,7 +47,7 @@ def monofonic_tests():
 
             # ax.bar(centers, number_densities, width=widths, log=True, fill=False)
             name = f"{waveform} {resolution}"
-            ax.step(left_edges, number_densities, where="post", color=colors[i], linestyle=linestyles[j], label=name)
+            ax.step(left_edges, number_densities, where="post", color=f"C{i}", linestyle=linestyles[j], label=name)
 
             ax.fill_between(
                 left_edges,
@@ -150,7 +149,6 @@ def hmf_from_rockstar_tree(file: Path):
         upper_error_limit, alpha=.5, linewidth=0, step='post')
 
     plt.show()
-
 
 
 if __name__ == '__main__':
