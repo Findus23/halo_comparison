@@ -31,7 +31,7 @@ def monofonic_tests():
         resolutions.append(1024)
 
     for i, waveform in enumerate(["DB2", "shannon"]):
-        for j, resolution in enumerate([128, 256, 512]):
+        for j, resolution in enumerate(resolutions):
             print(waveform, resolution)
             dir = base_dir / f"{waveform}_{resolution}_100"
             halos = read_velo_halos(dir)
