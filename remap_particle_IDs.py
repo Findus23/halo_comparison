@@ -33,7 +33,7 @@ class IDScaler:
         return ((mult[0] * self.Nres_min) + mult[1]) * self.Nres_min + mult[2]
 
 
-if __name__ == "__main__":
+def test():
     test_particle = np.array([0, 0, 127])
     # maximum_test = np.array([127, 127, 127]) #this works, Nres - 1 is the maximum for (i,j,k)
 
@@ -51,3 +51,21 @@ if __name__ == "__main__":
         reverse = scaler.downscale(id)
         print(id, reverse)
         assert reverse == test_particle_id
+
+
+def benchmark():
+    Nres_1 = 128
+    Nres_2 = 1024
+
+    scaler = IDScaler(Nres_1, Nres_2)
+    test_particle = np.random.randint(0, 127, size=(3, 10_000_000))
+
+    for part in test_particle:
+        test_particle_id = ((test_particle[0] * Nres_1) + test_particle[1]) * Nres_1 + test_particle[2]
+
+        particle_ID_1_converted = scaler.upscale(test_particle_id)
+
+
+if __name__ == "__main__":
+    # test()
+    benchmark()
