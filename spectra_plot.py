@@ -121,7 +121,7 @@ def create_plot(mode):
                     k0 * res,
                     color=colors[j],
                     linestyle="dashed",
-                    label=f"$k_\\mathrm{{ny, {res}}}$" if mode =="power" else None,
+                    label=f"$k_\\mathrm{{ny, {res}}}$" if mode == "power" else None,
                 )
             # ax.set_xticklabels([])
             # ax.set_yticklabels([])
@@ -184,8 +184,8 @@ def create_plot(mode):
 
                 # #Put this here to enable changing time of crossing measurement more easily
                 smaller_res = min(res1, res2)
-                crossing_index = np.searchsorted(end_k.to_list(), k0 * smaller_res) # change here
-                crossing_value = end_pcross[crossing_index] # and here
+                crossing_index = np.searchsorted(end_k.to_list(), k0 * smaller_res)  # change here
+                crossing_value = end_pcross[crossing_index]  # and here
                 crossings[i][j] = crossing_value
 
             ax_end.set_xlim(right=k0 * resolutions[-1])

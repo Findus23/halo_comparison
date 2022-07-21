@@ -10,7 +10,7 @@ from matplotlib.figure import Figure
 
 from paths import base_dir, has_1024_simulations
 from read_vr_files import read_velo_halos
-from utils import print_progress
+from utils import print_progress, figsize_from_page_fraction
 
 
 def counts_without_inf(number_halos):
@@ -22,7 +22,7 @@ def counts_without_inf(number_halos):
 
 
 def monofonic_tests():
-    fig: Figure = plt.figure()
+    fig: Figure = plt.figure(figsize=figsize_from_page_fraction())
     ax: Axes = fig.gca()
 
     linestyles = ["solid", "dashed", "dotted", "dashdot"]
