@@ -7,6 +7,8 @@ from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 
+waveforms = ["DB2", "DB4", "DB8", "shannon"]
+
 
 def print_progress(i, total, extra_data=""):
     print(f"{i} of {total} ({extra_data})" + " " * 20, end="\r" if i != total else "\n", flush=True)

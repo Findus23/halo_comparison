@@ -11,7 +11,7 @@ from matplotlib.figure import Figure
 # density like in Vr:
 from halo_vis import get_comp_id
 from paths import base_dir
-from utils import figsize_from_page_fraction, rowcolumn_labels
+from utils import figsize_from_page_fraction, rowcolumn_labels, waveforms
 
 G = 43.022682  # in Mpc (km/s)^2 / (10^10 Msun)
 
@@ -52,7 +52,7 @@ def concentration(row, halo_type: str):
     return cnfw, colour
 
 
-def plot_comparison_hist2d(ax: Axes, file: Path, property: str, mode: str):
+def plot_comparison_hist2d(ax: Axes, ax_scatter: Axes, file: Path, property: str, mode: str):
     print("WARNING: Can only plot hist2d of properties with comp_ or ref_ right now!")
     print(f"         Selected property: {property}")
     x_col = f"ref_{property}"
@@ -65,7 +65,8 @@ def plot_comparison_hist2d(ax: Axes, file: Path, property: str, mode: str):
     else:
         min_x = min([min(df[x_col]), min(df[y_col])])
         max_x = max([max(df[x_col]), max(df[y_col])])
-    bins = np.geomspace(min_x, max_x, 100)
+    num_bins = 100
+    bins = np.geomspace(min_x, max_x, num_bins)
     if mode == "concentration_bla" and property == 'cNFW':
         colors = []
         for i, row in df.iterrows():
@@ -77,30 +78,29 @@ def plot_comparison_hist2d(ax: Axes, file: Path, property: str, mode: str):
                 colors.append('black')
         ax.scatter(df[x_col], df[y_col], c=colors, s=1, alpha=.3)
     else:
-        rep_row = 20
-        rep_x_left = bins[rep_row]
-        rep_x_right = bins[rep_row] + 1
-        rep_bin = (rep_x_left < df[x_col]) & (df[x_col] < rep_x_right)
-        rep_values = df.loc[rep_bin][y_col]
-        mean = rep_values.mean()
-        std = rep_values.std()
-        print(rep_values.describe())
+        stds = []
+        for rep_row in range(num_bins):
+            rep_x_left = bins[rep_row]
+            rep_x_right = bins[rep_row] + 1
+            rep_bin = (rep_x_left < df[x_col]) & (df[x_col] < rep_x_right)
+            rep_values = df.loc[rep_bin][y_col]
+            if len(rep_values) > 30:
+                mean = rep_values.mean()
+                std = rep_values.std()
+                stds.append(std)
+            else:
+                stds.append(np.nan)
+        ax_scatter.step(bins, stds, label=f"{file.stem}")
+
         image: QuadMesh
-        xedges: np.ndarray  # 1d
-        yedges: np.ndarray  # 1d
-        hist: np.ndarray  # 2d
-        hist, xedges, yedges, image = ax.hist2d(df[x_col], df[y_col], bins=(bins, bins), norm=LogNorm())
-        ax.plot([rep_x_left, rep_x_left], [mean - std, mean + std], c="C1")
-        ax.annotate(
-            text=f"std={std:.2f}", xy=(rep_x_left, mean + std),
-            textcoords="axes fraction", xytext=(0.1, 0.9),
-            arrowprops={}
-        )
+        _, _, _, image = ax.hist2d(df[x_col], df[y_col], bins=(bins, bins), norm=LogNorm())
+        # ax.plot([rep_x_left, rep_x_left], [mean - std, mean + std], c="C1")
+        # ax.annotate(
+        #     text=f"std={std:.2f}", xy=(rep_x_left, mean + std),
+        #     textcoords="axes fraction", xytext=(0.1, 0.9),
+        #     arrowprops={}
+        # )
         print(mean - std, mean + std)
-        # print(hist)
-        # print(list(hist[rep_row]))
-        # print(rep_x_left)
-        # exit()
         print("vmin/vmax", image.norm.vmin, image.norm.vmax)
         # fig.colorbar(hist)
 
@@ -139,7 +139,6 @@ comparisons_dir = base_dir / "comparisons"
 properties = ['Mvir']
 # mode = 'concentration_analysis'
 mode = 'normal'
-waveforms = ["DB2", "DB4", "DB8", "shannon"]
 
 comparisons = [(256, 512), (256, 1024)]  # , (512, 1024)
 
@@ -150,13 +149,16 @@ for property in properties:
         sharey="all", sharex="all",
         figsize=figsize_from_page_fraction(columns=2)
     )
+    fig_scatter: Figure = plt.figure(figsize=figsize_from_page_fraction())
+    ax_scatter: Axes = fig_scatter.gca()
+    ax_scatter.set_xscale("log")
     for i, waveform in enumerate(waveforms):
         for j, (ref_res, comp_res) in enumerate(comparisons):
             file_id = get_comp_id(waveform, ref_res, waveform, comp_res)
             file = comparisons_dir / file_id
             print(file)
             ax: Axes = axes[i, j]
-            x_col, y_col = plot_comparison_hist2d(ax, file, property, mode)
+            x_col, y_col = plot_comparison_hist2d(ax, ax_scatter, file, property, mode)
             if i == len(waveforms) - 1:
                 ax.set_xlabel(x_col)
             if j == 0:
@@ -167,6 +169,8 @@ for property in properties:
 
     fig.tight_layout()
     fig.savefig(Path(f"~/tmp/comparison_{property}.pdf").expanduser())
+    ax_scatter.legend()
+    fig_scatter.tight_layout()
     plt.show()
 # axis_ratios = ['q', 's'] #they look normal
 

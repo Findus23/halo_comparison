@@ -1,18 +1,16 @@
-from math import log10, log
+from math import log
 from pathlib import Path
-from sys import argv
 
 import numpy as np
-from colossus.cosmology import cosmology
-from colossus.lss import mass_function
+# from colossus.cosmology import cosmology
+# from colossus.lss import mass_function
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
-from scipy.interpolate import interp1d
 
-from paths import base_dir
+from paths import base_dir, has_1024_simulations
 from read_vr_files import read_velo_halos
-from utils import print_progress
+from utils import print_progress, figsize_from_page_fraction
 
 
 def counts_without_inf(number_halos):
@@ -23,20 +21,22 @@ def counts_without_inf(number_halos):
     return number_halos_inverse
 
 
-def main():
-    fig: Figure = plt.figure()
+def monofonic_tests():
+    fig: Figure = plt.figure(figsize=figsize_from_page_fraction())
     ax: Axes = fig.gca()
 
-    linestyles = ["solid", "dashed", "dotted"]
-    colors = ["C1", "C2"]
+    linestyles = ["solid", "dotted"]
+    resolutions = [128]
+    if has_1024_simulations:
+        resolutions.append(1024)
+    else:
+        resolutions.append(512)
 
     for i, waveform in enumerate(["DB2", "shannon"]):
-        for j, resolution in enumerate([128, 256, 512]):
+        for j, resolution in enumerate(resolutions):
             print(waveform, resolution)
             dir = base_dir / f"{waveform}_{resolution}_100"
             halos = read_velo_halos(dir)
-
-            halos = halos[halos["Mvir"] > 2]  # there seem to be multiple halos with a mass of 1.88196993
 
             # halos.to_csv("weird_halos.csv")
             halo_masses: np.ndarray = halos["Mvir"].to_numpy()
@@ -49,7 +49,7 @@ def main():
 
             # ax.bar(centers, number_densities, width=widths, log=True, fill=False)
             name = f"{waveform} {resolution}"
-            ax.step(left_edges, number_densities, where="post", color=colors[i], linestyle=linestyles[j], label=name)
+            ax.step(left_edges, number_densities, where="post", color=f"C{i}", linestyle=linestyles[j], label=name)
 
             ax.fill_between(
                 left_edges,
@@ -59,6 +59,7 @@ def main():
             # break
         # break
     plt.legend()
+    fig.savefig(Path(f"~/tmp/halo_mass_function.pdf").expanduser())
     plt.show()
 
 
@@ -72,7 +73,7 @@ def halo_mass_function(halo_masses, num_bins=30, sim_volume=100 ** 3):
     Ns = []
     deltas = []
     for bin_id in range(num_bins):
-        print_progress(bin_id, num_bins)
+        print_progress(bin_id+1, num_bins)
         mass_low = bins[bin_id]
         mass_high = bins[bin_id + 1]
         counter = 0
@@ -153,7 +154,6 @@ def hmf_from_rockstar_tree(file: Path):
     plt.show()
 
 
-
 if __name__ == '__main__':
-    # main()
-    hmf_from_rockstar_tree(Path(argv[1]))
+    monofonic_tests()
+    # hmf_from_rockstar_tree(Path(argv[1]))

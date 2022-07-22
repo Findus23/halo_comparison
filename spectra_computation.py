@@ -8,6 +8,7 @@ from multiprocessing import Pool, cpu_count
 from sys import argv
 
 from paths import base_dir, spectra_dir
+from spectra_plot import waveforms
 
 
 def run_spectra(waveform: str, resolution_1: int, resolution_2: int, Lbox: int, time: str):
@@ -77,7 +78,7 @@ def run_spectra(waveform: str, resolution_1: int, resolution_2: int, Lbox: int, 
 
     print("end")
 
-def power_run(waveforms: list, resolutions: list, Lbox: int, time: str):
+def power_run(resolutions: list, Lbox: int, time: str):
     args = []
     for waveform in waveforms:
         for resolution in resolutions:
@@ -91,7 +92,7 @@ def power_run(waveforms: list, resolutions: list, Lbox: int, time: str):
     return args
 
 
-def cross_run(waveforms: list, resolutions: list, Lbox: int, time: str):
+def cross_run(resolutions: list, Lbox: int, time: str):
     args = []
     for waveform in waveforms:
         for res1, res2 in itertools.combinations(resolutions, 2):
@@ -109,16 +110,15 @@ if __name__ == '__main__':
 #    input("are you sure you want to run this? This might need a large amount of memory")
     Lbox = 100
     resolutions = [128, 256, 512, 1024]
-    waveforms = ["DB2", "DB4", "DB8", "shannon"]
 
     spectra = spectra_dir / 'spectra'
     time = argv[1]
 
     if argv[2] == 'power':
-        args = power_run(waveforms=waveforms, resolutions=resolutions, Lbox=Lbox, time=time)
+        args = power_run(resolutions=resolutions, Lbox=Lbox, time=time)
 
     elif argv[2] == 'cross':
-        args = cross_run(waveforms=waveforms, resolutions=resolutions, Lbox=Lbox, time=time)
+        args = cross_run(resolutions=resolutions, Lbox=Lbox, time=time)
     else:
         raise ValueError("missing argv[2] (power|cross)")
     with Pool(processes=1) as p:

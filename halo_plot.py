@@ -14,7 +14,7 @@ from mpl_toolkits.axes_grid1.anchored_artists import AnchoredSizeBar
 from halo_vis import Coords
 from paths import base_dir, vis_datafile, has_1024_simulations
 from read_vr_files import read_velo_halos
-from utils import figsize_from_page_fraction, rowcolumn_labels
+from utils import figsize_from_page_fraction, rowcolumn_labels, waveforms
 
 
 def coord_to_2d_extent(coords: Coords):
@@ -35,21 +35,20 @@ def in_area(coords: Coords, xobj, yobj, zobj, factor=1.3) -> bool:
 
 
 def main():
-    rows = ["shannon", "DB8", "DB4", "DB2"]
     offset = 2
-    columns = [128, 256, 512]
+    resolutions = [128, 256, 512]
     initial_halo_id = int(argv[1])
     if has_1024_simulations:
-        columns.append(1024)
+        resolutions.append(1024)
     fig: Figure = plt.figure(figsize=figsize_from_page_fraction(columns=2, height_to_width=1))
-    axes: List[List[Axes]] = fig.subplots(len(rows), len(columns), sharex="row", sharey="row")
+    axes: List[List[Axes]] = fig.subplots(len(waveforms), len(resolutions), sharex="row", sharey="row")
     with h5py.File(vis_datafile) as vis_out:
         halo_group = vis_out[str(initial_halo_id)]
 
         vmin, vmax = halo_group["vmin_vmax"]
         print(vmin, vmax)
-        for i, waveform in enumerate(rows):
-            for j, resolution in enumerate(columns):
+        for i, waveform in enumerate(waveforms):
+            for j, resolution in enumerate(resolutions):
                 dir = base_dir / f"{waveform}_{resolution}_100"
                 halos = read_velo_halos(dir)
                 ax = axes[i][j]
@@ -102,8 +101,8 @@ def main():
                     ax.add_artist(scalebar)
             #     break
             # break
-    rowcolumn_labels(axes, rows, isrow=True)
-    rowcolumn_labels(axes, columns, isrow=False)
+    rowcolumn_labels(axes, waveforms, isrow=True)
+    rowcolumn_labels(axes, resolutions, isrow=False)
 
     fig.tight_layout()
     fig.subplots_adjust(right=0.825)

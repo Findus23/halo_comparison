@@ -9,13 +9,12 @@ from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 
 from paths import base_dir
-from utils import figsize_from_page_fraction
+from utils import figsize_from_page_fraction, waveforms
 
 Lbox = 100
 h = 0.690021
 k0 = 3.14159265358979323846264338327950 / Lbox
 resolutions = [128, 256, 512, 1024]
-waveforms = ["DB2", "DB4", "DB8", "shannon"]
 
 # Careful: k is actually in Mpc^-1, the column is just named weirdly.
 columns = [
@@ -122,7 +121,7 @@ def create_plot(mode):
                     k0 * res,
                     color=colors[j],
                     linestyle="dashed",
-                    label=f"$k_\\mathrm{{ny, {res}}}$" if mode =="power" else None,
+                    label=f"$k_\\mathrm{{ny, {res}}}$" if mode == "power" else None,
                 )
             # ax.set_xticklabels([])
             # ax.set_yticklabels([])
@@ -185,8 +184,8 @@ def create_plot(mode):
 
                 # #Put this here to enable changing time of crossing measurement more easily
                 smaller_res = min(res1, res2)
-                crossing_index = np.searchsorted(end_k.to_list(), k0 * smaller_res) # change here
-                crossing_value = end_pcross[crossing_index] # and here
+                crossing_index = np.searchsorted(end_k.to_list(), k0 * smaller_res)  # change here
+                crossing_value = end_pcross[crossing_index]  # and here
                 crossings[i][j] = crossing_value
 
             ax_end.set_xlim(right=k0 * resolutions[-1])
