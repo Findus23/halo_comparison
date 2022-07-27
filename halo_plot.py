@@ -63,17 +63,17 @@ def main():
                 rho = (rho + offset) * mass
                 extent = coord_to_2d_extent(coords)
                 img = ax.imshow(rho.T, norm=LogNorm(vmin=vmin_scaled, vmax=vmax_scaled), extent=extent,
-                                origin="lower")
+                                origin="lower",cmap="Greys")
                 found_main_halo = False
                 for halo_id, halo in halos.iterrows():
-                    if halo["Mvir"] > 20:
+                    if halo["Vmax"] > 75:
                         if in_area(coords, halo.X, halo.Y, halo.Z):
                             if halo_id == main_halo_id:
-                                color = "red"
+                                color = "C2"
                             elif halo["Structuretype"] > 10:
-                                color = "lightgreen"
+                                color = "C0"
                             else:
-                                color = "lightblue"
+                                color = "C1"
                             if halo_id == main_halo_id:
                                 found_main_halo = True
                                 print("plotting main halo")
@@ -110,7 +110,7 @@ def main():
     fig.colorbar(img, cax=cbar_ax)
 
     fig.savefig(Path(f"~/tmp/halo_plot_{initial_halo_id}.pdf").expanduser())
-    fig.savefig(Path(f"~/tmp/halo_plot_{initial_halo_id}.png").expanduser())
+    fig.savefig(Path(f"~/tmp/halo_plot_{initial_halo_id}.png").expanduser(), dpi=300)
 
     plt.show()
 

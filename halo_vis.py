@@ -10,6 +10,7 @@ from cic import cic_from_radius
 from paths import base_dir, vis_datafile, has_1024_simulations
 from read_vr_files import read_velo_halo_particles
 from readfiles import read_file
+from utils import waveforms
 
 all_in_area = True
 
