@@ -161,9 +161,11 @@ xdb16, phidb16, psidb16 = cascade_algorithm(h_DB16, g_DB16, maxit)
 ###################################
 
 fig: Figure
-fig, ax = plt.subplots(4, 2,
-                       figsize=figsize_from_page_fraction(height_to_width=12 / 8)
-                       )
+fig, ax = plt.subplots(
+    4, 2,
+    figsize=figsize_from_page_fraction(height_to_width=12 / 8),
+    # sharex="all", sharey="all"
+)
 labels = ['Haar', 'DB2', 'DB4', 'DB8', 'DB16']
 
 ax[0, 0].set_title('scaling functions $\\varphi$')
@@ -186,13 +188,26 @@ ax[3, 1].plot(xdb8, psidb8, lw=1)
 for a in ax.flatten():
     a.set_xlabel('t')
 
+
+def inset_label(ax: Axes, text: str):
+    ax.text(
+        0.75,
+        0.05,
+        text,
+        horizontalalignment="left",
+        verticalalignment="bottom",
+        transform=ax.transAxes
+    )
+
+
 for a, label in zip(ax[:, 0], labels):
-    a.set_ylabel(r"$\varphi_{\textrm{LABEL}}$".replace("LABEL", label))
-    # a.set_ylabel('$\\varphi_{\\rm ' + i + '}[t]$')
+    text = r"$\varphi_{\textrm{LABEL}}$".replace("LABEL", label)
+    inset_label(a, text)
     a.set_ylim([-1.0, 1.5])
 
 for a, label in zip(ax[:, 1], labels):
-    a.set_ylabel(r"$\psi_{\textrm{LABEL}}$".replace("LABEL", label))
+    text = r"$\psi_{\textrm{LABEL}}$".replace("LABEL", label)
+    inset_label(a, text)
     # a.set_ylabel('$\\psi_{\\rm ' + i + '}[t]$')
     a.set_ylim([-2, 2])
 
