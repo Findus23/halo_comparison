@@ -217,8 +217,8 @@ def fourier_wavelet(h, g, n):
     return k, fphi, fpsi
 
 
-ax.plot([0, np.pi], [0., 0.], 'k:')
-ax.plot([0, np.pi], [1., 1.], 'k:')
+# ax.plot([0, np.pi], [0., 0.], 'k:')
+# ax.plot([0, np.pi], [1., 1.], 'k:')
 
 kh, fphih, fpsih = fourier_wavelet(h_Haar, g_Haar, 256)
 ax.plot(kh, np.abs(fphih) ** 2, label='$\\hat\\varphi_{\\rm Haar}$', c="C0")
@@ -245,8 +245,8 @@ def shannon(k):
     return y
 
 
-ax.plot(kdb8, shannon(kdb8), label='$\\hat\\varphi_{shannon}$', c="C4")
-ax.plot(kdb8, 1 - shannon(kdb8), label='$\\hat\\psi_{shannon}$', c="C4", linestyle="dashed")
+ax.plot(kdb8, 1 - shannon(kdb8), label='$\\hat\\varphi_{shannon}$', c="C4")
+ax.plot(kdb8, shannon(kdb8), label='$\\hat\\psi_{shannon}$', c="C4", linestyle="dashed")
 # ax.plot(kdb8, np.abs(fpsidb8) ** 2, label='$\\hat\\psi_{DB8}$', c="C3", linestyle="dashed")
 
 # kdb16, fphidb16, fpsidb16 = fourier_wavelet(h_DB16, g_DB16, 256)
