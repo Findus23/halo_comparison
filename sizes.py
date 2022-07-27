@@ -8,8 +8,9 @@ from matplotlib.axes import Axes
 from matplotlib.collections import QuadMesh
 from matplotlib.colors import LogNorm
 from matplotlib.figure import Figure
-
 # density like in Vr:
+from numpy import log10
+
 from halo_vis import get_comp_id
 from paths import base_dir
 from utils import figsize_from_page_fraction, rowcolumn_labels, waveforms
@@ -80,17 +81,23 @@ def plot_comparison_hist2d(ax: Axes, ax_scatter: Axes, file: Path, property: str
         ax.scatter(df[x_col], df[y_col], c=colors, s=1, alpha=.3)
     else:
         stds = []
+        means = []
         for rep_row in range(num_bins):
             rep_x_left = bins[rep_row]
             rep_x_right = bins[rep_row] + 1
             rep_bin = (rep_x_left < df[x_col]) & (df[x_col] < rep_x_right)
-            rep_values = df.loc[rep_bin][y_col]
-            if len(rep_values) > 30:
-                mean = rep_values.mean()
-                std = rep_values.std()
-                stds.append(std)
-            else:
-                stds.append(np.nan)
+            rep_values = log10(df.loc[rep_bin][y_col])
+            # if len(rep_values) > 30:
+            mean = rep_values.mean()
+            std = rep_values.std()
+            means.append(mean)
+            stds.append(len(rep_values))
+            # else:
+            #     stds.append(np.nan)
+        means = np.array(means)
+        stds = np.array(stds)
+        print(10 ** (means - stds))
+        ax.fill_between(bins, 10 ** (means - stds), 10 ** (means + stds), color="red", zorder=10, alpha=.6)
         ax_scatter.step(bins, stds, label=f"{file.stem}")
 
         image: QuadMesh
