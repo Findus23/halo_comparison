@@ -17,6 +17,7 @@ from cic import cic_from_radius
 from halo_mass_profile import halo_mass_profile
 from nfw import fit_nfw
 from paths import auriga_dir, richings_dir
+from ramses import load_ramses_data
 from readfiles import read_file, read_halo_file, ParticlesMeta
 from utils import read_swift_config, print_wall_time
 
@@ -30,6 +31,8 @@ mode = Mode.richings
 
 
 def dir_name_to_parameter(dir_name: str):
+    if "ramses" in dir_name:
+        return 7, 7, 9
     return map(int, dir_name.lstrip("auriga6_halo").lstrip("richings21_").lstrip("bary_").split("_"))
 
 
@@ -70,19 +73,21 @@ i = 0
 for dir in sorted(root_dir.glob("*")):
     if not dir.is_dir() or "bak" in dir.name:
         continue
+    is_ramses="ramses" in dir.name
     is_by_adrian = "arj" in dir.name
+
     print(dir.name)
 
     if not is_by_adrian:
         levelmin, levelmin_TF, levelmax = dir_name_to_parameter(dir.name)
         print(levelmin, levelmin_TF, levelmax)
-        # if levelmax != 9:
-        #     continue
+        if levelmax != 9:
+            continue
 
     input_file = dir / "output_0007.hdf5"
     if mode == Mode.richings:
         input_file = dir / "output_0004.hdf5"
-    if is_by_adrian:
+    if is_by_adrian or is_ramses:
         input_file = dir / "output_0000.hdf5"
         softening_length = None
     else:
@@ -109,6 +114,10 @@ for dir in sorted(root_dir.glob("*")):
             df = pd.DataFrame(f["Coordinates"][:] / h, columns=["X", "Y", "Z"])
         particles_meta = ParticlesMeta(particle_mass=1.1503e7 / 1e10)
         center = np.array([60.7, 29, 64]) / h
+        softening_length = None
+    elif "ramses" in dir.name:
+        hr_coordinates, particles_meta, center = load_ramses_data(dir / "output_00002")
+        df = pd.DataFrame(hr_coordinates, columns=["X", "Y", "Z"])
         softening_length = None
     else:
         df, particles_meta = read_file(input_file)
