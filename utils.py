@@ -1,4 +1,5 @@
 from pathlib import Path
+from string import ascii_uppercase
 from typing import Tuple
 
 import pandas as pd
@@ -76,3 +77,9 @@ def rowcolumn_labels(axes, labels, isrow: bool, pad=5) -> None:
         ax.annotate(label, xy=xy, xytext=xytext,
                     xycoords=xycoords, textcoords='offset points',
                     size='large', ha=ha, va=va)
+
+
+def tex_fmt(format_str: str, *args) -> str:
+    for i, arg in enumerate(args):
+        format_str = format_str.replace(ascii_uppercase[i] * 2, str(arg))
+    return format_str
