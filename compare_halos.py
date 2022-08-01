@@ -25,6 +25,7 @@ from utils import print_progress, memory_usage
 class Counterset:
     all_refhalos: int = 0
     no_match: int = 0
+    bad_match: int = 0
     negative_cnfw: int = 0
     too_small_halo: int = 0
     checking_50: int = 0
@@ -141,10 +142,10 @@ def compare_halo_resolutions(
             axis=1)
         # print(list(halo_distances))
 
-        print(f"find nearby halos (5x{ref_halo.Rvir:.1f})")
+        print(f"find nearby halos (10x{ref_halo.Rvir:.1f})")
         print(ref_halo[['X', 'Y', 'Z']].values)
-        # Find IDs of halos that are less than 5 Rvir away
-        nearby_halos = set(df_comp_halo.loc[halo_distances < ref_halo.Rvir * 5].index.to_list())
+        # Find IDs of halos that are less than 10 Rvir away
+        nearby_halos = set(df_comp_halo.loc[halo_distances < ref_halo.Rvir * 10].index.to_list())
         if len(nearby_halos) < 10:
             print(f"only {len(nearby_halos)} halos, expanding to 50xRvir")
             nearby_halos = set(df_comp_halo.loc[halo_distances < ref_halo.Rvir * 50].index.to_list())
@@ -239,7 +240,7 @@ def compare_halo_resolutions(
 
             # similarity = len(shared_particles) / len(union_particles)
             similarity = len(shared_particles) / (
-                        len(halo_particle_ids) + len(particle_ids_in_comp_halo) - len(shared_particles))
+                    len(halo_particle_ids) + len(particle_ids_in_comp_halo) - len(shared_particles))
             # assert similarity_orig == similarity
             # print(shared_size)
             # if not similarity:
@@ -266,6 +267,10 @@ def compare_halo_resolutions(
         print(f"skipped {num_skipped_for_mass} halos due to mass ratio")
         if not best_halo:
             counters.no_match += 1
+            continue
+        minimum_j = 0.1
+        if best_halo_match < minimum_j:
+            counters.bad_match += 1
             continue
         comp_halo: pd.Series = df_comp_halo.loc[best_halo]
 
