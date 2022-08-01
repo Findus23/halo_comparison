@@ -242,7 +242,7 @@ def compare_property(property, show: bool):
                     plot_comparison_hist(ax, file, property)
                 x_labels = {
                     "match": "$J$",
-                    "distance": "$D$"
+                    "distance": "$D$ [$R_{vir}$]"
                 }
                 if is_bottom_row:
                     ax.set_xlabel(x_labels[property])
@@ -276,67 +276,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-# axis_ratios = ['q', 's'] #they look normal
-
-# for property in axis_ratios:
-#     plot_comparison_hist2d(file, property, 'no')
-#     plot_comparison_hist2d(file, property, mode)
-
-# plot_comparison_hist2d(file, 'cNFW_200mean', mode)
-
-# ref_property = 'ref_cNFW_200crit'
-# comp_property = 'comp_cNFW_200crit'
-
-# df = pd.read_csv(file)
-# all_ref_structure_types: pd.DataFrame = df[ref_property]
-# all_comp_structure_types: pd.DataFrame = df[comp_property]
-
-# df_odd: pd.DataFrame = df.loc[2 * df.ref_cNFW < df.comp_cNFW]
-# odd_ref_structure_types: pd.DataFrame = df_odd[ref_property]
-# odd_comp_structure_types: pd.DataFrame = df_odd[comp_property]
-
-# print(all_ref_structure_types.mean(), all_comp_structure_types.mean())
-# print(odd_ref_structure_types.mean(), odd_comp_structure_types.mean())
-
-
-# ref_colour = []
-# comp_colour = []
-# ref_cnfw = []
-# comp_cnfw = []
-# df = pd.read_csv(file)
-#
-# for index, row in df.iterrows():
-#     cnfw, colour = concentration(row)
-#     ref_cnfw.append(cnfw[0])
-#     ref_colour.append(colour[0])
-#     comp_cnfw.append(cnfw[1])
-#     comp_colour.append(colour[1])
-#
-# fig: Figure = plt.figure()
-# ax: Axes = fig.gca()
-#
-# ax.scatter(ref_cnfw, comp_cnfw, s=1, c=comp_colour, alpha=.3)
-# ax.set_xscale("log")
-# ax.set_yscale("log")
-# plt.show()
-
-# #Maybe for later:
-# if __name__ == '__main__':
-#     print('Run with sizes.py <Path to file> <property: str> <mode: str>')
-#     file = Path(argv[1])
-#     property = str(argv[2])
-#     mode = str(argv[3])
-
-
-# #This is to find the median of the quality of our matches
-# matches:pd.DataFrame=df["match"]
-# print(matches)
-# exit()
-# print(matches.median())
-# print(matches.std())
-# exit()
-
-# #This is to save weird concentration data to own csv
-# df_odd: pd.DataFrame = df.loc[2 * df.ref_cNFW < df.comp_cNFW]
-# df_odd.to_csv("weird_cnfw.csv")
-# exit()
