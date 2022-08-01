@@ -12,6 +12,7 @@ def load_ramses_data(ramses_dir: Path):
     s: RamsesSnap = pynbody.load(str(ramses_dir))
     mass_array: SimArray = s.dm["mass"]
     coord_array: SimArray = s.dm["pos"]
+    print("RAMSES a", s.properties["a"])
 
     masses = np.asarray(mass_array.in_units("1e10 Msol"))
     high_res_mass = np.amin(np.unique(masses))  # get lowest mass of particles
