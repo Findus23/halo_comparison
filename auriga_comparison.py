@@ -31,9 +31,7 @@ mode = Mode.richings
 
 
 def dir_name_to_parameter(dir_name: str):
-    if "ramses" in dir_name:
-        return 7, 7, 9
-    return map(int, dir_name.lstrip("auriga6_halo").lstrip("richings21_").lstrip("bary_").split("_"))
+    return map(int, dir_name.lstrip("auriga6_halo").lstrip("richings21_").lstrip("bary_").lstrip("ramses_").split("_"))
 
 
 def levelmax_to_softening_length(levelmax: int) -> float:
@@ -73,7 +71,7 @@ i = 0
 for dir in sorted(root_dir.glob("*")):
     if not dir.is_dir() or "bak" in dir.name:
         continue
-    is_ramses="ramses" in dir.name
+    is_ramses = "ramses" in dir.name
     is_by_adrian = "arj" in dir.name
 
     print(dir.name)
@@ -81,12 +79,12 @@ for dir in sorted(root_dir.glob("*")):
     if not is_by_adrian:
         levelmin, levelmin_TF, levelmax = dir_name_to_parameter(dir.name)
         print(levelmin, levelmin_TF, levelmax)
-        if levelmax != 9:
+        if levelmax != 11:
             continue
 
     input_file = dir / "output_0007.hdf5"
     if mode == Mode.richings:
-        input_file = dir / "output_0004.hdf5"
+        input_file = dir / "output_0003.hdf5"
     if is_by_adrian or is_ramses:
         input_file = dir / "output_0000.hdf5"
         softening_length = None
@@ -116,7 +114,7 @@ for dir in sorted(root_dir.glob("*")):
         center = np.array([60.7, 29, 64]) / h
         softening_length = None
     elif "ramses" in dir.name:
-        hr_coordinates, particles_meta, center = load_ramses_data(dir / "output_00002")
+        hr_coordinates, particles_meta, center = load_ramses_data(dir / "output_00008")
         df = pd.DataFrame(hr_coordinates, columns=["X", "Y", "Z"])
         softening_length = None
     else:
@@ -192,7 +190,7 @@ for dir in sorted(root_dir.glob("*")):
     Y -= center[1]
     Z -= center[2]
 
-    rho, extent = cic_from_radius(X, Z, 1000, 0, 0, 5, periodic=False)
+    rho, extent = cic_from_radius(X, Z, 4000, 0, 0, 5, periodic=False)
 
     vmin = min(vmin, rho.min())
     vmax = max(vmax, rho.max())
@@ -212,8 +210,8 @@ ax2.legend()
 
 # fig3: Figure = plt.figure(figsize=(9, 9))
 # axes: List[Axes] = fig3.subplots(3, 3, sharex=True, sharey=True).flatten()
-fig3: Figure = plt.figure(figsize=(9, 9))
-axes: List[Axes] = fig3.subplots(3, 3, sharex=True, sharey=True).flatten()
+fig3: Figure = plt.figure(figsize=(9, 6))
+axes: List[Axes] = fig3.subplots(2, 3, sharex=True, sharey=True).flatten()
 
 for result, ax in zip(images, axes):
     data = 1.1 + result.rho
