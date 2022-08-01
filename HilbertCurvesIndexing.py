@@ -109,7 +109,7 @@ for i in range(2 ** (2 * sublevel)):
 plt.xlabel('$x$')
 plt.ylabel('$y$')
 plt.tight_layout()
-plt.savefig(Path(f"~/tmp/hilbert_indexcolor.pdf").expanduser())
+plt.savefig(Path(f"~/tmp/hilbert_indexcolor.eps").expanduser())
 
 key = b'0123456789ABCDEF'
 num = 123
@@ -142,5 +142,5 @@ for i in range(2 ** (2 * sublevel)):
 plt.xlabel('$x$')
 plt.ylabel('$y$')
 plt.tight_layout()
-plt.savefig(Path(f"~/tmp/hilbert_indexcolor_scrambled.pdf").expanduser())
+plt.savefig(Path(f"~/tmp/hilbert_indexcolor_scrambled.eps").expanduser())
 plt.show()

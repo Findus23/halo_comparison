@@ -82,7 +82,7 @@ def create_plot(mode):
     combination_list = list(itertools.combinations(resolutions, 2))
     fig, axes = plt.subplots(
         len(waveforms), 3, sharex=True, sharey=True,
-        constrained_layout=True, figsize=figsize_from_page_fraction(columns=2),
+        figsize=figsize_from_page_fraction(columns=2),
     )
     crossings = np.zeros((len(waveforms), len(combination_list)))
     for i, waveform in enumerate(waveforms):
@@ -200,7 +200,9 @@ def create_plot(mode):
     crossings_df = pd.DataFrame(crossings, columns=combination_list, index=waveforms)
     # print(crossings_df.to_markdown())
     print(crossings_df.to_latex())
-    # fig.tight_layout()
+    fig.tight_layout()
+    fig.subplots_adjust(wspace=0,hspace=0)
+
     fig.savefig(Path(f"~/tmp/spectra_{mode}.pdf").expanduser())
 
 

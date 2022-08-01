@@ -105,6 +105,7 @@ def main():
     rowcolumn_labels(axes, resolutions, isrow=False)
 
     fig.tight_layout()
+    # fig.subplots_adjust(wspace=0,hspace=0)
     fig.subplots_adjust(right=0.825)
     cbar_ax = fig.add_axes([0.85, 0.05, 0.05, 0.9])
     fig.colorbar(img, cax=cbar_ax)

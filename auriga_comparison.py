@@ -84,7 +84,7 @@ for dir in sorted(root_dir.glob("*")):
 
     input_file = dir / "output_0007.hdf5"
     if mode == Mode.richings:
-        input_file = dir / "output_0003.hdf5"
+        input_file = dir / "output_0002.hdf5"
     if is_by_adrian or is_ramses:
         input_file = dir / "output_0000.hdf5"
         softening_length = None
@@ -114,7 +114,7 @@ for dir in sorted(root_dir.glob("*")):
         center = np.array([60.7, 29, 64]) / h
         softening_length = None
     elif "ramses" in dir.name:
-        hr_coordinates, particles_meta, center = load_ramses_data(dir / "output_00008")
+        hr_coordinates, particles_meta, center = load_ramses_data(dir / "output_00007")
         df = pd.DataFrame(hr_coordinates, columns=["X", "Y", "Z"])
         softening_length = None
     else:

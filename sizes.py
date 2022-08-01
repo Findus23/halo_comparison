@@ -1,13 +1,16 @@
 from pathlib import Path
 from sys import argv
+from typing import List
 
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
+from matplotlib.axis import XTick
 from matplotlib.collections import QuadMesh
 from matplotlib.colors import LogNorm
 from matplotlib.figure import Figure
+from matplotlib.patches import Polygon
 from numpy import inf
 
 from halo_vis import get_comp_id
@@ -131,7 +134,7 @@ def plot_comparison_hist2d(ax: Axes, file: Path, property: str):
         print("WARNING: vmax not set")
     image: QuadMesh
     _, _, _, image = ax.hist2d(df[x_col], df[y_col] / df[x_col], bins=(bins, np.linspace(0, 2, num_bins)),
-                               norm=LogNorm(vmax=vmax))
+                               norm=LogNorm(vmax=vmax), rasterized=True)
     # ax.plot([rep_x_left, rep_x_left], [mean - std, mean + std], c="C1")
     # ax.annotate(
     #     text=f"std={std:.2f}", xy=(rep_x_left, mean + std),
@@ -173,10 +176,24 @@ def plot_comparison_hist(ax: Axes, file: Path, property: str, m_min=None, m_max=
         bins = num_bins
     if property == "match":
         histtype = "step"
-        label = f"${m_min} < M < {m_max}$"
+        labels = {
+            (-inf, 30): "$M<30$",
+            (None, None): "$M$",
+            (30, 100): "$30<M<100$",
+            (100, inf): "$100<M$",
+        }
+        label = labels[(m_min, m_max)]
         density = True
+    if property == "match":
+        hist_val, bin_edges = np.histogram(df[property], bins=bins, density=density)
+        bin_centers = []
+        for i in range(len(hist_val)):
+            bin_centers.append((bin_edges[i] + bin_edges[i + 1]) / 2)
 
-    ax.hist(df[property], bins=bins, histtype=histtype, label=label, density=density)
+        ax.plot(bin_centers, hist_val, label=label)
+    else:
+        patches: List[Polygon]
+        hist_val, bin_edges, patches = ax.hist(df[property], bins=bins, histtype=histtype, label=label, density=density)
 
 
 comparisons_dir = base_dir / "comparisons"
@@ -191,7 +208,7 @@ def compare_property(property, show: bool):
     fig, axes = plt.subplots(
         len(waveforms), len(comparisons),
         sharey="all", sharex="all",
-        figsize=figsize_from_page_fraction(columns=2)
+        figsize=figsize_from_page_fraction(columns=2),
     )
     for i, waveform in enumerate(waveforms):
         for j, (ref_res, comp_res) in enumerate(comparisons):
@@ -200,6 +217,7 @@ def compare_property(property, show: bool):
             print(file)
             ax: Axes = axes[i, j]
             is_bottom_row = i == len(waveforms) - 1
+            is_top_row = i == 0
             is_left_col = j == 0
             if not is_hist_property:
                 x_labels = {
@@ -230,7 +248,7 @@ def compare_property(property, show: bool):
                     # mass_bins = np.geomspace(10, 30000, num_mass_bins)
                     plot_comparison_hist(ax, file, property)
 
-                    mass_bins = [-inf, 30, 50, 100, inf]
+                    mass_bins = [-inf, 30, 100, inf]
                     for k in range(len(mass_bins) - 1):
                         m_min = mass_bins[k]
                         m_max = mass_bins[k + 1]
@@ -253,10 +271,30 @@ def compare_property(property, show: bool):
                 ax.set_yscale("log")
                 if is_bottom_row and is_left_col:
                     ax.legend()
+            if not is_top_row:
+                last_xtick: XTick = ax.yaxis.get_major_ticks()[-1]
+                last_xtick.set_visible(False)
+            if property == "Mvir" and is_top_row:
+                particle_masses = {
+                    256: 0.23524624,
+                    512: 0.02940578,
+                    1024: 0.0036757225
+                }
+                partmass = particle_masses[ref_res]
+
+                def mass2partnum(mass: float) -> float:
+                    return mass / partmass
+
+                def partnum2mass(partnum: float) -> float:
+                    return partnum * partmass
+
+                sec_ax = ax.secondary_xaxis("top", functions=(mass2partnum, partnum2mass))
+                sec_ax.set_xlabel(r"[\# \textrm{particles}]")
 
     rowcolumn_labels(axes, comparisons, isrow=False)
     rowcolumn_labels(axes, waveforms, isrow=True)
     fig.tight_layout()
+    fig.subplots_adjust(hspace=0)
     fig.savefig(Path(f"~/tmp/comparison_{property}.pdf").expanduser())
     if show:
         plt.show()
@@ -268,7 +306,7 @@ def main():
     if len(argv) > 1:
         properties = argv[1:]
     else:
-        properties = ["Mvir", "Vmax", "cNFW"]
+        properties = ["Mvir", "Vmax", "cNFW", "distance", "match"]
 
     for property in properties:
         compare_property(property, show=len(argv) == 2)
