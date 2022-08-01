@@ -84,7 +84,8 @@ def main():
     vmax = -np.Inf
     with h5py.File(vis_datafile, "a") as vis_out:
         halo_group = vis_out.create_group(str(initial_halo_id))
-        for waveform in waveforms:
+        # use shannon first for reference and as order doesn't matter here
+        for waveform in ["shannon", "DB2", "DB4", "DB8"]:
             for resolution in resolutions:
                 if first_halo:
                     assert ref_resolution == resolution
