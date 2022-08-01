@@ -114,8 +114,10 @@ for dir in sorted(root_dir.glob("*")):
         center = np.array([60.7, 29, 64]) / h
         softening_length = None
     elif "ramses" in dir.name:
+        h = 0.6777
         hr_coordinates, particles_meta, center = load_ramses_data(dir / "output_00007")
         df = pd.DataFrame(hr_coordinates, columns=["X", "Y", "Z"])
+        center = center
         softening_length = None
     else:
         df, particles_meta = read_file(input_file)

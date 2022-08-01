@@ -1,12 +1,26 @@
+import hashlib
+import json
+
 import numpy as np
 import pandas as pd
 
 from utils import print_progress
 
+cache_file = "center_cache.json"
+
+try:
+    with open(cache_file, "r") as f:
+        center_cache = json.load(f)
+except FileNotFoundError:
+    center_cache = {}
+
 
 def find_center(df: pd.DataFrame, center: np.ndarray, initial_radius=1):
     # plt.figure()
     all_particles = df[["X", "Y", "Z"]].to_numpy()
+    hash = hashlib.sha256(np.ascontiguousarray(all_particles).data).hexdigest()
+    if hash in center_cache:
+        return np.array(center_cache[hash])
     radius = initial_radius
     center_history = []
     i = 0
@@ -30,4 +44,7 @@ def find_center(df: pd.DataFrame, center: np.ndarray, initial_radius=1):
     # plt.colorbar(label="step")
     # plt.show()
     print()
+    center_cache[hash] = center.tolist()
+    with open(cache_file, "w") as f:
+        json.dump(center_cache, f)
     return center
