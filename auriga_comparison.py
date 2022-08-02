@@ -19,7 +19,7 @@ from nfw import fit_nfw
 from paths import auriga_dir, richings_dir
 from ramses import load_ramses_data
 from readfiles import read_file, read_halo_file, ParticlesMeta
-from utils import read_swift_config, print_wall_time
+from utils import read_swift_config, print_wall_time, figsize_from_page_fraction
 
 
 class Mode(Enum):
@@ -27,7 +27,7 @@ class Mode(Enum):
     auriga6 = 2
 
 
-mode = Mode.richings
+mode = Mode.auriga6
 
 
 def dir_name_to_parameter(dir_name: str):
@@ -39,9 +39,9 @@ def levelmax_to_softening_length(levelmax: int) -> float:
     return box_size / 30 / 2 ** levelmax
 
 
-fig1: Figure = plt.figure(figsize=(9, 6))
+fig1: Figure = plt.figure(figsize=figsize_from_page_fraction())
 ax1: Axes = fig1.gca()
-fig2: Figure = plt.figure(figsize=(9, 6))
+fig2: Figure = plt.figure(figsize=figsize_from_page_fraction())
 ax2: Axes = fig2.gca()
 
 for ax in [ax1, ax2]:
@@ -79,8 +79,8 @@ for dir in sorted(root_dir.glob("*")):
     if not is_by_adrian:
         levelmin, levelmin_TF, levelmax = dir_name_to_parameter(dir.name)
         print(levelmin, levelmin_TF, levelmax)
-        if levelmax != 11:
-            continue
+        # if levelmax != 11:
+        #     continue
 
     input_file = dir / "output_0007.hdf5"
     if mode == Mode.richings:
@@ -154,9 +154,13 @@ for dir in sorted(root_dir.glob("*")):
     if is_by_adrian:
         with reference_file.open("wb") as f:
             pickle.dump([log_radial_bins, bin_masses, bin_densities], f)
-    ax1.loglog(log_radial_bins[:-1], bin_masses, label=str(dir.name), c=f"C{i}")
+    if is_by_adrian:
+        label = "reference"
+    else:
+        label = f"{levelmin}, {levelmin_TF}, {levelmax}"
+    ax1.loglog(log_radial_bins[:-1], bin_masses, label=label, c=f"C{i}")
 
-    ax2.loglog(log_radial_bins[:-1], bin_densities, label=str(dir.name), c=f"C{i}")
+    ax2.loglog(log_radial_bins[:-1], bin_densities, label=label, c=f"C{i}")
 
     if reference_file.exists() and not is_by_adrian:
         with reference_file.open("rb") as f:
@@ -209,11 +213,13 @@ for dir in sorted(root_dir.glob("*")):
     # )
 ax1.legend()
 ax2.legend()
+fig1.tight_layout()
+fig2.tight_layout()
 
 # fig3: Figure = plt.figure(figsize=(9, 9))
 # axes: List[Axes] = fig3.subplots(3, 3, sharex=True, sharey=True).flatten()
-fig3: Figure = plt.figure(figsize=(9, 6))
-axes: List[Axes] = fig3.subplots(2, 3, sharex=True, sharey=True).flatten()
+fig3: Figure = plt.figure(figsize=figsize_from_page_fraction(columns=2, height_to_width=1))
+axes: List[Axes] = fig3.subplots(3, 3, sharex=True, sharey=True).flatten()
 
 for result, ax in zip(images, axes):
     data = 1.1 + result.rho
