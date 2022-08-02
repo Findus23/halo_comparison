@@ -142,15 +142,10 @@ def compare_halo_resolutions(
             axis=1)
         # print(list(halo_distances))
 
-        print(f"find nearby halos (10x{ref_halo.Rvir:.1f})")
+        print(f"find nearby halos (50x{ref_halo.Rvir:.1f})")
         print(ref_halo[['X', 'Y', 'Z']].values)
-        # Find IDs of halos that are less than 10 Rvir away
-        nearby_halos = set(df_comp_halo.loc[halo_distances < ref_halo.Rvir * 10].index.to_list())
-        if len(nearby_halos) < 10:
-            print(f"only {len(nearby_halos)} halos, expanding to 50xRvir")
-            nearby_halos = set(df_comp_halo.loc[halo_distances < ref_halo.Rvir * 50].index.to_list())
-            counters.checking_50 += 1
-        # TODO: if still no found: further expand or skip?
+        # Find IDs of halos that are less than 50 Rvir away
+        nearby_halos = set(df_comp_halo.loc[halo_distances < ref_halo.Rvir * 50].index.to_list())
         if len(nearby_halos) < 10:
             print(f"only {len(nearby_halos)} halos, expanding to 150xRvir")
             nearby_halos = set(df_comp_halo.loc[halo_distances < ref_halo.Rvir * 150].index.to_list())
