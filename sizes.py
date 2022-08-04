@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
-from matplotlib.axis import XTick
+from matplotlib.axis import XTick, YTick
 from matplotlib.collections import QuadMesh
 from matplotlib.colors import LogNorm
 from matplotlib.figure import Figure
@@ -275,8 +275,8 @@ def compare_property(property, show: bool):
                 if is_bottom_row and is_left_col:
                     ax.legend()
             if not is_top_row:
-                last_xtick: XTick = ax.yaxis.get_major_ticks()[-1]
-                last_xtick.set_visible(False)
+                last_ytick: YTick = ax.yaxis.get_major_ticks()[-1]
+                last_ytick.set_visible(False)
             if property == "Mvir" and is_top_row:
                 particle_masses = {
                     256: 0.23524624,

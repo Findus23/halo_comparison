@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from matplotlib.axes import Axes
+from matplotlib.axis import XTick, YTick
 from matplotlib.figure import Figure
 
 from paths import base_dir
@@ -96,6 +97,7 @@ def create_plot(mode):
             ax_end: "end"
         }
         bottom_row = i == len(waveforms) - 1
+        top_row = i == 0
         # for is_end, ax in enumerate([ax_ics, ax_z1]):
         for is_end, ax in enumerate([ax_ics, ax_z1, ax_end]):
             if bottom_row:
@@ -193,6 +195,9 @@ def create_plot(mode):
         if bottom_row:
             # ax_z1.legend()
             ax_ics.legend(loc='lower left')
+        if not bottom_row:
+            last_xtick: XTick = ax_ics.yaxis.get_major_ticks()[0]
+            last_xtick.set_visible(False)
 
         # fig.suptitle(f"Cross Spectra {time}") #Not needed for paper
         # fig.tight_layout()
