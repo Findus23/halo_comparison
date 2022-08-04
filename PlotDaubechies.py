@@ -4,11 +4,13 @@ in PlotDaubechies.ipynb
 """
 from math import pi
 from pathlib import Path
+from typing import List
 
 import matplotlib.pyplot as plt
 import numpy as np
 # two-fold upsampling -- https://cnx.org/contents/xsppCgXj@8.18:H_wA16rf@16/Upsampling
 from matplotlib.figure import Figure
+from matplotlib.lines import Line2D
 from pyvista import Axes
 
 # # The Cascade Algorithm to Compute the Wavelet and the Scaling Function
@@ -240,16 +242,16 @@ ax.plot(kh, np.abs(fphih) ** 2, label='$\\hat\\varphi_{\\rm Haar}$', c="C0")
 ax.plot(kh, np.abs(fpsih) ** 2, label='$\\hat\\psi_{\\rm Haar}$', c="C0", linestyle="dashed")
 
 kdb2, fphidb2, fpsidb2 = fourier_wavelet(h_DB2, g_DB2, 256)
-ax.plot(kdb2, np.abs(fphidb2) ** 2, label='$\\hat\\varphi_{DB2}$', c="C1")
-ax.plot(kdb2, np.abs(fpsidb2) ** 2, label='$\\hat\\psi_{DB2}$', c="C1", linestyle="dashed")
+ax.plot(kdb2, np.abs(fphidb2) ** 2, label=r'$\hat\varphi_\textrm{DB2}$', c="C1")
+ax.plot(kdb2, np.abs(fpsidb2) ** 2, label=r'$\hat\psi_\textrm{DB2}$', c="C1", linestyle="dashed")
 
 kdb4, fphidb4, fpsidb4 = fourier_wavelet(h_DB4, g_DB4, 256)
-ax.plot(kdb4, np.abs(fphidb4) ** 2, label='$\\hat\\varphi_{DB4}$', c="C2")
-ax.plot(kdb4, np.abs(fpsidb4) ** 2, label='$\\hat\\psi_{DB4}$', c="C2", linestyle="dashed")
+ax.plot(kdb4, np.abs(fphidb4) ** 2, label=r'$\hat\varphi_\textrm{DB4}$', c="C2")
+ax.plot(kdb4, np.abs(fpsidb4) ** 2, label=r'$\hat\psi_\textrm{DB4}$', c="C2", linestyle="dashed")
 
 kdb8, fphidb8, fpsidb8 = fourier_wavelet(h_DB8, g_DB8, 256)
-ax.plot(kdb8, np.abs(fphidb8) ** 2, label='$\\hat\\varphi_{DB8}$', c="C3")
-ax.plot(kdb8, np.abs(fpsidb8) ** 2, label='$\\hat\\psi_{DB8}$', c="C3", linestyle="dashed")
+ax.plot(kdb8, np.abs(fphidb8) ** 2, label=r'$\hat\varphi_\textrm{DB8}$', c="C3")
+ax.plot(kdb8, np.abs(fpsidb8) ** 2, label=r'$\hat\psi_\textrm{DB8}$', c="C3", linestyle="dashed")
 
 
 # all k* are np.linspace(0, np.pi, 256), so we can also use them for shannon
@@ -260,14 +262,26 @@ def shannon(k):
     return y
 
 
-ax.plot(kdb8, 1 - shannon(kdb8), label='$\\hat\\varphi_{shannon}$', c="C4")
-ax.plot(kdb8, shannon(kdb8), label='$\\hat\\psi_{shannon}$', c="C4", linestyle="dashed")
+ax.plot(kdb8, 1 - shannon(kdb8), label=r'$\hat\varphi_\textrm{shannon}$', c="C4")
+ax.plot(kdb8, shannon(kdb8), label=r'$\hat\psi_\textrm{shannon}$', c="C4", linestyle="dashed")
 # ax.plot(kdb8, np.abs(fpsidb8) ** 2, label='$\\hat\\psi_{DB8}$', c="C3", linestyle="dashed")
 
 # kdb16, fphidb16, fpsidb16 = fourier_wavelet(h_DB16, g_DB16, 256)
 # ax.plot(kdb16, np.abs(fphidb16) ** 2, label='$\\hat\\varphi_{DB16}$', c="C4")
 # ax.plot(kdb16, np.abs(fpsidb16) ** 2, label='$\\hat\\psi_{DB16}$', c="C4", linestyle="dashed")
-ax.legend(frameon=False)
+lines: List[Line2D] = ax.get_lines()
+philines = []
+psilines = []
+for line in lines:
+    if "phi" in line.get_label():
+        philines.append(line)
+    else:
+        psilines.append(line)
+
+leg1 = ax.legend(frameon=False, handles=philines, loc="center left")
+leg2 = ax.legend(frameon=False, handles=psilines, loc="center right")
+ax.add_artist(leg1)
+ax.add_artist(leg2)
 ax.set_xlabel('k')
 ax.set_ylabel('P(k)')
 ax.set_xticks([0, pi / 2, pi])
