@@ -265,7 +265,10 @@ def compare_property(property, show: bool):
                 if is_bottom_row:
                     ax.set_xlabel(x_labels[property])
                 if is_left_col:
-                    ax.set_ylabel(r"\# Halos")
+                    if property == "match":
+                        ax.set_ylabel(r"$p(J)$")
+                    else:
+                        ax.set_ylabel(r"\# Halos")
             if property == "distance":
                 ax.set_xscale("log")
                 ax.set_yscale("log")
