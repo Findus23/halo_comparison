@@ -238,8 +238,8 @@ def fourier_wavelet(h, g, n):
 # ax.plot([0, np.pi], [1., 1.], 'k:')
 
 kh, fphih, fpsih = fourier_wavelet(h_Haar, g_Haar, 256)
-ax.plot(kh, np.abs(fphih) ** 2, label='$\\hat\\varphi_{\\rm Haar}$', c="C0")
-ax.plot(kh, np.abs(fpsih) ** 2, label='$\\hat\\psi_{\\rm Haar}$', c="C0", linestyle="dashed")
+ax.plot(kh, np.abs(fphih) ** 2, label=r'$\hat\varphi_\textrm{Haar}$', c="C0")
+ax.plot(kh, np.abs(fpsih) ** 2, label=r'$\hat\psi_\textrm{Haar}$', c="C0", linestyle="dashed")
 
 kdb2, fphidb2, fpsidb2 = fourier_wavelet(h_DB2, g_DB2, 256)
 ax.plot(kdb2, np.abs(fphidb2) ** 2, label=r'$\hat\varphi_\textrm{DB2}$', c="C1")
