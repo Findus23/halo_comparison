@@ -44,6 +44,7 @@ def read_file(file: Path) -> Tuple[pd.DataFrame, ParticlesMeta]:
         with meta_cache_file.open("wb") as f:
             pickle.dump(meta, f)
         df.to_pickle(str(cache_file))
+        reference_file.close()
         return df, meta
     print("from cache")
     df = pd.read_pickle(str(cache_file))
