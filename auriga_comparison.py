@@ -19,6 +19,7 @@ from nfw import fit_nfw
 from paths import auriga_dir, richings_dir
 from ramses import load_ramses_data
 from readfiles import read_file, read_halo_file, ParticlesMeta
+from slices import create_2d_slice
 from utils import read_swift_config, print_wall_time, figsize_from_page_fraction
 
 
@@ -27,7 +28,7 @@ class Mode(Enum):
     auriga6 = 2
 
 
-mode = Mode.auriga6
+mode = Mode.richings
 
 
 def dir_name_to_parameter(dir_name: str):
@@ -72,6 +73,7 @@ for dir in sorted(root_dir.glob("*")):
     if not dir.is_dir() or "bak" in dir.name:
         continue
     is_ramses = "ramses" in dir.name
+    has_baryons = "bary" in dir.name or is_ramses
     is_by_adrian = "arj" in dir.name
 
     print(dir.name)
@@ -79,8 +81,10 @@ for dir in sorted(root_dir.glob("*")):
     if not is_by_adrian:
         levelmin, levelmin_TF, levelmax = dir_name_to_parameter(dir.name)
         print(levelmin, levelmin_TF, levelmax)
-        # if levelmax != 11:
-        #     continue
+        if not has_baryons:
+            continue
+        if levelmax != 11:
+            continue
 
     input_file = dir / "output_0007.hdf5"
     if mode == Mode.richings:
@@ -150,6 +154,10 @@ for dir in sorted(root_dir.glob("*")):
     #     nfw(log_radial_bins[i_min_border:i_max_border], *popt),
     #     linestyle="dotted"
     # )
+
+    if has_baryons:
+        create_2d_slice(input_file, center, property="InternalEnergies")
+
     centers[dir.name] = center
     if is_by_adrian:
         with reference_file.open("wb") as f:
@@ -231,7 +239,7 @@ for result, ax in zip(images, axes):
 
 fig3.tight_layout()
 fig3.subplots_adjust(right=0.825)
-cbar_ax = fig3.add_axes([0.85, 0.15, 0.05, 0.7])
+cbar_ax = fig3.add_axes([0.85, 0.05, 0.05, 0.9])
 fig3.colorbar(img, cax=cbar_ax)
 
 fig1.savefig(Path(f"~/tmp/auriga1.pdf").expanduser())
