@@ -9,9 +9,9 @@ from typing import List
 import matplotlib.pyplot as plt
 import numpy as np
 # two-fold upsampling -- https://cnx.org/contents/xsppCgXj@8.18:H_wA16rf@16/Upsampling
+from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
-from pyvista import Axes
 
 # # The Cascade Algorithm to Compute the Wavelet and the Scaling Function
 # Algorithm adapted from [this webpage](https://cnx.org/contents/0nnvPGYf@7/Computing-the-Scaling-Function-The-Cascade-Algorithm). The iterations are defined by
