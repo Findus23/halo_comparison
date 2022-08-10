@@ -94,7 +94,7 @@ def create_plot(mode):
             # TODO: better names
             ax_ics: "ics",
             ax_z1: "z=1",
-            ax_end: "end"
+            ax_end: "z=0"
         }
         bottom_row = i == len(waveforms) - 1
         top_row = i == 0
@@ -103,7 +103,7 @@ def create_plot(mode):
             if bottom_row:
                 ax.set_xlabel("k [Mpc$^{-1}$]")
             ax.text(
-                0.02,
+                0.01,
                 0.85,
                 f"{waveform}",
                 horizontalalignment="left",
@@ -111,7 +111,7 @@ def create_plot(mode):
                 transform=ax.transAxes,
             )
             ax.text(
-                0.98,
+                0.99,
                 0.85,
                 axes_names[ax],
                 horizontalalignment="right",
@@ -129,7 +129,7 @@ def create_plot(mode):
             # ax.set_yticklabels([])
 
         if mode == "power":
-            ax_ics.set_ylabel("P")
+            ax_ics.set_ylabel("$\\mathrm{{P}}_\\mathrm{{X}}$ / $\\mathrm{{P}}_{{1024}}$")
             for j, resolution in enumerate(resolutions):
                 ics_data = spectra_data(waveform, resolution, resolution, Lbox, "ics")
                 ics_k = ics_data["k [Mpc]"]
@@ -157,6 +157,8 @@ def create_plot(mode):
                 ax_end.semilogx(end_k, end_p1, color=colors[j])
                 for ax in [ax_ics, ax_z1, ax_end]:
                     ax.set_ylim(0.9, 1.10)
+                    ax.set_axisbelow(True)
+                    ax.grid(color='black', linestyle=':', linewidth=0.5, alpha=0.5)
 
 
         # fig.suptitle(f"Power Spectra {time}") #Not needed for paper
@@ -189,6 +191,10 @@ def create_plot(mode):
                 crossing_index = np.searchsorted(end_k.to_list(), k0 * smaller_res)  # change here
                 crossing_value = end_pcross[crossing_index]  # and here
                 crossings[i][j] = crossing_value
+
+                for ax in [ax_ics, ax_z1, ax_end]:
+                    ax.set_axisbelow(True)
+                    ax.grid(color='black', linestyle=':', linewidth=0.5, alpha=0.5)
 
             ax_end.set_xlim(right=k0 * resolutions[-1])
             ax_end.set_ylim(0.8, 1.02)

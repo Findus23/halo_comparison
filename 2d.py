@@ -1,3 +1,7 @@
+"""
+Looks like this file takes one snapshot (line 26) and visualises specified halos (line 28) as a 2d-projection. Might not be accurate, hasn't been changed in a long time.
+"""
+
 from pathlib import Path
 
 import matplotlib.pyplot as plt
