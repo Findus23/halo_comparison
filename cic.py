@@ -39,10 +39,15 @@ def cic_deposit(X, Y, ngrid, periodic=True) -> np.ndarray:
 
 
 def cic_range(
-        X: np.ndarray, Y: np.ndarray,
-        ngrid: int,
-        xmin: float, xmax: float,
-        ymin: float, ymax: float, *args, **kwargs
+    X: np.ndarray,
+    Y: np.ndarray,
+    ngrid: int,
+    xmin: float,
+    xmax: float,
+    ymin: float,
+    ymax: float,
+    *args,
+    **kwargs
 ) -> Tuple[np.ndarray, Extent]:
     xrange = xmax - xmin
     yrange = ymax - ymin
@@ -57,16 +62,25 @@ def cic_range(
 
 
 def cic_from_radius(
-        X: np.ndarray, Y: np.ndarray,
-        ngrid: int,
-        x_center: float, y_center: float,
-        radius: float, *args, **kwargs
+    X: np.ndarray,
+    Y: np.ndarray,
+    ngrid: int,
+    x_center: float,
+    y_center: float,
+    radius: float,
+    *args,
+    **kwargs
 ) -> Tuple[np.ndarray, Extent]:
     return cic_range(
-        X, Y, ngrid,
-        x_center - radius, x_center + radius,
-        y_center - radius, y_center + radius,
-        *args, **kwargs
+        X,
+        Y,
+        ngrid,
+        x_center - radius,
+        x_center + radius,
+        y_center - radius,
+        y_center + radius,
+        *args,
+        **kwargs
     )
 
 
@@ -87,18 +101,21 @@ def plot_cic(rho: np.ndarray, extent: Extent, title: str):
     data = np.log(data)
     norm = plt.Normalize(vmin=data.min(), vmax=data.max())
     image = cmap(norm(data.T))
-    plt.imsave((Path("~/tmp").expanduser() / title).with_suffix(".png"), image, origin="lower")
+    plt.imsave(
+        (Path("~/tmp").expanduser() / title).with_suffix(".png"), image, origin="lower"
+    )
     # ax.hist2d(df.X, df.Y, bins=500, norm=LogNorm())
     # ax.hist2d(df2.X, df2.Y, bins=1000, norm=LogNorm())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     input_file = Path(sys.argv[1])
     df_ref, _ = read_file(input_file)
-    rho, extent = cic_from_radius(df_ref.X.to_numpy(), df_ref.Y.to_numpy(), 1500, 48.8, 57, 1, periodic=False)
+    rho, extent = cic_from_radius(
+        df_ref.X.to_numpy(), df_ref.Y.to_numpy(), 1500, 48.8, 57, 1, periodic=False
+    )
     # rho, extent = cic_range(df_ref.X.to_numpy(), df_ref.Y.to_numpy(), 800, 0, 85.47, 0, 85.47, periodic=False)
 
     plot_cic(
-        rho, extent,
-        title=str(input_file.relative_to(input_file.parent.parent).name)
+        rho, extent, title=str(input_file.relative_to(input_file.parent.parent).name)
     )

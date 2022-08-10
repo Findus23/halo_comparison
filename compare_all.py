@@ -16,7 +16,7 @@ for wf in ["DB2", "DB4", "DB8", "shannon"]:
                         plot=False,
                         plot3d=False,
                         velo_halos=True,
-                        single=False
+                        single=False,
                     )
                 except Exception as e:
                     traceback.print_exc()

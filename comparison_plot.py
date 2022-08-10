@@ -21,32 +21,32 @@ from utils import figsize_from_page_fraction, rowcolumn_labels, waveforms, tex_f
 
 G = 43.022682  # in Mpc (km/s)^2 / (10^10 Msun)
 
-vmaxs = {
-    "Mvir": 52,
-    "Vmax": 93,
-    "cNFW": 31
-}
+vmaxs = {"Mvir": 52, "Vmax": 93, "cNFW": 31}
 
 units = {
     "distance": "Mpc",
-    "Mvir": r"10^{10} \textrm{M}_\odot",
-    "Vmax": r"\textrm{km} \textrm{s}^{-1}"  # TODO
+    "Mvir": r"10^{10} \textrm{ M}_\odot",
+    "Vmax": r"\textrm{km } \textrm{s}^{-1}",  # TODO
 }
 
 
 def concentration(row, halo_type: str) -> bool:
-    r_200crit = row[f'{halo_type}_R_200crit']
+    r_200crit = row[f"{halo_type}_R_200crit"]
     if r_200crit <= 0:
         cnfw = -1
-        colour = 'orange'
+        colour = "orange"
         return False
         # return cnfw, colour
 
-    r_size = row[f'{halo_type}_R_size']  # largest difference from center of mass to any halo particle
-    m_200crit = row[f'{halo_type}_Mass_200crit']
-    vmax = row[f'{halo_type}_Vmax']  # largest velocity coming from enclosed mass profile calculation
-    rmax = row[f'{halo_type}_Rmax']
-    npart = row[f'{halo_type}_npart']
+    r_size = row[
+        f"{halo_type}_R_size"
+    ]  # largest difference from center of mass to any halo particle
+    m_200crit = row[f"{halo_type}_Mass_200crit"]
+    vmax = row[
+        f"{halo_type}_Vmax"
+    ]  # largest velocity coming from enclosed mass profile calculation
+    rmax = row[f"{halo_type}_Rmax"]
+    npart = row[f"{halo_type}_npart"]
     VmaxVvir2 = vmax ** 2 * r_200crit / (G * m_200crit)
     if VmaxVvir2 <= 1.05:
         if m_200crit == 0:
@@ -59,7 +59,7 @@ def concentration(row, halo_type: str) -> bool:
             # colour = 'white'
     else:
         if npart >= 100:  # only calculate cnfw for groups with more than 100 particles
-            cnfw = row[f'{halo_type}_cNFW']
+            cnfw = row[f"{halo_type}_cNFW"]
             return True
             # colour = 'black'
         else:
@@ -91,12 +91,12 @@ def plot_comparison_hist2d(ax: Axes, file: Path, property: str):
     max_x = max([max(df[x_col]), max(df[y_col])])
     num_bins = 100
     bins = np.geomspace(min_x, max_x, num_bins)
-    if property == 'cNFW':
+    if property == "cNFW":
         rows = []
         for i, row in df.iterrows():
             comp_cnfw_normal = concentration(row, halo_type="comp")
 
-            ref_cnfw_normal = concentration(row, halo_type='ref')
+            ref_cnfw_normal = concentration(row, halo_type="ref")
             cnfw_normal = comp_cnfw_normal and ref_cnfw_normal
             if cnfw_normal:
                 rows.append(row)
@@ -118,13 +118,10 @@ def plot_comparison_hist2d(ax: Axes, file: Path, property: str):
             stds.append(std)
         means = np.array(means)
         stds = np.array(stds)
-        args = {
-            "color": "C2",
-            "zorder": 10
-        }
-        ax.fill_between(bins, means - stds, means + stds, alpha=.2, **args)
-        ax.plot(bins, means + stds, alpha=.5, **args)
-        ax.plot(bins, means - stds, alpha=.5, **args)
+        args = {"color": "C2", "zorder": 10}
+        ax.fill_between(bins, means - stds, means + stds, alpha=0.2, **args)
+        ax.plot(bins, means + stds, alpha=0.5, **args)
+        ax.plot(bins, means - stds, alpha=0.5, **args)
         # ax_scatter.plot(bins, stds, label=f"{file.stem}")
 
     if property in vmaxs:
@@ -133,8 +130,13 @@ def plot_comparison_hist2d(ax: Axes, file: Path, property: str):
         vmax = None
         print("WARNING: vmax not set")
     image: QuadMesh
-    _, _, _, image = ax.hist2d(df[x_col], df[y_col] / df[x_col], bins=(bins, np.linspace(0, 2, num_bins)),
-                               norm=LogNorm(vmax=vmax), rasterized=True)
+    _, _, _, image = ax.hist2d(
+        df[x_col],
+        df[y_col] / df[x_col],
+        bins=(bins, np.linspace(0, 2, num_bins)),
+        norm=LogNorm(vmax=vmax),
+        rasterized=True,
+    )
     # ax.plot([rep_x_left, rep_x_left], [mean - std, mean + std], c="C1")
     # ax.annotate(
     #     text=f"std={std:.2f}", xy=(rep_x_left, mean + std),
@@ -148,7 +150,9 @@ def plot_comparison_hist2d(ax: Axes, file: Path, property: str):
     # ax.set_yscale("log")
     ax.set_xlim(min(df[x_col]), max(df[y_col]))
 
-    ax.plot([min(df[x_col]), max(df[y_col])], [1, 1], linewidth=1, color="C1", zorder=10)
+    ax.plot(
+        [min(df[x_col]), max(df[y_col])], [1, 1], linewidth=1, color="C1", zorder=10
+    )
 
     return x_col, y_col
     # ax.set_title(file.name)
@@ -193,7 +197,9 @@ def plot_comparison_hist(ax: Axes, file: Path, property: str, m_min=None, m_max=
         ax.plot(bin_centers, hist_val, label=label)
     else:
         patches: List[Polygon]
-        hist_val, bin_edges, patches = ax.hist(df[property], bins=bins, histtype=histtype, label=label, density=density)
+        hist_val, bin_edges, patches = ax.hist(
+            df[property], bins=bins, histtype=histtype, label=label, density=density
+        )
 
 
 comparisons_dir = base_dir / "comparisons"
@@ -206,8 +212,10 @@ def compare_property(property, show: bool):
     is_hist_property = property in hist_properties
     fig: Figure
     fig, axes = plt.subplots(
-        len(waveforms), len(comparisons),
-        sharey="all", sharex="all",
+        len(waveforms),
+        len(comparisons),
+        sharey="all",
+        sharex="all",
         figsize=figsize_from_page_fraction(columns=2),
     )
     for i, waveform in enumerate(waveforms):
@@ -227,24 +235,82 @@ def compare_property(property, show: bool):
                 }
                 x_col, y_col = plot_comparison_hist2d(ax, file, property)
                 lab_a, lab_b = x_labels[property]
-                unit = f"[{units[property]}]" if property in units and units[property] else ""
+                unit = (
+                    f"[{units[property]}]"
+                    if property in units and units[property]
+                    else ""
+                )
                 if is_bottom_row:
                     if lab_b:
-                        ax.set_xlabel(tex_fmt(r"$AA_{\textrm{BB},CC} DD$", lab_a, lab_b, ref_res, unit))
+                        ax.set_xlabel(
+                            tex_fmt(
+                                r"$AA_{\textrm{BB},\textrm{ CC}} \textrm{ } DD$",
+                                lab_a,
+                                lab_b,
+                                ref_res,
+                                unit,
+                            )
+                        )
+                        # fig.supxlabel(tex_fmt(r"$AA_{\textrm{BB},\textrm{ } CC} \textrm{ } DD$", lab_a, lab_b, ref_res, unit), fontsize='medium')
                     else:
-                        ax.set_xlabel(tex_fmt(r"$AA_{BB} CC$", lab_a, ref_res, unit))
+                        ax.set_xlabel(
+                            tex_fmt(
+                                r"$AA_{\textrm{BB}} \textrm{ } CC$",
+                                lab_a,
+                                ref_res,
+                                unit,
+                            )
+                        )
+                        # fig.supxlabel(tex_fmt(r"$AA_{BB} \textrm{ } CC$", lab_a, ref_res, unit), fontsize='medium')
                 if is_left_col:
                     if lab_b:
-                        ax.set_ylabel(
-                            tex_fmt(r"$AA_{\textrm{BB},\textrm{comp}} / AA_{\textrm{BB},\textrm{CC}}$",
-                                    lab_a, lab_b, ref_res))
+                        # ax.set_ylabel(
+                        #     tex_fmt(r"$AA_{\textrm{BB},\textrm{comp}} \textrm{ } / \textrm{ } AA_{\textrm{BB},\textrm{CC}}$",
+                        #             lab_a, lab_b, ref_res))
+                        # fig.text(0.015, 0.5, tex_fmt(r"$AA_{\textrm{BB},\textrm{ comp}} \textrm{ } / \textrm{ } AA_{\textrm{BB},\textrm{ CC}}$", lab_a, lab_b, ref_res), va='center', rotation='vertical', size='medium')
+                        fig.supylabel(
+                            tex_fmt(
+                                r"$AA_{\textrm{BB},\textrm{ comp}} \textrm{ } / \textrm{ } AA_{\textrm{BB},\textrm{ CC}}$",
+                                lab_a,
+                                lab_b,
+                                ref_res,
+                            ),
+                            fontsize="medium",
+                            fontvariant="small-caps",
+                        )
                     else:
-                        ax.set_ylabel(
-                            tex_fmt(r"$AA_{\textrm{comp}} / AA_{\textrm{BB}}$",
-                                    lab_a, ref_res))
+                        # ax.set_ylabel(
+                        #     tex_fmt(r"$AA_{\textrm{comp}} \textrm{ } / \textrm{ } AA_{\textrm{BB}}$",
+                        #             lab_a, ref_res))
+                        # fig.text(0.015, 0.5, tex_fmt(r"$AA_{\textrm{comp}} \textrm{ } / \textrm{ } AA_{\textrm{BB}}$", lab_a, ref_res), va='center', rotation='vertical', size='medium')
+                        fig.supylabel(
+                            tex_fmt(
+                                r"$AA_{\textrm{comp}} \textrm{ } / \textrm{ } AA_{\textrm{BB}}$",
+                                lab_a,
+                                ref_res,
+                            ),
+                            fontsize="medium",
+                        )
                     # ax.set_ylabel(f"{property}_{{comp}}/{property}_{ref_res}")
+                ax.text(
+                    0.975,
+                    0.9,
+                    f"comp = {comp_res}",
+                    horizontalalignment="right",
+                    verticalalignment="top",
+                    transform=ax.transAxes,
+                )
             else:
                 if property == "match":
+                    if not (is_bottom_row and is_left_col):
+                        ax.text(
+                            0.05,
+                            0.9,
+                            f"comp = {comp_res}",
+                            horizontalalignment="left",
+                            verticalalignment="top",
+                            transform=ax.transAxes,
+                        )
                     # mass_bins = np.geomspace(10, 30000, num_mass_bins)
                     plot_comparison_hist(ax, file, property)
 
@@ -257,18 +323,25 @@ def compare_property(property, show: bool):
                         ax.legend()
 
                 else:
+                    ax.text(
+                        0.05,
+                        0.9,
+                        f"comp = {comp_res}",
+                        horizontalalignment="left",
+                        verticalalignment="top",
+                        transform=ax.transAxes,
+                    )
                     plot_comparison_hist(ax, file, property)
-                x_labels = {
-                    "match": "$J$",
-                    "distance": "$D$ [$R_{vir}$]"
-                }
+                x_labels = {"match": "$J$", "distance": "$D$ [$R_\mathrm{{vir}}$]"}
                 if is_bottom_row:
                     ax.set_xlabel(x_labels[property])
                 if is_left_col:
                     if property == "match":
-                        ax.set_ylabel(r"$p(J)$")
+                        # ax.set_ylabel(r"$p(J)$")
+                        fig.supylabel(r"$p(J)$", fontsize="medium")
                     else:
-                        ax.set_ylabel(r"\# Halos")
+                        # ax.set_ylabel(r"\# Halos")
+                        fig.supylabel(r"\# Halos", fontsize="medium")
             if property == "distance":
                 ax.set_xscale("log")
                 ax.set_yscale("log")
@@ -278,11 +351,7 @@ def compare_property(property, show: bool):
                 last_ytick: YTick = ax.yaxis.get_major_ticks()[-1]
                 last_ytick.set_visible(False)
             if property == "Mvir" and is_top_row:
-                particle_masses = {
-                    256: 0.23524624,
-                    512: 0.02940578,
-                    1024: 0.0036757225
-                }
+                particle_masses = {256: 0.23524624, 512: 0.02940578, 1024: 0.0036757225}
                 partmass = particle_masses[ref_res]
 
                 def mass2partnum(mass: float) -> float:
@@ -291,10 +360,12 @@ def compare_property(property, show: bool):
                 def partnum2mass(partnum: float) -> float:
                     return partnum * partmass
 
-                sec_ax = ax.secondary_xaxis("top", functions=(mass2partnum, partnum2mass))
-                sec_ax.set_xlabel(r"[\# \textrm{particles}]")
+                sec_ax = ax.secondary_xaxis(
+                    "top", functions=(mass2partnum, partnum2mass)
+                )
+                sec_ax.set_xlabel(r"\textrm{Halo Size }[\# \textrm{particles}]")
 
-    rowcolumn_labels(axes, comparisons, isrow=False)
+    # rowcolumn_labels(axes, comparisons, isrow=False)
     rowcolumn_labels(axes, waveforms, isrow=True)
     fig.tight_layout()
     fig.subplots_adjust(hspace=0)
@@ -315,5 +386,5 @@ def main():
         compare_property(property, show=len(argv) == 2)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

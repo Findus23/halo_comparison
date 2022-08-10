@@ -9,8 +9,12 @@ def nfw(r, rho_0, r_s):
 
 def fit_nfw(radius, densities):
     popt, pcov = curve_fit(
-        nfw, radius, densities,
-        verbose=1, method="trf", max_nfev=1000,
-        bounds=([0, 0], [inf, 1])
+        nfw,
+        radius,
+        densities,
+        verbose=1,
+        method="trf",
+        max_nfev=1000,
+        bounds=([0, 0], [inf, 1]),
     )
     return popt

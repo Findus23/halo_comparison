@@ -26,11 +26,9 @@ def in_area(coords: Coords, xobj, yobj, zobj, factor=1.3) -> bool:
     radius, xcenter, ycenter, zcenter = coords
     radius *= factor
     return (
-            (xcenter - radius < xobj < xcenter + radius)
-            and
-            (ycenter - radius < yobj < ycenter + radius)
-            and
-            (zcenter - radius < zobj < zcenter + radius)
+        (xcenter - radius < xobj < xcenter + radius)
+        and (ycenter - radius < yobj < ycenter + radius)
+        and (zcenter - radius < zobj < zcenter + radius)
     )
 
 
@@ -40,8 +38,12 @@ def main():
     initial_halo_id = int(argv[1])
     if has_1024_simulations:
         resolutions.append(1024)
-    fig: Figure = plt.figure(figsize=figsize_from_page_fraction(columns=2, height_to_width=1))
-    axes: List[List[Axes]] = fig.subplots(len(waveforms), len(resolutions), sharex="row", sharey="row")
+    fig: Figure = plt.figure(
+        figsize=figsize_from_page_fraction(columns=2, height_to_width=1)
+    )
+    axes: List[List[Axes]] = fig.subplots(
+        len(waveforms), len(resolutions), sharex="row", sharey="row"
+    )
     with h5py.File(vis_datafile) as vis_out:
         halo_group = vis_out[str(initial_halo_id)]
 
@@ -62,8 +64,13 @@ def main():
                 vmax_scaled = (vmax + offset) * mass
                 rho = (rho + offset) * mass
                 extent = coord_to_2d_extent(coords)
-                img = ax.imshow(rho.T, norm=LogNorm(vmin=vmin_scaled, vmax=vmax_scaled), extent=extent,
-                                origin="lower",cmap="Greys")
+                img = ax.imshow(
+                    rho.T,
+                    norm=LogNorm(vmin=vmin_scaled, vmax=vmax_scaled),
+                    extent=extent,
+                    origin="lower",
+                    cmap="Greys",
+                )
                 found_main_halo = False
                 for halo_id, halo in halos.iterrows():
                     if halo["Vmax"] > 75:
@@ -79,8 +86,12 @@ def main():
                                 print("plotting main halo")
                             circle = Circle(
                                 (halo.X, halo.Y),
-                                halo["Rvir"], zorder=10,
-                                linewidth=1, edgecolor=color, fill=None, alpha=.2
+                                halo["Rvir"],
+                                zorder=10,
+                                linewidth=1,
+                                edgecolor=color,
+                                fill=None,
+                                alpha=0.2,
                             )
                             ax.add_artist(circle)
                 # assert found_main_halo
@@ -92,9 +103,11 @@ def main():
                 if j == 0:
                     scalebar = AnchoredSizeBar(
                         ax.transData,
-                        1, '1 Mpc', 'lower left',
+                        1,
+                        "1 Mpc",
+                        "lower left",
                         # pad=0.1,
-                        color='white',
+                        color="white",
                         frameon=False,
                         # size_vertical=1
                     )
@@ -116,5 +129,5 @@ def main():
     plt.show()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

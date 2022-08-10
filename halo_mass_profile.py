@@ -15,8 +15,15 @@ def V(r):
     return 4 / 3 * np.pi * r ** 3
 
 
-def halo_mass_profile(particles: pd.DataFrame, center: np.ndarray,
-                      particles_meta: ParticlesMeta, vmin: float, vmax: float, plot=False, num_bins=30):
+def halo_mass_profile(
+    particles: pd.DataFrame,
+    center: np.ndarray,
+    particles_meta: ParticlesMeta,
+    vmin: float,
+    vmax: float,
+    plot=False,
+    num_bins=30,
+):
     center = find_center(particles, center)
     positions = particles[["X", "Y", "Z"]].to_numpy()
     distances = np.linalg.norm(positions - center, axis=1)
@@ -50,7 +57,7 @@ def halo_mass_profile(particles: pd.DataFrame, center: np.ndarray,
         ax.loglog(log_radial_bins[:-1], bin_masses, label="counts")
         ax2.loglog(log_radial_bins[:-1], bin_densities, label="densities", c="C1")
         # ax.set_xlabel(r'R / R$_\mathrm{group}$')
-        ax.set_ylabel(r'M [$10^{10} \mathrm{M}_\odot$]')
+        ax.set_ylabel(r"M [$10^{10} \mathrm{M}_\odot$]")
         ax2.set_ylabel("density [$\\frac{10^{10} \\mathrm{M}_\\odot}{Mpc^3}$]")
         plt.legend()
         plt.show()
@@ -58,7 +65,7 @@ def halo_mass_profile(particles: pd.DataFrame, center: np.ndarray,
     return log_radial_bins, bin_masses, bin_densities, center
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     input_file = Path(sys.argv[1])
     df, particles_meta = read_file(input_file)
     df_halos = read_halo_file(input_file.with_name("fof_" + input_file.name))

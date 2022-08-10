@@ -10,7 +10,9 @@ from scipy.interpolate import griddata
 from utils import create_figure
 
 
-def create_2d_slice(input_file: Path, center: List[float], property: str, axis="Z", thickness=3):
+def create_2d_slice(
+    input_file: Path, center: List[float], property: str, axis="Z", thickness=3
+):
     axis_names = ["X", "Y", "Z"]
     cut_axis = axis_names.index(axis)
     with h5py.File(input_file) as f:
@@ -24,11 +26,7 @@ def create_2d_slice(input_file: Path, center: List[float], property: str, axis="
         # coords_in_slice = coords[in_slice]
         # data_in_slice = data[in_slice]
         print("stats")
-        other_axis = {
-            "X": ("Y", "Z"),
-            "Y": ("X", "Z"),
-            "Z": ("X", "Y")
-        }
+        other_axis = {"X": ("Y", "Z"), "Y": ("X", "Z"), "Z": ("X", "Y")}
         x_axis_label, y_axis_label = other_axis[axis]
         x_axis = axis_names.index(x_axis_label)
         y_axis = axis_names.index(y_axis_label)
@@ -36,12 +34,7 @@ def create_2d_slice(input_file: Path, center: List[float], property: str, axis="
         yrange = np.linspace(coords[::, y_axis].min(), coords[::, y_axis].max(), 1000)
         gx, gy, gz = np.meshgrid(xrange, yrange, center[cut_axis])
         print("interpolating")
-        grid = griddata(
-            coords,
-            data,
-            (gx, gy, gz),
-            method="linear"
-        )[::, ::, 0]
+        grid = griddata(coords, data, (gx, gy, gz), method="linear")[::, ::, 0]
         print(grid.shape)
         # stats, x_edge, y_edge, _ = binned_statistic_2d(
         #     coords_in_slice[::, x_axis],
@@ -56,8 +49,8 @@ def create_2d_slice(input_file: Path, center: List[float], property: str, axis="
         img = ax.imshow(
             grid.T,
             norm=LogNorm(),
-            interpolation='nearest',
-            extent=[xrange[0], xrange[-1], yrange[0], yrange[-1]]
+            interpolation="nearest",
+            extent=[xrange[0], xrange[-1], yrange[0], yrange[-1]],
         )
         ax.set_title(input_file.parent.stem)
         ax.set_xlabel(x_axis_label)

@@ -26,5 +26,5 @@ for i, profile in enumerate(density_profiles):
         sleep(1)
     color = "red" if is_odd_halo else "lightgray"
 
-    plt.loglog(bin_edges, profile, color=color, alpha=.1)
+    plt.loglog(bin_edges, profile, color=color, alpha=0.1)
 plt.show()

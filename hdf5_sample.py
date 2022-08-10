@@ -44,10 +44,12 @@ def main():
         else:
             all_data = np.vstack(column_data[column])
 
-        out_column = outpart.create_dataset(column, data=all_data, compression='gzip' if column == "Masses" else None)
+        out_column = outpart.create_dataset(
+            column, data=all_data, compression="gzip" if column == "Masses" else None
+        )
     print(len(out_column))
     f_out.close()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

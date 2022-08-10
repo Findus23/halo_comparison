@@ -33,10 +33,12 @@ from utils import figsize_from_page_fraction
 # rc('ytick',direction='in')
 # rc('legend',fontsize='x-large')
 
-base_shape = {'u': [np.array([0, 1]), np.array([1, 0]), np.array([0, -1])],
-              'd': [np.array([0, -1]), np.array([-1, 0]), np.array([0, 1])],
-              'r': [np.array([1, 0]), np.array([0, 1]), np.array([-1, 0])],
-              'l': [np.array([-1, 0]), np.array([0, -1]), np.array([1, 0])]}
+base_shape = {
+    "u": [np.array([0, 1]), np.array([1, 0]), np.array([0, -1])],
+    "d": [np.array([0, -1]), np.array([-1, 0]), np.array([0, 1])],
+    "r": [np.array([1, 0]), np.array([0, 1]), np.array([-1, 0])],
+    "l": [np.array([-1, 0]), np.array([0, -1]), np.array([1, 0])],
+}
 
 
 def hilbert_curve(order, orientation):
@@ -44,26 +46,46 @@ def hilbert_curve(order, orientation):
     Recursively creates the structure for a hilbert curve of given order
     """
     if order > 1:
-        if orientation == 'u':
-            return hilbert_curve(order - 1, 'r') + [np.array([0, 1])] + \
-                   hilbert_curve(order - 1, 'u') + [np.array([1, 0])] + \
-                   hilbert_curve(order - 1, 'u') + [np.array([0, -1])] + \
-                   hilbert_curve(order - 1, 'l')
-        elif orientation == 'd':
-            return hilbert_curve(order - 1, 'l') + [np.array([0, -1])] + \
-                   hilbert_curve(order - 1, 'd') + [np.array([-1, 0])] + \
-                   hilbert_curve(order - 1, 'd') + [np.array([0, 1])] + \
-                   hilbert_curve(order - 1, 'r')
-        elif orientation == 'r':
-            return hilbert_curve(order - 1, 'u') + [np.array([1, 0])] + \
-                   hilbert_curve(order - 1, 'r') + [np.array([0, 1])] + \
-                   hilbert_curve(order - 1, 'r') + [np.array([-1, 0])] + \
-                   hilbert_curve(order - 1, 'd')
+        if orientation == "u":
+            return (
+                hilbert_curve(order - 1, "r")
+                + [np.array([0, 1])]
+                + hilbert_curve(order - 1, "u")
+                + [np.array([1, 0])]
+                + hilbert_curve(order - 1, "u")
+                + [np.array([0, -1])]
+                + hilbert_curve(order - 1, "l")
+            )
+        elif orientation == "d":
+            return (
+                hilbert_curve(order - 1, "l")
+                + [np.array([0, -1])]
+                + hilbert_curve(order - 1, "d")
+                + [np.array([-1, 0])]
+                + hilbert_curve(order - 1, "d")
+                + [np.array([0, 1])]
+                + hilbert_curve(order - 1, "r")
+            )
+        elif orientation == "r":
+            return (
+                hilbert_curve(order - 1, "u")
+                + [np.array([1, 0])]
+                + hilbert_curve(order - 1, "r")
+                + [np.array([0, 1])]
+                + hilbert_curve(order - 1, "r")
+                + [np.array([-1, 0])]
+                + hilbert_curve(order - 1, "d")
+            )
         else:
-            return hilbert_curve(order - 1, 'd') + [np.array([-1, 0])] + \
-                   hilbert_curve(order - 1, 'l') + [np.array([0, -1])] + \
-                   hilbert_curve(order - 1, 'l') + [np.array([1, 0])] + \
-                   hilbert_curve(order - 1, 'u')
+            return (
+                hilbert_curve(order - 1, "d")
+                + [np.array([-1, 0])]
+                + hilbert_curve(order - 1, "l")
+                + [np.array([0, -1])]
+                + hilbert_curve(order - 1, "l")
+                + [np.array([1, 0])]
+                + hilbert_curve(order - 1, "u")
+            )
     else:
         return base_shape[orientation]
 
@@ -88,15 +110,17 @@ def hilbert_curve(order, orientation):
 
 
 order = 6
-curve = hilbert_curve(order, 'u')
+curve = hilbert_curve(order, "u")
 curve = np.array(curve) * 4
 cumulative_curve_int = np.array([np.sum(curve[:i], 0) for i in range(len(curve) + 1)])
-cumulative_curve = (np.array([np.sum(curve[:i], 0) for i in range(len(curve) + 1)]) + 2) / 2 ** (order + 2)
+cumulative_curve = (
+    np.array([np.sum(curve[:i], 0) for i in range(len(curve) + 1)]) + 2
+) / 2 ** (order + 2)
 # plot curve using plt
 N = 2 ** (2 * order)
 sublevel = order - 4
 
-cmap = cm.get_cmap('jet')
+cmap = cm.get_cmap("jet")
 
 fig = plt.figure(figsize=figsize_from_page_fraction(height_to_width=1))
 t = {}
@@ -104,31 +128,38 @@ sublevel = 7
 for i in range(2 ** (2 * sublevel)):
     il = i * N // (2 ** (2 * sublevel))
     ir = (i + 1) * N // 2 ** (2 * sublevel)
-    plt.plot(cumulative_curve[il:ir + 1, 0], cumulative_curve[il:ir + 1, 1], lw=0.5, c=cmap(i / 2 ** (2 * sublevel)))
+    plt.plot(
+        cumulative_curve[il : ir + 1, 0],
+        cumulative_curve[il : ir + 1, 1],
+        lw=0.5,
+        c=cmap(i / 2 ** (2 * sublevel)),
+    )
 
-plt.xlabel('$x$')
-plt.ylabel('$y$')
+plt.xlabel("$x$")
+plt.ylabel("$y$")
 plt.tight_layout()
 plt.savefig(Path(f"~/tmp/hilbert_indexcolor.eps").expanduser())
 
-key = b'0123456789ABCDEF'
+key = b"0123456789ABCDEF"
 num = 123
 print(siphash.SipHash_2_4(key, bytes(num)).hash())
 
 order = 6
-curve = hilbert_curve(order, 'u')
+curve = hilbert_curve(order, "u")
 curve = np.array(curve) * 4
 cumulative_curve_int = np.array([np.sum(curve[:i], 0) for i in range(len(curve) + 1)])
-cumulative_curve = (np.array([np.sum(curve[:i], 0) for i in range(len(curve) + 1)]) + 2) / 2 ** (order + 2)
+cumulative_curve = (
+    np.array([np.sum(curve[:i], 0) for i in range(len(curve) + 1)]) + 2
+) / 2 ** (order + 2)
 # plot curve using plt
 N = 2 ** (2 * order)
 sublevel = order - 4
 
-cmap = cm.get_cmap('jet')
+cmap = cm.get_cmap("jet")
 
 plt.figure()
 
-key = b'0123456789ABCDEF'
+key = b"0123456789ABCDEF"
 
 fig = plt.figure(figsize=figsize_from_page_fraction(height_to_width=1))
 t = {}
@@ -137,10 +168,15 @@ for i in range(2 ** (2 * sublevel)):
     il = i * N // (2 ** (2 * sublevel))
     ir = (i + 1) * N // 2 ** (2 * sublevel)
     sipkey = siphash.SipHash_2_4(key, bytes(il)).hash()
-    plt.plot(cumulative_curve[il:ir + 1, 0], cumulative_curve[il:ir + 1, 1], lw=0.5, c=cmap(sipkey / 2 ** 64))
+    plt.plot(
+        cumulative_curve[il : ir + 1, 0],
+        cumulative_curve[il : ir + 1, 1],
+        lw=0.5,
+        c=cmap(sipkey / 2 ** 64),
+    )
 
-plt.xlabel('$x$')
-plt.ylabel('$y$')
+plt.xlabel("$x$")
+plt.ylabel("$y$")
 plt.tight_layout()
 plt.savefig(Path(f"~/tmp/hilbert_indexcolor_scrambled.eps").expanduser())
 plt.show()

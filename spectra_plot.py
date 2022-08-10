@@ -38,7 +38,7 @@ colors = [f"C{i}" for i in range(10)]
 
 
 def spectra_data(
-        waveform: str, resolution_1: int, resolution_2: int, Lbox: int, time: str
+    waveform: str, resolution_1: int, resolution_2: int, Lbox: int, time: str
 ):
     dir = base_dir / f"spectra/{waveform}_{Lbox}"
 
@@ -82,7 +82,10 @@ def create_plot(mode):
     fig: Figure
     combination_list = list(itertools.combinations(resolutions, 2))
     fig, axes = plt.subplots(
-        len(waveforms), 3, sharex=True, sharey=True,
+        len(waveforms),
+        3,
+        sharex=True,
+        sharey=True,
         figsize=figsize_from_page_fraction(columns=2),
     )
     crossings = np.zeros((len(waveforms), len(combination_list)))
@@ -94,7 +97,7 @@ def create_plot(mode):
             # TODO: better names
             ax_ics: "ics",
             ax_z1: "z=1",
-            ax_end: "z=0"
+            ax_end: "z=0",
         }
         bottom_row = i == len(waveforms) - 1
         top_row = i == 0
@@ -118,7 +121,9 @@ def create_plot(mode):
                 verticalalignment="top",
                 transform=ax.transAxes,
             )
-            for j, res in enumerate(resolutions[:-1] if mode == "cross" else resolutions):
+            for j, res in enumerate(
+                resolutions[:-1] if mode == "cross" else resolutions
+            ):
                 ax.axvline(
                     k0 * res,
                     color=colors[j],
@@ -129,26 +134,34 @@ def create_plot(mode):
             # ax.set_yticklabels([])
 
         if mode == "power":
-            ax_ics.set_ylabel("$\\mathrm{{P}}_\\mathrm{{X}}$ / $\\mathrm{{P}}_{{1024}}$")
+            ax_ics.set_ylabel(
+                "$\\mathrm{{P}}_\\mathrm{{X}}$ / $\\mathrm{{P}}_{{1024}}$"
+            )
             for j, resolution in enumerate(resolutions):
                 ics_data = spectra_data(waveform, resolution, resolution, Lbox, "ics")
                 ics_k = ics_data["k [Mpc]"]
                 ics_p1 = ics_data["P1"]
-                comp_data = spectra_data(waveform, resolutions[-1], resolutions[-1], Lbox, "ics")
+                comp_data = spectra_data(
+                    waveform, resolutions[-1], resolutions[-1], Lbox, "ics"
+                )
                 comp_p1 = comp_data["P1"]
                 ics_p1 /= comp_p1
 
                 end_data = spectra_data(waveform, resolution, resolution, Lbox, "end")
                 end_k = end_data["k [Mpc]"]
                 end_p1 = end_data["P1"]
-                comp_data = spectra_data(waveform, resolutions[-1], resolutions[-1], Lbox, "end")
+                comp_data = spectra_data(
+                    waveform, resolutions[-1], resolutions[-1], Lbox, "end"
+                )
                 comp_p1 = comp_data["P1"]
                 end_p1 /= comp_p1
 
                 z1_data = spectra_data(waveform, resolution, resolution, Lbox, "z=1")
                 z1_k = z1_data["k [Mpc]"]
                 z1_p1 = z1_data["P1"]
-                comp_data = spectra_data(waveform, resolutions[-1], resolutions[-1], Lbox, 'z=1')
+                comp_data = spectra_data(
+                    waveform, resolutions[-1], resolutions[-1], Lbox, "z=1"
+                )
                 comp_p1 = comp_data["P1"]
                 z1_p1 /= comp_p1
 
@@ -158,8 +171,7 @@ def create_plot(mode):
                 for ax in [ax_ics, ax_z1, ax_end]:
                     ax.set_ylim(0.9, 1.10)
                     ax.set_axisbelow(True)
-                    ax.grid(color='black', linestyle=':', linewidth=0.5, alpha=0.5)
-
+                    ax.grid(color="black", linestyle=":", linewidth=0.5, alpha=0.5)
 
         # fig.suptitle(f"Power Spectra {time}") #Not needed for paper
         # fig.tight_layout()
@@ -168,39 +180,47 @@ def create_plot(mode):
             ax_ics.set_ylabel("C")
             # ax_end.set_ylabel("C")
             for j, (res1, res2) in enumerate(combination_list):
-                ics_data = spectra_data(waveform, res1, res2, Lbox, 'ics')
+                ics_data = spectra_data(waveform, res1, res2, Lbox, "ics")
                 ics_k = ics_data["k [Mpc]"]
                 ics_pcross = ics_data["Pcross"]
 
-                ax_ics.semilogx(ics_k, ics_pcross, color=colors[j + 3], label=f'{res1} vs {res2}')
+                ax_ics.semilogx(
+                    ics_k, ics_pcross, color=colors[j + 3], label=f"{res1} vs {res2}"
+                )
 
-                z1_data = spectra_data(waveform, res1, res2, Lbox, 'z=1')
+                z1_data = spectra_data(waveform, res1, res2, Lbox, "z=1")
                 z1_k = z1_data["k [Mpc]"]
                 z1_pcross = z1_data["Pcross"]
 
-                ax_z1.semilogx(z1_k, z1_pcross, color=colors[j + 3], label=f'{res1} vs {res2}')
+                ax_z1.semilogx(
+                    z1_k, z1_pcross, color=colors[j + 3], label=f"{res1} vs {res2}"
+                )
 
-                end_data = spectra_data(waveform, res1, res2, Lbox, 'end')
+                end_data = spectra_data(waveform, res1, res2, Lbox, "end")
                 end_k = end_data["k [Mpc]"]
                 end_pcross = end_data["Pcross"]
 
-                ax_end.semilogx(end_k, end_pcross, color=colors[j + 3], label=f'{res1} vs {res2}')
+                ax_end.semilogx(
+                    end_k, end_pcross, color=colors[j + 3], label=f"{res1} vs {res2}"
+                )
 
                 # #Put this here to enable changing time of crossing measurement more easily
                 smaller_res = min(res1, res2)
-                crossing_index = np.searchsorted(end_k.to_list(), k0 * smaller_res)  # change here
+                crossing_index = np.searchsorted(
+                    end_k.to_list(), k0 * smaller_res
+                )  # change here
                 crossing_value = end_pcross[crossing_index]  # and here
                 crossings[i][j] = crossing_value
 
                 for ax in [ax_ics, ax_z1, ax_end]:
                     ax.set_axisbelow(True)
-                    ax.grid(color='black', linestyle=':', linewidth=0.5, alpha=0.5)
+                    ax.grid(color="black", linestyle=":", linewidth=0.5, alpha=0.5)
 
             ax_end.set_xlim(right=k0 * resolutions[-1])
             ax_end.set_ylim(0.8, 1.02)
         if bottom_row:
             # ax_z1.legend()
-            ax_ics.legend(loc='lower left')
+            ax_ics.legend(loc="lower left")
         if not bottom_row:
             last_xtick: XTick = ax_ics.yaxis.get_major_ticks()[0]
             last_xtick.set_visible(False)
@@ -212,7 +232,7 @@ def create_plot(mode):
     # print(crossings_df.to_markdown())
     print(crossings_df.to_latex())
     fig.tight_layout()
-    fig.subplots_adjust(wspace=0,hspace=0)
+    fig.subplots_adjust(wspace=0, hspace=0)
 
     fig.savefig(Path(f"~/tmp/spectra_{mode}.pdf").expanduser())
 

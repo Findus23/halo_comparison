@@ -24,12 +24,18 @@ def read_file(file: Path) -> Tuple[pd.DataFrame, ParticlesMeta]:
         masses = reference_file["PartType1"]["Masses"]
         if not np.all(masses == masses[0]):
             raise ValueError("only equal mass particles are supported for now")
-        df = pd.DataFrame(reference_file["PartType1"]["Coordinates"], columns=["X", "Y", "Z"])
+        df = pd.DataFrame(
+            reference_file["PartType1"]["Coordinates"], columns=["X", "Y", "Z"]
+        )
         if has_fof:
-            df2 = pd.DataFrame(reference_file["PartType1"]["FOFGroupIDs"], columns=["FOFGroupIDs"]).astype("category")
+            df2 = pd.DataFrame(
+                reference_file["PartType1"]["FOFGroupIDs"], columns=["FOFGroupIDs"]
+            ).astype("category")
             df = df.merge(df2, "outer", left_index=True, right_index=True)
             del df2
-        df3 = pd.DataFrame(reference_file["PartType1"]["ParticleIDs"], columns=["ParticleIDs"])
+        df3 = pd.DataFrame(
+            reference_file["PartType1"]["ParticleIDs"], columns=["ParticleIDs"]
+        )
 
         df = df.merge(df3, "outer", left_index=True, right_index=True)
         del df3
@@ -37,9 +43,7 @@ def read_file(file: Path) -> Tuple[pd.DataFrame, ParticlesMeta]:
         if has_fof:
             print("sorting")
             df.sort_values("FOFGroupIDs", inplace=True)
-        meta = ParticlesMeta(
-            particle_mass=masses[0]
-        )
+        meta = ParticlesMeta(particle_mass=masses[0])
         print("saving cache")
         with meta_cache_file.open("wb") as f:
             pickle.dump(meta, f)

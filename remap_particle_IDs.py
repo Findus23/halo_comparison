@@ -25,7 +25,9 @@ class IDScaler:
         mult = orig * self.N
         for shift in self.shifts:
             variant = mult + shift
-            yield ((variant[0] * self.Nres_max) + variant[1]) * self.Nres_max + variant[2]
+            yield ((variant[0] * self.Nres_max) + variant[1]) * self.Nres_max + variant[
+                2
+            ]
 
     def downscale(self, particle_ID: int):
         orig = self.original_position(self.Nres_max, particle_ID)
@@ -40,7 +42,9 @@ def test():
     Nres_1 = 128
     Nres_2 = 256
 
-    test_particle_id = ((test_particle[0] * Nres_1) + test_particle[1]) * Nres_1 + test_particle[2]
+    test_particle_id = (
+        (test_particle[0] * Nres_1) + test_particle[1]
+    ) * Nres_1 + test_particle[2]
     print(test_particle_id)
 
     scaler = IDScaler(Nres_1, Nres_2)
@@ -61,7 +65,9 @@ def benchmark():
     test_particle = np.random.randint(0, 127, size=(3, 10_000_000))
 
     for part in test_particle:
-        test_particle_id = ((test_particle[0] * Nres_1) + test_particle[1]) * Nres_1 + test_particle[2]
+        test_particle_id = (
+            (test_particle[0] * Nres_1) + test_particle[1]
+        ) * Nres_1 + test_particle[2]
 
         particle_ID_1_converted = scaler.upscale(test_particle_id)
 

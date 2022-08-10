@@ -14,7 +14,9 @@ comparisons_dir = base_dir / "comparisons"
 
 
 def read(mode, ref_res, comp_res):
-    df = pd.read_csv(comparisons_dir / get_comp_id(waveform, ref_res, waveform, comp_res))
+    df = pd.read_csv(
+        comparisons_dir / get_comp_id(waveform, ref_res, waveform, comp_res)
+    )
     # df = pd.read_csv(f"{mode}_{ref_res}_100_{mode}_{comp_res}_100.csv")
     print(min(df.ref_Mvir), max(df.ref_Mvir))
 
@@ -23,7 +25,9 @@ def read(mode, ref_res, comp_res):
     for i in range(num_bins):
         values = np.where(digits == i + 1)
         in_bin = df.iloc[values]
-        matches = np.array(in_bin.match)  # TODO: or instead fraction of halos that are matching?
+        matches = np.array(
+            in_bin.match
+        )  # TODO: or instead fraction of halos that are matching?
         bin_means.append(matches.mean())
     return bin_means
 
@@ -48,7 +52,9 @@ ax.set_yticklabels(["{:.2f}".format(a) for a in bins])
 
 for x in range(data.shape[0]):
     for y in range(data.shape[1]):
-        text = ax.text(y, x, "{:.2f}".format(data[x, y]), ha="center", va="center", color="w")
+        text = ax.text(
+            y, x, "{:.2f}".format(data[x, y]), ha="center", va="center", color="w"
+        )
 
 # print(data)
 p = ax.imshow(data, origin="lower", vmin=0.5, vmax=1)

@@ -45,10 +45,16 @@ def apply_offset(value, offset):
 
 
 def compare_halo_resolutions(
-        ref_waveform: str, comp_waveform: str,
-        reference_resolution: int, comparison_resolution: int,
-        plot=False, plot3d=False, plot_cic=False,
-        single=False, velo_halos=False, force=False
+    ref_waveform: str,
+    comp_waveform: str,
+    reference_resolution: int,
+    comparison_resolution: int,
+    plot=False,
+    plot3d=False,
+    plot_cic=False,
+    single=False,
+    velo_halos=False,
+    force=False,
 ):
     reference_dir = base_dir / f"{ref_waveform}_{reference_resolution}_100"
     comparison_dir = base_dir / f"{comp_waveform}_{comparison_resolution}_100/"
@@ -68,14 +74,18 @@ def compare_halo_resolutions(
     print("reading reference file")
     df_ref, ref_meta = read_file(reference_dir / "output_0004.hdf5")
     if velo_halos:
-        df_ref_halo, ref_halo_lookup, ref_unbound = read_velo_halo_particles(reference_dir)
+        df_ref_halo, ref_halo_lookup, ref_unbound = read_velo_halo_particles(
+            reference_dir
+        )
     else:
         df_ref_halo = read_halo_file(reference_dir / "fof_output_0004.hdf5")
 
     print("reading comparison file")
     df_comp, comp_meta = read_file(comparison_dir / "output_0004.hdf5")
     if velo_halos:
-        df_comp_halo, comp_halo_lookup, comp_unbound = read_velo_halo_particles(comparison_dir)
+        df_comp_halo, comp_halo_lookup, comp_unbound = read_velo_halo_particles(
+            comparison_dir
+        )
 
     else:
         df_comp_halo = read_halo_file(comparison_dir / "fof_output_0004.hdf5")
@@ -137,18 +147,22 @@ def compare_halo_resolutions(
             print(f"{prev_len} => {after_len} (factor {prev_len / after_len:.2f})")
 
         halo_distances = np.linalg.norm(
-            ref_halo[['X', 'Y', 'Z']].values
-            - df_comp_halo[['X', 'Y', 'Z']].values,
-            axis=1)
+            ref_halo[["X", "Y", "Z"]].values - df_comp_halo[["X", "Y", "Z"]].values,
+            axis=1,
+        )
         # print(list(halo_distances))
 
         print(f"find nearby halos (50x{ref_halo.Rvir:.1f})")
-        print(ref_halo[['X', 'Y', 'Z']].values)
+        print(ref_halo[["X", "Y", "Z"]].values)
         # Find IDs of halos that are less than 50 Rvir away
-        nearby_halos = set(df_comp_halo.loc[halo_distances < ref_halo.Rvir * 50].index.to_list())
+        nearby_halos = set(
+            df_comp_halo.loc[halo_distances < ref_halo.Rvir * 50].index.to_list()
+        )
         if len(nearby_halos) < 10:
             print(f"only {len(nearby_halos)} halos, expanding to 150xRvir")
-            nearby_halos = set(df_comp_halo.loc[halo_distances < ref_halo.Rvir * 150].index.to_list())
+            nearby_halos = set(
+                df_comp_halo.loc[halo_distances < ref_halo.Rvir * 150].index.to_list()
+            )
             counters.checking_150 += 1
 
         if not nearby_halos:
@@ -179,9 +193,13 @@ def compare_halo_resolutions(
         if plot:
             fig: Figure = plt.figure()
             ax: Axes = fig.gca()
-            ax.scatter(apply_offset_to_list(halo_particles["X"], offset_x),
-                       apply_offset_to_list(halo_particles["Y"], offset_y), s=1,
-                       alpha=.3, label="Halo")
+            ax.scatter(
+                apply_offset_to_list(halo_particles["X"], offset_x),
+                apply_offset_to_list(halo_particles["Y"], offset_y),
+                s=1,
+                alpha=0.3,
+                label="Halo",
+            )
         if plot_cic:
             diameter = ref_halo["R_size"]
             X = ref_halo["Xc"]
@@ -207,6 +225,7 @@ def compare_halo_resolutions(
 
         if plot3d:
             from pyvista import Plotter
+
             pl = Plotter()
             plotdf3d(pl, halo_particles, color="#b3cde3")  # light blue
             pl.set_focus((ref_halo.X, ref_halo.Y, ref_halo.Z))
@@ -223,7 +242,11 @@ def compare_halo_resolutions(
             particle_ids_in_comp_halo = comp_halo_lookup[halo_id]
             mass_factor_limit = 5
 
-            if not (1 / mass_factor_limit < (comp_halo_masses[halo_id] / ref_halo_mass) < mass_factor_limit):
+            if not (
+                1 / mass_factor_limit
+                < (comp_halo_masses[halo_id] / ref_halo_mass)
+                < mass_factor_limit
+            ):
                 # print("mass not similar, skipping")
                 num_skipped_for_mass += 1
                 continue
@@ -235,7 +258,10 @@ def compare_halo_resolutions(
 
             # similarity = len(shared_particles) / len(union_particles)
             similarity = len(shared_particles) / (
-                    len(halo_particle_ids) + len(particle_ids_in_comp_halo) - len(shared_particles))
+                len(halo_particle_ids)
+                + len(particle_ids_in_comp_halo)
+                - len(shared_particles)
+            )
             # assert similarity_orig == similarity
             # print(shared_size)
             # if not similarity:
@@ -247,12 +273,24 @@ def compare_halo_resolutions(
                 color = f"C{i + 1}"
                 comp_halo: pd.Series = df_comp_halo.loc[halo_id]
 
-                ax.scatter(apply_offset_to_list(df["X"], offset_x), apply_offset_to_list(df["Y"], offset_y), s=1,
-                           alpha=.3, c=color)
-                circle = Circle((apply_offset(comp_halo.X, offset_x), apply_offset(comp_halo.Y, offset_y)),
-                                comp_halo["Rvir"], zorder=10,
-                                linewidth=1, edgecolor=color, fill=None
-                                )
+                ax.scatter(
+                    apply_offset_to_list(df["X"], offset_x),
+                    apply_offset_to_list(df["Y"], offset_y),
+                    s=1,
+                    alpha=0.3,
+                    c=color,
+                )
+                circle = Circle(
+                    (
+                        apply_offset(comp_halo.X, offset_x),
+                        apply_offset(comp_halo.Y, offset_y),
+                    ),
+                    comp_halo["Rvir"],
+                    zorder=10,
+                    linewidth=1,
+                    edgecolor=color,
+                    fill=None,
+                )
                 ax.add_artist(circle)
             if plot3d:
                 plotdf3d(pl, df, color="#fed9a6")  # light orange
@@ -270,13 +308,16 @@ def compare_halo_resolutions(
         comp_halo: pd.Series = df_comp_halo.loc[best_halo]
 
         # merge the data of the two halos with fitting prefixes
-        halo_data = pd.concat([
-            ref_halo.add_prefix("ref_"),
-            comp_halo.add_prefix("comp_")
-        ])
-        distance = linalg.norm(
-            np.array([ref_halo.X, ref_halo.Y, ref_halo.Z]) - np.array([comp_halo.X, comp_halo.Y, comp_halo.Z])
-        ) / ref_halo.Rvir
+        halo_data = pd.concat(
+            [ref_halo.add_prefix("ref_"), comp_halo.add_prefix("comp_")]
+        )
+        distance = (
+            linalg.norm(
+                np.array([ref_halo.X, ref_halo.Y, ref_halo.Z])
+                - np.array([comp_halo.X, comp_halo.Y, comp_halo.Z])
+            )
+            / ref_halo.Rvir
+        )
         halo_data["distance"] = distance
         halo_data["match"] = best_halo_match
         halo_data["num_skipped_for_mass"] = num_skipped_for_mass
@@ -285,7 +326,9 @@ def compare_halo_resolutions(
         if plot:
             print(f"plotting with offsets ({offset_x},{offset_y})")
             # ax.legend()
-            ax.set_title(f"{reference_dir.name} vs. {comparison_dir.name} (Halo {index})")
+            ax.set_title(
+                f"{reference_dir.name} vs. {comparison_dir.name} (Halo {index})"
+            )
             fig.savefig("out.png", dpi=300)
             plt.show()
         if plot3d:
@@ -310,7 +353,7 @@ def precalculate_halo_membership(df_comp, df_comp_halo):
         print_progress(i, len(df_comp_halo), halo["Sizes"])
         size = int(halo["Sizes"])
         halo_id = int(i)
-        halo_particles = df_comp.iloc[pointer:pointer + size]
+        halo_particles = df_comp.iloc[pointer : pointer + size]
 
         # check_id = halo_particles["FOFGroupIDs"].to_numpy()
         # assert (check_id == i).all()
@@ -321,7 +364,7 @@ def precalculate_halo_membership(df_comp, df_comp_halo):
     return comp_halo_lookup
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     compare_halo_resolutions(
         ref_waveform="shannon",
         comp_waveform="shannon",
@@ -332,5 +375,5 @@ if __name__ == '__main__':
         plot_cic=False,
         velo_halos=True,
         single=False,
-        force=True
+        force=True,
     )

@@ -20,7 +20,9 @@ Coords = Tuple[float, float, float, float]  # radius, X, Y, Z
 def load_halo_data(waveform: str, resolution: int, halo_id: int, coords: Coords):
     dir = base_dir / f"{waveform}_{resolution}_100"
     df, meta = read_file(dir / "output_0004.hdf5")
-    df_halo, halo_lookup, unbound = read_velo_halo_particles(dir, skip_halo_particle_ids=all_in_area)
+    df_halo, halo_lookup, unbound = read_velo_halo_particles(
+        dir, skip_halo_particle_ids=all_in_area
+    )
 
     halo = df_halo.loc[halo_id]
     if coords:
@@ -43,12 +45,29 @@ def load_halo_data(waveform: str, resolution: int, halo_id: int, coords: Coords)
     return halo, halo_particles, meta, coords
 
 
-def get_comp_id(ref_waveform: str, reference_resolution: int, comp_waveform: str, comp_resolution: int):
+def get_comp_id(
+    ref_waveform: str,
+    reference_resolution: int,
+    comp_waveform: str,
+    comp_resolution: int,
+):
     return f"{ref_waveform}_{reference_resolution}_100_{comp_waveform}_{comp_resolution}_100_velo.csv"
 
 
-def map_halo_id(halo_id: int, ref_waveform: str, reference_resolution: int, comp_waveform: str, comp_resolution: int):
-    file = base_dir / "comparisons" / get_comp_id(ref_waveform, reference_resolution, comp_waveform, comp_resolution)
+def map_halo_id(
+    halo_id: int,
+    ref_waveform: str,
+    reference_resolution: int,
+    comp_waveform: str,
+    comp_resolution: int,
+):
+    file = (
+        base_dir
+        / "comparisons"
+        / get_comp_id(
+            ref_waveform, reference_resolution, comp_waveform, comp_resolution
+        )
+    )
     print("opening", file)
     df = pd.read_csv(file)
     mapping = {}
@@ -93,9 +112,16 @@ def main():
                     halo_id = initial_halo_id
                     first_halo = False
                 else:
-                    halo_id = map_halo_id(initial_halo_id, ref_waveform, ref_resolution, waveform, resolution)
-                halo, halo_particles, meta, image_coords = load_halo_data(waveform, resolution, halo_id,
-                                                                          coords[waveform])
+                    halo_id = map_halo_id(
+                        initial_halo_id,
+                        ref_waveform,
+                        ref_resolution,
+                        waveform,
+                        resolution,
+                    )
+                halo, halo_particles, meta, image_coords = load_halo_data(
+                    waveform, resolution, halo_id, coords[waveform]
+                )
                 if not coords[waveform]:
                     coords[waveform] = image_coords
                 print(coords[waveform])
@@ -104,19 +130,30 @@ def main():
                 # sleep(100)
                 radius, X, Y, Z = coords[waveform]
                 rho, _ = cic_from_radius(
-                    halo_particles.X.to_numpy(), halo_particles.Y.to_numpy(),
-                    1000, X, Y, radius, periodic=False)
+                    halo_particles.X.to_numpy(),
+                    halo_particles.Y.to_numpy(),
+                    1000,
+                    X,
+                    Y,
+                    radius,
+                    periodic=False,
+                )
                 rhos[(waveform, resolution)] = rho
                 vmin = min(rho.min(), vmin)
                 vmax = max(rho.max(), vmax)
                 dataset_group = halo_group.create_group(f"{waveform}_{resolution}")
-                dataset_group.create_dataset("rho", data=rho, compression='gzip', compression_opts=5)
+                dataset_group.create_dataset(
+                    "rho", data=rho, compression="gzip", compression_opts=5
+                )
                 dataset_group.create_dataset("coords", data=coords[waveform])
                 dataset_group.create_dataset("mass", data=meta.particle_mass)
                 dataset_group.create_dataset("halo_id", data=halo_id)
-                imsave(rho, f"out_halo{initial_halo_id}_{waveform}_{resolution}_{halo_id}.png")
+                imsave(
+                    rho,
+                    f"out_halo{initial_halo_id}_{waveform}_{resolution}_{halo_id}.png",
+                )
         halo_group.create_dataset("vmin_vmax", data=[vmin, vmax])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

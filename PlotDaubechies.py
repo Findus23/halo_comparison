@@ -8,6 +8,7 @@ from typing import List
 
 import matplotlib.pyplot as plt
 import numpy as np
+
 # two-fold upsampling -- https://cnx.org/contents/xsppCgXj@8.18:H_wA16rf@16/Upsampling
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
@@ -69,12 +70,12 @@ def cascade_algorithm(h, g, maxit):
 
     for it in range(maxit):
         # perform repeated convolutions
-        phi_it = np.sqrt(2) * np.convolve(h_it, phi_it, mode='full')
+        phi_it = np.sqrt(2) * np.convolve(h_it, phi_it, mode="full")
 
         if it != maxit - 1:
-            psi_it = np.sqrt(2) * np.convolve(h_it, psi_it, mode='full')
+            psi_it = np.sqrt(2) * np.convolve(h_it, psi_it, mode="full")
         else:
-            psi_it = np.sqrt(2) * np.convolve(g_it, psi_it, mode='full')
+            psi_it = np.sqrt(2) * np.convolve(g_it, psi_it, mode="full")
 
         # upsample the coefficients
         h_it = upsample(h_it)
@@ -108,55 +109,173 @@ xdb2, phidb2, psidb2 = cascade_algorithm(h_DB2, g_DB2, maxit)
 
 # DB3 -- http://wavelets.pybytes.com/wavelet/db3/
 h_DB3 = np.array(
-    [0.3326705529509569, 0.8068915093133388, 0.4598775021193313, -0.13501102001039084, -0.08544127388224149,
-     0.035226291882100656])
+    [
+        0.3326705529509569,
+        0.8068915093133388,
+        0.4598775021193313,
+        -0.13501102001039084,
+        -0.08544127388224149,
+        0.035226291882100656,
+    ]
+)
 g_DB3 = np.array(
-    [0.035226291882100656, 0.08544127388224149, -0.13501102001039084, -0.4598775021193313, 0.8068915093133388,
-     -0.3326705529509569])
+    [
+        0.035226291882100656,
+        0.08544127388224149,
+        -0.13501102001039084,
+        -0.4598775021193313,
+        0.8068915093133388,
+        -0.3326705529509569,
+    ]
+)
 
 xdb3, phidb3, psidb3 = cascade_algorithm(h_DB3, g_DB3, maxit)
 
 # DB4 -- http://wavelets.pybytes.com/wavelet/db4/
 h_DB4 = np.array(
-    [0.23037781330885523, 0.7148465705525415, 0.6308807679295904, -0.02798376941698385, -0.18703481171888114,
-     0.030841381835986965, 0.032883011666982945, -0.010597401784997278])
+    [
+        0.23037781330885523,
+        0.7148465705525415,
+        0.6308807679295904,
+        -0.02798376941698385,
+        -0.18703481171888114,
+        0.030841381835986965,
+        0.032883011666982945,
+        -0.010597401784997278,
+    ]
+)
 g_DB4 = np.array(
-    [-0.010597401784997278, -0.032883011666982945, 0.030841381835986965, 0.18703481171888114, -0.02798376941698385,
-     -0.6308807679295904, 0.7148465705525415, -0.23037781330885523])
+    [
+        -0.010597401784997278,
+        -0.032883011666982945,
+        0.030841381835986965,
+        0.18703481171888114,
+        -0.02798376941698385,
+        -0.6308807679295904,
+        0.7148465705525415,
+        -0.23037781330885523,
+    ]
+)
 
 xdb4, phidb4, psidb4 = cascade_algorithm(h_DB4, g_DB4, maxit)
 
 # DB8 -- http://wavelets.pybytes.com/wavelet/db8/
 h_DB8 = np.array(
-    [0.05441584224308161, 0.3128715909144659, 0.6756307362980128, 0.5853546836548691, -0.015829105256023893,
-     -0.2840155429624281, 0.00047248457399797254, 0.128747426620186, -0.01736930100202211, -0.04408825393106472,
-     0.013981027917015516, 0.008746094047015655, -0.00487035299301066, -0.0003917403729959771, 0.0006754494059985568,
-     -0.00011747678400228192])
+    [
+        0.05441584224308161,
+        0.3128715909144659,
+        0.6756307362980128,
+        0.5853546836548691,
+        -0.015829105256023893,
+        -0.2840155429624281,
+        0.00047248457399797254,
+        0.128747426620186,
+        -0.01736930100202211,
+        -0.04408825393106472,
+        0.013981027917015516,
+        0.008746094047015655,
+        -0.00487035299301066,
+        -0.0003917403729959771,
+        0.0006754494059985568,
+        -0.00011747678400228192,
+    ]
+)
 g_DB8 = np.array(
-    [-0.00011747678400228192, -0.0006754494059985568, -0.0003917403729959771, 0.00487035299301066, 0.008746094047015655,
-     -0.013981027917015516, -0.04408825393106472, 0.01736930100202211, 0.128747426620186, -0.00047248457399797254,
-     -0.2840155429624281, 0.015829105256023893, 0.5853546836548691, -0.6756307362980128, 0.3128715909144659,
-     -0.05441584224308161])
+    [
+        -0.00011747678400228192,
+        -0.0006754494059985568,
+        -0.0003917403729959771,
+        0.00487035299301066,
+        0.008746094047015655,
+        -0.013981027917015516,
+        -0.04408825393106472,
+        0.01736930100202211,
+        0.128747426620186,
+        -0.00047248457399797254,
+        -0.2840155429624281,
+        0.015829105256023893,
+        0.5853546836548691,
+        -0.6756307362980128,
+        0.3128715909144659,
+        -0.05441584224308161,
+    ]
+)
 
 xdb8, phidb8, psidb8 = cascade_algorithm(h_DB8, g_DB8, maxit)
 
-# DB16 -- 
+# DB16 --
 h_DB16 = np.array(
-    [0.0031892209253436892, 0.03490771432362905, 0.1650642834886438, 0.43031272284545874, 0.6373563320829833,
-     0.44029025688580486, -0.08975108940236352, -0.3270633105274758, -0.02791820813292813, 0.21119069394696974,
-     0.027340263752899923, -0.13238830556335474, -0.006239722752156254, 0.07592423604445779, -0.007588974368642594,
-     -0.036888397691556774, 0.010297659641009963, 0.013993768859843242, -0.006990014563390751, -0.0036442796214883506,
-     0.00312802338120381, 0.00040789698084934395, -0.0009410217493585433, 0.00011424152003843815,
-     0.00017478724522506327, -6.103596621404321e-05, -1.394566898819319e-05, 1.133660866126152e-05,
-     -1.0435713423102517e-06, -7.363656785441815e-07, 2.3087840868545578e-07, -2.1093396300980412e-08])
-g_DB16 = np.array([-2.1093396300980412e-08, -2.3087840868545578e-07, -7.363656785441815e-07, 1.0435713423102517e-06,
-                   1.133660866126152e-05, 1.394566898819319e-05, -6.103596621404321e-05, -0.00017478724522506327,
-                   0.00011424152003843815, 0.0009410217493585433, 0.00040789698084934395, -0.00312802338120381,
-                   -0.0036442796214883506, 0.006990014563390751, 0.013993768859843242, -0.010297659641009963,
-                   -0.036888397691556774, 0.007588974368642594, 0.07592423604445779, 0.006239722752156254,
-                   -0.13238830556335474, -0.027340263752899923, 0.21119069394696974, 0.02791820813292813,
-                   -0.3270633105274758, 0.08975108940236352, 0.44029025688580486, -0.6373563320829833,
-                   0.43031272284545874, -0.1650642834886438, 0.03490771432362905, -0.0031892209253436892])
+    [
+        0.0031892209253436892,
+        0.03490771432362905,
+        0.1650642834886438,
+        0.43031272284545874,
+        0.6373563320829833,
+        0.44029025688580486,
+        -0.08975108940236352,
+        -0.3270633105274758,
+        -0.02791820813292813,
+        0.21119069394696974,
+        0.027340263752899923,
+        -0.13238830556335474,
+        -0.006239722752156254,
+        0.07592423604445779,
+        -0.007588974368642594,
+        -0.036888397691556774,
+        0.010297659641009963,
+        0.013993768859843242,
+        -0.006990014563390751,
+        -0.0036442796214883506,
+        0.00312802338120381,
+        0.00040789698084934395,
+        -0.0009410217493585433,
+        0.00011424152003843815,
+        0.00017478724522506327,
+        -6.103596621404321e-05,
+        -1.394566898819319e-05,
+        1.133660866126152e-05,
+        -1.0435713423102517e-06,
+        -7.363656785441815e-07,
+        2.3087840868545578e-07,
+        -2.1093396300980412e-08,
+    ]
+)
+g_DB16 = np.array(
+    [
+        -2.1093396300980412e-08,
+        -2.3087840868545578e-07,
+        -7.363656785441815e-07,
+        1.0435713423102517e-06,
+        1.133660866126152e-05,
+        1.394566898819319e-05,
+        -6.103596621404321e-05,
+        -0.00017478724522506327,
+        0.00011424152003843815,
+        0.0009410217493585433,
+        0.00040789698084934395,
+        -0.00312802338120381,
+        -0.0036442796214883506,
+        0.006990014563390751,
+        0.013993768859843242,
+        -0.010297659641009963,
+        -0.036888397691556774,
+        0.007588974368642594,
+        0.07592423604445779,
+        0.006239722752156254,
+        -0.13238830556335474,
+        -0.027340263752899923,
+        0.21119069394696974,
+        0.02791820813292813,
+        -0.3270633105274758,
+        0.08975108940236352,
+        0.44029025688580486,
+        -0.6373563320829833,
+        0.43031272284545874,
+        -0.1650642834886438,
+        0.03490771432362905,
+        -0.0031892209253436892,
+    ]
+)
 
 xdb16, phidb16, psidb16 = cascade_algorithm(h_DB16, g_DB16, maxit)
 
@@ -164,14 +283,15 @@ xdb16, phidb16, psidb16 = cascade_algorithm(h_DB16, g_DB16, maxit)
 
 fig: Figure
 fig, ax = plt.subplots(
-    4, 2,
+    4,
+    2,
     figsize=figsize_from_page_fraction(height_to_width=12 / 8),
     # sharex="all", sharey="all"
 )
-labels = ['Haar', 'DB2', 'DB4', 'DB8', 'DB16']
+labels = ["Haar", "DB2", "DB4", "DB8", "DB16"]
 
-ax[0, 0].set_title('scaling functions $\\varphi$')
-ax[0, 1].set_title('wavelets $\\psi$')
+ax[0, 0].set_title("scaling functions $\\varphi$")
+ax[0, 1].set_title("wavelets $\\psi$")
 
 ax[0, 0].plot(xhaar, phihaar, lw=1)
 ax[0, 1].plot(xhaar, psihaar, lw=1)
@@ -188,7 +308,7 @@ ax[3, 1].plot(xdb8, psidb8, lw=1)
 # ax[4, 0].plot(xdb16, phidb16, lw=1)
 # ax[4, 1].plot(xdb16, psidb16, lw=1)
 for a in ax.flatten():
-    a.set_xlabel('t')
+    a.set_xlabel("t")
 
 
 def inset_label(ax: Axes, text: str):
@@ -198,7 +318,7 @@ def inset_label(ax: Axes, text: str):
         text,
         horizontalalignment="left",
         verticalalignment="bottom",
-        transform=ax.transAxes
+        transform=ax.transAxes,
     )
 
 
@@ -238,23 +358,48 @@ def fourier_wavelet(h, g, n):
 # ax.plot([0, np.pi], [1., 1.], 'k:')
 
 kh, fphih, fpsih = fourier_wavelet(h_Haar, g_Haar, 256)
-ax.plot(kh, np.abs(fphih) ** 2, label=r'$\hat\varphi_\textrm{Haar}$', c="C0")
-ax.plot(kh, np.abs(fpsih) ** 2, label=r'$\hat\psi_\textrm{Haar}$', c="C0", linestyle="dashed")
+ax.plot(kh, np.abs(fphih) ** 2, label=r"$\hat\varphi_\textrm{Haar}$", c="C0")
+ax.plot(
+    kh,
+    np.abs(fpsih) ** 2,
+    label=r"$\hat\psi_\textrm{Haar}$",
+    c="C0",
+    linestyle="dashed",
+)
 
 kdb2, fphidb2, fpsidb2 = fourier_wavelet(h_DB2, g_DB2, 256)
-ax.plot(kdb2, np.abs(fphidb2) ** 2, label=r'$\hat\varphi_\textrm{DB2}$', c="C1")
-ax.plot(kdb2, np.abs(fpsidb2) ** 2, label=r'$\hat\psi_\textrm{DB2}$', c="C1", linestyle="dashed")
+ax.plot(kdb2, np.abs(fphidb2) ** 2, label=r"$\hat\varphi_\textrm{DB2}$", c="C1")
+ax.plot(
+    kdb2,
+    np.abs(fpsidb2) ** 2,
+    label=r"$\hat\psi_\textrm{DB2}$",
+    c="C1",
+    linestyle="dashed",
+)
 
 kdb4, fphidb4, fpsidb4 = fourier_wavelet(h_DB4, g_DB4, 256)
-ax.plot(kdb4, np.abs(fphidb4) ** 2, label=r'$\hat\varphi_\textrm{DB4}$', c="C2")
-ax.plot(kdb4, np.abs(fpsidb4) ** 2, label=r'$\hat\psi_\textrm{DB4}$', c="C2", linestyle="dashed")
+ax.plot(kdb4, np.abs(fphidb4) ** 2, label=r"$\hat\varphi_\textrm{DB4}$", c="C2")
+ax.plot(
+    kdb4,
+    np.abs(fpsidb4) ** 2,
+    label=r"$\hat\psi_\textrm{DB4}$",
+    c="C2",
+    linestyle="dashed",
+)
 
 kdb8, fphidb8, fpsidb8 = fourier_wavelet(h_DB8, g_DB8, 256)
-ax.plot(kdb8, np.abs(fphidb8) ** 2, label=r'$\hat\varphi_\textrm{DB8}$', c="C3")
-ax.plot(kdb8, np.abs(fpsidb8) ** 2, label=r'$\hat\psi_\textrm{DB8}$', c="C3", linestyle="dashed")
+ax.plot(kdb8, np.abs(fphidb8) ** 2, label=r"$\hat\varphi_\textrm{DB8}$", c="C3")
+ax.plot(
+    kdb8,
+    np.abs(fpsidb8) ** 2,
+    label=r"$\hat\psi_\textrm{DB8}$",
+    c="C3",
+    linestyle="dashed",
+)
 
 
 # all k* are np.linspace(0, np.pi, 256), so we can also use them for shannon
+
 
 def shannon(k):
     y = np.zeros_like(k)
@@ -262,8 +407,14 @@ def shannon(k):
     return y
 
 
-ax.plot(kdb8, 1 - shannon(kdb8), label=r'$\hat\varphi_\textrm{shannon}$', c="C4")
-ax.plot(kdb8, shannon(kdb8), label=r'$\hat\psi_\textrm{shannon}$', c="C4", linestyle="dashed")
+ax.plot(kdb8, 1 - shannon(kdb8), label=r"$\hat\varphi_\textrm{shannon}$", c="C4")
+ax.plot(
+    kdb8,
+    shannon(kdb8),
+    label=r"$\hat\psi_\textrm{shannon}$",
+    c="C4",
+    linestyle="dashed",
+)
 # ax.plot(kdb8, np.abs(fpsidb8) ** 2, label='$\\hat\\psi_{DB8}$', c="C3", linestyle="dashed")
 
 # kdb16, fphidb16, fpsidb16 = fourier_wavelet(h_DB16, g_DB16, 256)
@@ -282,10 +433,12 @@ leg1 = ax.legend(frameon=False, handles=philines, loc="center left")
 leg2 = ax.legend(frameon=False, handles=psilines, loc="center right")
 ax.add_artist(leg1)
 ax.add_artist(leg2)
-ax.set_xlabel('k')
-ax.set_ylabel('P(k)')
+ax.set_xlabel("k")
+ax.set_ylabel("P(k)")
 ax.set_xticks([0, pi / 2, pi])
-ax.set_xticklabels(["0", r"$k_\textrm{coarse}^\textrm{ny}$", r"$k_\textrm{fine}^\textrm{ny}$"])
+ax.set_xticklabels(
+    ["0", r"$k_\textrm{coarse}^\textrm{ny}$", r"$k_\textrm{fine}^\textrm{ny}$"]
+)
 
 # plt.semilogy()
 # plt.ylim([1e-4,2.0])

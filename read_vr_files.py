@@ -28,7 +28,9 @@ def all_children(df: DataFrame, id: int):
         yield from all_children(df, sh)
 
 
-def particles_in_halo(offsets: Dict[int, int], particle_ids: np.ndarray) -> HaloParticleMapping:
+def particles_in_halo(
+    offsets: Dict[int, int], particle_ids: np.ndarray
+) -> HaloParticleMapping:
     """
     get mapping from halo ID to particle ID set by using the offset and a lookup in the particle array
     """
@@ -64,7 +66,7 @@ def cached_particles_in_halo(file: Path, *args, **kwargs) -> HaloParticleMapping
 
     Unfortunatly this is magnitudes slower than doing the calculation itself as HDF5 is not
     intended for 100K small datasets making this whole function pointless.
-    
+
     """
     if file.exists():
         print("loading from cache")
@@ -80,7 +82,12 @@ def cached_particles_in_halo(file: Path, *args, **kwargs) -> HaloParticleMapping
         print("saving to cache")
         with h5py.File(file, "w") as data_file:
             for key, valueset in halo_particle_ids.items():
-                data_file.create_dataset(str(key), data=list(valueset), compression='gzip', compression_opts=5)
+                data_file.create_dataset(
+                    str(key),
+                    data=list(valueset),
+                    compression="gzip",
+                    compression_opts=5,
+                )
     return halo_particle_ids
 
 
@@ -116,13 +123,15 @@ def read_velo_halos(directory: Path, veloname="vroutput"):
         "offset_unbound": group_catalog["Offset_unbound"],
         "parent_halo_id": group_catalog["Parent_halo_ID"],
     }
-    df = pd.DataFrame({**data, **scalar_properties})  # create dataframe from two merged dicts
+    df = pd.DataFrame(
+        {**data, **scalar_properties}
+    )  # create dataframe from two merged dicts
     df.index += 1  # Halo IDs start at 1
     return df
 
 
 def read_velo_halo_particles(
-        directory: Path, skip_halo_particle_ids=False, skip_unbound=True
+    directory: Path, skip_halo_particle_ids=False, skip_unbound=True
 ) -> Tuple[DataFrame, Optional[HaloParticleMapping], Optional[HaloParticleMapping]]:
     """
     This reads the output files of VELOCIraptor
@@ -153,7 +162,9 @@ def read_velo_halo_particles(
     else:
         print("look up unbound particle IDs")
         halo_unbound_offsets = dict(df["offset_unbound"])
-        halo_particle_unbound_ids = particles_in_halo(halo_unbound_offsets, particle_ids_unbound)
+        halo_particle_unbound_ids = particles_in_halo(
+            halo_unbound_offsets, particle_ids_unbound
+        )
     return df, halo_particle_ids, halo_particle_unbound_ids
 
 
@@ -179,7 +190,9 @@ def main():
     Nres = 512
     directory = base_dir / f"{waveform}_{Nres}_100"
 
-    df_halo, halo_particle_ids, halo_particle_unbound_ids = read_velo_halo_particles(directory)
+    df_halo, halo_particle_ids, halo_particle_unbound_ids = read_velo_halo_particles(
+        directory
+    )
     particles, meta = read_file(directory)
     HALO = 1000
     while True:
@@ -196,5 +209,5 @@ def main():
         HALO += 1
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -42,11 +42,12 @@ def plotdf3d(pl: Plotter, df: DataFrame, color="white"):
     glrenderer = vtk.vtkOpenGLRenderer.SafeDownCast(renderer)
     glrenderer.SetPass(blur_pass)
 
+
 def df_to_coords(df: pd.DataFrame):
     return df[["X", "Y", "Z"]].to_numpy()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # HALO = 1
     # reference_dir = base_dir / "shannon_512_100"
     # df, _ = read_file(reference_dir / "output_0004.hdf5")

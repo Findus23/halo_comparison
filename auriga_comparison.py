@@ -32,7 +32,14 @@ mode = Mode.richings
 
 
 def dir_name_to_parameter(dir_name: str):
-    return map(int, dir_name.lstrip("auriga6_halo").lstrip("richings21_").lstrip("bary_").lstrip("ramses_").split("_"))
+    return map(
+        int,
+        dir_name.lstrip("auriga6_halo")
+        .lstrip("richings21_")
+        .lstrip("bary_")
+        .lstrip("ramses_")
+        .split("_"),
+    )
 
 
 def levelmax_to_softening_length(levelmax: int) -> float:
@@ -46,8 +53,8 @@ fig2: Figure = plt.figure(figsize=figsize_from_page_fraction())
 ax2: Axes = fig2.gca()
 
 for ax in [ax1, ax2]:
-    ax.set_xlabel(r'R [Mpc]')
-ax1.set_ylabel(r'M [$10^{10} \mathrm{M}_\odot$]')
+    ax.set_xlabel(r"R [Mpc]")
+ax1.set_ylabel(r"M [$10^{10} \mathrm{M}_\odot$]")
 ax2.set_ylabel("density [$\\frac{10^{10} \\mathrm{M}_\\odot}{Mpc^3}$]")
 
 part_numbers = []
@@ -107,8 +114,10 @@ for dir in sorted(root_dir.glob("*")):
 
         ideal_softening_length = levelmax_to_softening_length(levelmax)
         if not np.isclose(softening_length, levelmax_to_softening_length(levelmax)):
-            raise ValueError(f"softening length for levelmax {levelmax} should be {ideal_softening_length} "
-                             f"but is {softening_length}")
+            raise ValueError(
+                f"softening length for levelmax {levelmax} should be {ideal_softening_length} "
+                f"but is {softening_length}"
+            )
     print(input_file)
     if mode == Mode.richings and is_by_adrian:
         h = 0.6777
@@ -141,12 +150,16 @@ for dir in sorted(root_dir.glob("*")):
         # halo = halos.loc[1]
         center = np.array([halo.X, halo.Y, halo.Z])
     log_radial_bins, bin_masses, bin_densities, center = halo_mass_profile(
-        df, center, particles_meta, plot=False, num_bins=100,
-        vmin=0.002, vmax=6.5
+        df, center, particles_meta, plot=False, num_bins=100, vmin=0.002, vmax=6.5
     )
-    i_min_border = np.argmax(0.01 < log_radial_bins)  # first bin outside of specific radius
+    i_min_border = np.argmax(
+        0.01 < log_radial_bins
+    )  # first bin outside of specific radius
     i_max_border = np.argmax(1.5 < log_radial_bins)
-    popt = fit_nfw(log_radial_bins[i_min_border:i_max_border], bin_densities[i_min_border:i_max_border])  # = rho_0, r_s
+    popt = fit_nfw(
+        log_radial_bins[i_min_border:i_max_border],
+        bin_densities[i_min_border:i_max_border],
+    )  # = rho_0, r_s
     print(popt)
     # # Plot NFW profile
     # ax.loglog(
@@ -176,11 +189,11 @@ for dir in sorted(root_dir.glob("*")):
             ref_log_radial_bins, ref_bin_masses, ref_bin_densities = data
         mass_deviation: np.ndarray = np.abs(bin_masses - ref_bin_masses)
         density_deviation: np.ndarray = np.abs(bin_densities - ref_bin_densities)
-        ax1.loglog(log_radial_bins[:-1], mass_deviation, c=f"C{i}",
-                   linestyle="dotted")
+        ax1.loglog(log_radial_bins[:-1], mass_deviation, c=f"C{i}", linestyle="dotted")
 
-        ax2.loglog(log_radial_bins[:-1], density_deviation, c=f"C{i}",
-                   linestyle="dotted")
+        ax2.loglog(
+            log_radial_bins[:-1], density_deviation, c=f"C{i}", linestyle="dotted"
+        )
         accuracy = mass_deviation / ref_bin_masses
         print(accuracy)
         print("mean accuracy", accuracy.mean())
@@ -209,11 +222,13 @@ for dir in sorted(root_dir.glob("*")):
     vmin = min(vmin, rho.min())
     vmax = max(vmax, rho.max())
 
-    images.append(Result(
-        rho=rho,
-        title=str(dir.name),
-        levels=(levelmin, levelmin_TF, levelmax) if levelmin else None
-    ))
+    images.append(
+        Result(
+            rho=rho,
+            title=str(dir.name),
+            levels=(levelmin, levelmin_TF, levelmax) if levelmin else None,
+        )
+    )
     i += 1
     # plot_cic(
     #     rho, extent,
@@ -226,15 +241,21 @@ fig2.tight_layout()
 
 # fig3: Figure = plt.figure(figsize=(9, 9))
 # axes: List[Axes] = fig3.subplots(3, 3, sharex=True, sharey=True).flatten()
-fig3: Figure = plt.figure(figsize=figsize_from_page_fraction(columns=2, height_to_width=1))
+fig3: Figure = plt.figure(
+    figsize=figsize_from_page_fraction(columns=2, height_to_width=1)
+)
 axes: List[Axes] = fig3.subplots(3, 3, sharex=True, sharey=True).flatten()
 
 for result, ax in zip(images, axes):
     data = 1.1 + result.rho
     vmin_scaled = 1.1 + vmin
     vmax_scaled = 1.1 + vmax
-    img = ax.imshow(data.T, norm=LogNorm(vmin=vmin_scaled, vmax=vmax_scaled), extent=extent,
-                    origin="lower")
+    img = ax.imshow(
+        data.T,
+        norm=LogNorm(vmin=vmin_scaled, vmax=vmax_scaled),
+        extent=extent,
+        origin="lower",
+    )
     ax.set_title(result.title)
 
 fig3.tight_layout()

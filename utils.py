@@ -12,7 +12,11 @@ waveforms = ["DB2", "DB4", "DB8", "shannon"]
 
 
 def print_progress(i, total, extra_data=""):
-    print(f"{i} of {total} ({extra_data})" + " " * 20, end="\r" if i != total else "\n", flush=True)
+    print(
+        f"{i} of {total} ({extra_data})" + " " * 20,
+        end="\r" if i != total else "\n",
+        flush=True,
+    )
 
 
 def memory_usage(df: pd.DataFrame):
@@ -35,7 +39,7 @@ def read_swift_config(dir: Path):
 
 
 def print_wall_time(dir: Path):
-    with(dir / "swift.log").open() as f:
+    with (dir / "swift.log").open() as f:
         last_line = f.readlines()[-1]
     print(last_line)
     assert "main: done. Bye." in last_line
@@ -66,17 +70,24 @@ def rowcolumn_labels(axes, labels, isrow: bool, pad=5) -> None:
             xy = (0, 0.5)
             xytext = (-ax.yaxis.labelpad - pad, 0)
             xycoords = ax.yaxis.label
-            ha = 'right'
-            va = 'center'
+            ha = "right"
+            va = "center"
         else:
             xy = (0.5, 1)
             xytext = (0, pad)
-            xycoords = 'axes fraction'
-            ha = 'center'
-            va = 'baseline'
-        ax.annotate(label, xy=xy, xytext=xytext,
-                    xycoords=xycoords, textcoords='offset points',
-                    size='large', ha=ha, va=va)
+            xycoords = "axes fraction"
+            ha = "center"
+            va = "baseline"
+        ax.annotate(
+            label,
+            xy=xy,
+            xytext=xytext,
+            xycoords=xycoords,
+            textcoords="offset points",
+            size="medium",
+            ha=ha,
+            va=va,
+        )
 
 
 def tex_fmt(format_str: str, *args) -> str:
