@@ -121,6 +121,9 @@ def create_plot(mode):
                 verticalalignment="top",
                 transform=ax.transAxes,
             )
+            ax.set_axisbelow(True)
+            ax.grid(color="black", linestyle=":", linewidth=0.5, alpha=0.5)
+
             for j, res in enumerate(
                 resolutions[:-1] if mode == "cross" else resolutions
             ):
@@ -135,7 +138,7 @@ def create_plot(mode):
 
         if mode == "power":
             ax_ics.set_ylabel(
-                "$\\mathrm{{P}}_\\mathrm{{X}}$ / $\\mathrm{{P}}_{{1024}}$"
+                r"$\mathrm{P}_\mathrm{X}$ / $\mathrm{P}_{1024}$"
             )
             for j, resolution in enumerate(resolutions):
                 ics_data = spectra_data(waveform, resolution, resolution, Lbox, "ics")
@@ -170,8 +173,6 @@ def create_plot(mode):
                 ax_end.semilogx(end_k, end_p1, color=colors[j])
                 for ax in [ax_ics, ax_z1, ax_end]:
                     ax.set_ylim(0.9, 1.10)
-                    ax.set_axisbelow(True)
-                    ax.grid(color="black", linestyle=":", linewidth=0.5, alpha=0.5)
 
         # fig.suptitle(f"Power Spectra {time}") #Not needed for paper
         # fig.tight_layout()
@@ -212,9 +213,6 @@ def create_plot(mode):
                 crossing_value = end_pcross[crossing_index]  # and here
                 crossings[i][j] = crossing_value
 
-                for ax in [ax_ics, ax_z1, ax_end]:
-                    ax.set_axisbelow(True)
-                    ax.grid(color="black", linestyle=":", linewidth=0.5, alpha=0.5)
 
             ax_end.set_xlim(right=k0 * resolutions[-1])
             ax_end.set_ylim(0.8, 1.02)
