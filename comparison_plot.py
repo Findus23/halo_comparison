@@ -209,9 +209,9 @@ comparisons = [(256, 512), (256, 1024)]  # , (512, 1024)
 
 def compare_property(property, show: bool):
     is_hist_property = property in hist_properties
-    height_to_width = 3 / 4
+    height_to_width = 2 / 4
     if property == "distance":
-        height_to_width /= 2
+        height_to_width = 3/8
     fig: Figure
     fig, axes = plt.subplots(
         len(waveforms),

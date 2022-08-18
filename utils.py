@@ -87,7 +87,7 @@ def rowcolumn_labels(axes, labels, isrow: bool, pad=5) -> None:
             size="medium",
             ha=ha,
             va=va,
-            rotation=90
+            rotation=90 if isrow else 0
         )
 
 
