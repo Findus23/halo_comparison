@@ -43,7 +43,7 @@ def main():
     if has_1024_simulations:
         resolutions.append(1024)
     fig: Figure = plt.figure(
-        figsize=figsize_from_page_fraction(columns=2, height_to_width=1 if is_box else 1.3)
+        figsize=figsize_from_page_fraction(columns=2, height_to_width=1 if is_box else 1.2)
     )
     axes: List[List[Axes]] = fig.subplots(
         len(waveforms) if is_box else len(waveforms) * 2, 4, sharex="row", sharey="row"
@@ -84,7 +84,7 @@ def main():
                     ax.set_xticks([])
                     ax.set_yticks([])
                     if not is_box:
-                        ax.set_ylim(Y - radius * .6, Y + radius * .6)
+                        ax.set_ylim(Y - radius * .5, Y + radius * .5)
                     if j == 0:
                         scalebar = AnchoredSizeBar(
                             ax.transData,
