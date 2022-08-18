@@ -24,7 +24,7 @@ def load_halo_data(waveform: str, resolution: int, halo_id: int, coords: Coords)
         dir, skip_halo_particle_ids=all_in_area
     )
 
-    halo = df_halo.loc[halo_id]
+    halo = df_halo.loc[halo_id] if halo_id else None
     if coords:
         radius, X, Y, Z = coords
     else:
@@ -46,27 +46,27 @@ def load_halo_data(waveform: str, resolution: int, halo_id: int, coords: Coords)
 
 
 def get_comp_id(
-    ref_waveform: str,
-    reference_resolution: int,
-    comp_waveform: str,
-    comp_resolution: int,
+        ref_waveform: str,
+        reference_resolution: int,
+        comp_waveform: str,
+        comp_resolution: int,
 ):
     return f"{ref_waveform}_{reference_resolution}_100_{comp_waveform}_{comp_resolution}_100_velo.csv"
 
 
 def map_halo_id(
-    halo_id: int,
-    ref_waveform: str,
-    reference_resolution: int,
-    comp_waveform: str,
-    comp_resolution: int,
+        halo_id: int,
+        ref_waveform: str,
+        reference_resolution: int,
+        comp_waveform: str,
+        comp_resolution: int,
 ):
     file = (
-        base_dir
-        / "comparisons"
-        / get_comp_id(
-            ref_waveform, reference_resolution, comp_waveform, comp_resolution
-        )
+            base_dir
+            / "comparisons"
+            / get_comp_id(
+        ref_waveform, reference_resolution, comp_waveform, comp_resolution
+    )
     )
     print("opening", file)
     df = pd.read_csv(file)
@@ -91,17 +91,28 @@ def main():
     resolutions = [128, 256, 512]
     if has_1024_simulations:
         resolutions.append(1024)
-    initial_halo_id = int(argv[1])
-    first_halo = True
+    coords = {}
+    if argv[1] == "box":
+        initial_halo_id = 0
+        first_halo = False
+        for wf in waveforms:
+            coords[wf] = (15, 85, 85, 85)
+
+    else:
+        initial_halo_id = int(argv[1])
+        first_halo = True
+        for wf in waveforms:
+            coords[wf] = None
+
     rhos = {}
     ref_waveform = "shannon"
     ref_resolution = 128
-    coords = {}
-    for wf in waveforms:
-        coords[wf] = None
     vmin = np.Inf
     vmax = -np.Inf
     with h5py.File(vis_datafile, "a") as vis_out:
+        key = str(initial_halo_id)
+        if key in vis_out:
+            del vis_out[key]
         halo_group = vis_out.create_group(str(initial_halo_id))
         # use shannon first for reference and as order doesn't matter here
         for waveform in ["shannon", "DB2", "DB4", "DB8"]:
@@ -112,20 +123,23 @@ def main():
                     halo_id = initial_halo_id
                     first_halo = False
                 else:
-                    halo_id = map_halo_id(
-                        initial_halo_id,
-                        ref_waveform,
-                        ref_resolution,
-                        waveform,
-                        resolution,
-                    )
+                    if initial_halo_id:
+                        halo_id = map_halo_id(
+                            initial_halo_id,
+                            ref_waveform,
+                            ref_resolution,
+                            waveform,
+                            resolution,
+                        )
+                    else:
+                        halo_id = None
                 halo, halo_particles, meta, image_coords = load_halo_data(
                     waveform, resolution, halo_id, coords[waveform]
                 )
                 if not coords[waveform]:
                     coords[waveform] = image_coords
                 print(coords[waveform])
-                print("mass", halo["Mvir"])
+                # print("mass", halo["Mvir"])
                 # print("sleep")
                 # sleep(100)
                 radius, X, Y, Z = coords[waveform]
@@ -147,7 +161,8 @@ def main():
                 )
                 dataset_group.create_dataset("coords", data=coords[waveform])
                 dataset_group.create_dataset("mass", data=meta.particle_mass)
-                dataset_group.create_dataset("halo_id", data=halo_id)
+                if halo_id:
+                    dataset_group.create_dataset("halo_id", data=halo_id)
                 imsave(
                     rho,
                     f"out_halo{initial_halo_id}_{waveform}_{resolution}_{halo_id}.png",

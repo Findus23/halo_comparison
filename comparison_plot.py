@@ -6,12 +6,13 @@ import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
-from matplotlib.axis import XTick, YTick
+from matplotlib.axis import YTick
 from matplotlib.collections import QuadMesh
 from matplotlib.colors import LogNorm
 from matplotlib.figure import Figure
 from matplotlib.patches import Polygon
 from numpy import inf
+from scipy.stats import norm
 
 from halo_vis import get_comp_id
 from paths import base_dir
@@ -102,27 +103,25 @@ def plot_comparison_hist2d(ax: Axes, file: Path, property: str):
                 rows.append(row)
         df = pd.concat(rows, axis=1).T
         print(df)
-    if property == "Mvir":
-        stds = []
-        means = []
+    if property in ["Mvir", "Vmax"]:
+        percentiles = []
         for rep_row in range(num_bins):
             rep_x_left = bins[rep_row]
             rep_x_right = bins[rep_row] + 1
             rep_bin = (rep_x_left < df[x_col]) & (df[x_col] < rep_x_right)
             rep_values = df.loc[rep_bin][y_col] / df.loc[rep_bin][x_col]
-            if len(rep_bin) < 30:
+            if len(rep_values) < 10:
+                percentiles.append([np.nan, np.nan, np.nan])
                 continue
-            mean = rep_values.mean()
-            std = rep_values.std()
-            means.append(mean)
-            stds.append(std)
-        means = np.array(means)
-        stds = np.array(stds)
-        args = {"color": "C2", "zorder": 10}
-        ax.fill_between(bins, means - stds, means + stds, alpha=0.2, **args)
-        ax.plot(bins, means + stds, alpha=0.5, **args)
-        ax.plot(bins, means - stds, alpha=0.5, **args)
-        # ax_scatter.plot(bins, stds, label=f"{file.stem}")
+            percentiles.append(np.quantile(rep_values, [norm.cdf(-1), norm.cdf(0), norm.cdf(1)]))
+
+        percentiles = np.asarray(percentiles)
+        print(percentiles.shape)
+        args = {"color": "C1", "zorder": 10}
+        # ax.fill_between(bins, percentiles[::, 0], percentiles[::, 2], alpha=0.1, **args)
+        ax.plot(bins, percentiles[::, 0], alpha=0.9, **args)
+        ax.plot(bins, percentiles[::, 1], alpha=0.9, **args)
+        ax.plot(bins, percentiles[::, 2], alpha=0.9, **args)
 
     if property in vmaxs:
         vmax = vmaxs[property]
@@ -135,6 +134,7 @@ def plot_comparison_hist2d(ax: Axes, file: Path, property: str):
         df[y_col] / df[x_col],
         bins=(bins, np.linspace(0, 2, num_bins)),
         norm=LogNorm(vmax=vmax),
+        cmap="gray_r",
         rasterized=True,
     )
     # ax.plot([rep_x_left, rep_x_left], [mean - std, mean + std], c="C1")
@@ -151,7 +151,7 @@ def plot_comparison_hist2d(ax: Axes, file: Path, property: str):
     ax.set_xlim(min(df[x_col]), max(df[y_col]))
 
     ax.plot(
-        [min(df[x_col]), max(df[y_col])], [1, 1], linewidth=1, color="C1", zorder=10
+        [min(df[x_col]), max(df[y_col])], [1, 1], linewidth=1, color="C0", zorder=10, linestyle="dotted"
     )
 
     return x_col, y_col
@@ -179,7 +179,6 @@ def plot_comparison_hist(ax: Axes, file: Path, property: str, m_min=None, m_max=
     else:
         bins = num_bins
     if property == "match":
-        histtype = "step"
         labels = {
             (-inf, 30): "$M<30$",
             (None, None): "all $M$ $[10^{10}$ $\mathrm{M}_\odot]$",
@@ -198,7 +197,7 @@ def plot_comparison_hist(ax: Axes, file: Path, property: str, m_min=None, m_max=
     else:
         patches: List[Polygon]
         hist_val, bin_edges, patches = ax.hist(
-            df[property], bins=bins, histtype=histtype, label=label, density=density
+            df[property], bins=bins, histtype="step", label=label, density=density
         )
 
 
@@ -210,13 +209,16 @@ comparisons = [(256, 512), (256, 1024)]  # , (512, 1024)
 
 def compare_property(property, show: bool):
     is_hist_property = property in hist_properties
+    height_to_width = 2 / 4
+    if property == "distance":
+        height_to_width = 3/8
     fig: Figure
     fig, axes = plt.subplots(
         len(waveforms),
         len(comparisons),
         sharey="all",
         sharex="all",
-        figsize=figsize_from_page_fraction(columns=2),
+        figsize=figsize_from_page_fraction(columns=2, height_to_width=height_to_width),
     )
     for i, waveform in enumerate(waveforms):
         for j, (ref_res, comp_res) in enumerate(comparisons):

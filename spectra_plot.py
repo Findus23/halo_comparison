@@ -1,13 +1,15 @@
 import itertools
 from pathlib import Path
 from sys import argv
+from typing import List
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from matplotlib.axes import Axes
-from matplotlib.axis import XTick, YTick
+from matplotlib.axis import XTick
 from matplotlib.figure import Figure
+from matplotlib.lines import Line2D
 
 from paths import base_dir
 from utils import figsize_from_page_fraction, waveforms
@@ -38,7 +40,7 @@ colors = [f"C{i}" for i in range(10)]
 
 
 def spectra_data(
-    waveform: str, resolution_1: int, resolution_2: int, Lbox: int, time: str
+        waveform: str, resolution_1: int, resolution_2: int, Lbox: int, time: str
 ):
     dir = base_dir / f"spectra/{waveform}_{Lbox}"
 
@@ -86,7 +88,7 @@ def create_plot(mode):
         3,
         sharex=True,
         sharey=True,
-        figsize=figsize_from_page_fraction(columns=2),
+        figsize=figsize_from_page_fraction(columns=2, height_to_width=.5),
     )
     crossings = np.zeros((len(waveforms), len(combination_list)))
     for i, waveform in enumerate(waveforms):
@@ -125,7 +127,7 @@ def create_plot(mode):
             ax.grid(color="black", linestyle=":", linewidth=0.5, alpha=0.5)
 
             for j, res in enumerate(
-                resolutions[:-1] if mode == "cross" else resolutions
+                    resolutions[:-1] if mode == "cross" else resolutions
             ):
                 ax.axvline(
                     k0 * res,
@@ -213,22 +215,35 @@ def create_plot(mode):
                 crossing_value = end_pcross[crossing_index]  # and here
                 crossings[i][j] = crossing_value
 
-
             ax_end.set_xlim(right=k0 * resolutions[-1])
             ax_end.set_ylim(0.8, 1.02)
         if bottom_row:
-            # ax_z1.legend()
-            ax_ics.legend(loc="lower left")
+            if mode == "power":
+                ax_ics.legend(loc="lower left")
+            else:
+                lines: List[Line2D] = ax_ics.get_lines()
+                half_lines1 = []
+                half_lines2 = []
+                for line in lines:
+                    if line.get_label().startswith("128"):
+                        half_lines1.append(line)
+                    else:
+                        half_lines2.append(line)
+
+                ax_ics.legend(handles=half_lines1, loc="lower left")
+                ax_z1.legend(handles=half_lines2, loc="lower left")
+
         if not bottom_row:
             last_xtick: XTick = ax_ics.yaxis.get_major_ticks()[0]
             last_xtick.set_visible(False)
 
         # fig.suptitle(f"Cross Spectra {time}") #Not needed for paper
         # fig.tight_layout()
-    print(crossings)
-    crossings_df = pd.DataFrame(crossings, columns=combination_list, index=waveforms)
-    # print(crossings_df.to_markdown())
-    print(crossings_df.to_latex())
+    if mode=="cross":
+        print(crossings)
+        crossings_df = pd.DataFrame(crossings, columns=combination_list, index=waveforms)
+        # print(crossings_df.to_markdown())
+        print(crossings_df.to_latex())
     fig.tight_layout()
     fig.subplots_adjust(wspace=0, hspace=0)
 
