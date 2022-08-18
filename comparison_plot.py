@@ -103,7 +103,7 @@ def plot_comparison_hist2d(ax: Axes, file: Path, property: str):
                 rows.append(row)
         df = pd.concat(rows, axis=1).T
         print(df)
-    if property in ["Mvir","Vmax"]:
+    if property in ["Mvir", "Vmax"]:
         percentiles = []
         for rep_row in range(num_bins):
             rep_x_left = bins[rep_row]
@@ -209,13 +209,16 @@ comparisons = [(256, 512), (256, 1024)]  # , (512, 1024)
 
 def compare_property(property, show: bool):
     is_hist_property = property in hist_properties
+    height_to_width = 3 / 4
+    if property == "distance":
+        height_to_width /= 2
     fig: Figure
     fig, axes = plt.subplots(
         len(waveforms),
         len(comparisons),
         sharey="all",
         sharex="all",
-        figsize=figsize_from_page_fraction(columns=2),
+        figsize=figsize_from_page_fraction(columns=2, height_to_width=height_to_width),
     )
     for i, waveform in enumerate(waveforms):
         for j, (ref_res, comp_res) in enumerate(comparisons):
