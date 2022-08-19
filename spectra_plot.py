@@ -218,20 +218,22 @@ def create_plot(mode):
             ax_end.set_xlim(right=k0 * resolutions[-1])
             ax_end.set_ylim(0.8, 1.02)
         if bottom_row:
-            if mode == "power":
-                ax_ics.legend(loc="lower left")
-            else:
-                lines: List[Line2D] = ax_ics.get_lines()
-                half_lines1 = []
-                half_lines2 = []
-                for line in lines:
-                    if line.get_label().startswith("128"):
-                        half_lines1.append(line)
-                    else:
-                        half_lines2.append(line)
+            lines: List[Line2D] = ax_ics.get_lines()
+            half_lines1 = []
+            half_lines2 = []
+            for line in lines:
+                lab = line.get_label()
+                if (
+                        (mode == "cross" and lab.startswith("128"))
+                        or
+                        (mode == "power" and ("128" in lab or "256" in lab))
+                ):
+                    half_lines1.append(line)
+                else:
+                    half_lines2.append(line)
 
-                ax_ics.legend(handles=half_lines1, loc="lower left")
-                ax_z1.legend(handles=half_lines2, loc="lower left")
+            ax_ics.legend(handles=half_lines1, loc="lower left")
+            ax_z1.legend(handles=half_lines2, loc="lower left")
 
         if not bottom_row:
             last_xtick: XTick = ax_ics.yaxis.get_major_ticks()[0]
@@ -239,7 +241,7 @@ def create_plot(mode):
 
         # fig.suptitle(f"Cross Spectra {time}") #Not needed for paper
         # fig.tight_layout()
-    if mode=="cross":
+    if mode == "cross":
         print(crossings)
         crossings_df = pd.DataFrame(crossings, columns=combination_list, index=waveforms)
         # print(crossings_df.to_markdown())
