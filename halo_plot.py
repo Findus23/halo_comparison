@@ -80,6 +80,7 @@ def main():
                         extent=extent,
                         origin="lower",
                         cmap="Greys",
+                        interpolation="none"
                     )  # ax.set_axis_off()
                     ax.set_xticks([])
                     ax.set_yticks([])

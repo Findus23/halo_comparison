@@ -146,7 +146,7 @@ def main():
                 rho, _ = cic_from_radius(
                     halo_particles.X.to_numpy(),
                     halo_particles.Y.to_numpy(),
-                    1000,
+                    600,
                     X,
                     Y,
                     radius,
