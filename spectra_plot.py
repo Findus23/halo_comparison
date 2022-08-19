@@ -109,7 +109,7 @@ def create_plot(mode):
                 ax.set_xlabel("k [Mpc$^{-1}$]")
             ax.text(
                 0.01,
-                0.85,
+                0.82,
                 f"{waveform}",
                 horizontalalignment="left",
                 verticalalignment="top",
@@ -117,7 +117,7 @@ def create_plot(mode):
             )
             ax.text(
                 0.99,
-                0.85,
+                0.82,
                 axes_names[ax],
                 horizontalalignment="right",
                 verticalalignment="top",
@@ -216,7 +216,7 @@ def create_plot(mode):
                 crossings[i][j] = crossing_value
 
             ax_end.set_xlim(right=k0 * resolutions[-1])
-            ax_end.set_ylim(0.8, 1.02)
+            ax_end.set_ylim(0.9, 1.02)
         if bottom_row:
             lines: List[Line2D] = ax_ics.get_lines()
             half_lines1 = []
