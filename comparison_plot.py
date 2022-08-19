@@ -185,7 +185,14 @@ def plot_comparison_hist(ax: Axes, file: Path, property: str, m_min=None, m_max=
             (30, 100): "$30<M<100$",
             (100, inf): "$100<M$",
         }
+        colours = {
+            (-inf, 30): 'C1',
+            (None, None): 'C0', 
+            (30, 100): 'C2',
+            (100, inf): 'C3',
+        }
         label = labels[(m_min, m_max)]
+        colour = colours[(m_min, m_max)]
         density = True
     if property == "match":
         hist_val, bin_edges = np.histogram(df[property], bins=bins, density=density)
@@ -194,6 +201,8 @@ def plot_comparison_hist(ax: Axes, file: Path, property: str, m_min=None, m_max=
             bin_centers.append((bin_edges[i] + bin_edges[i + 1]) / 2)
 
         ax.plot(bin_centers, hist_val, label=label)
+        median = np.median(df[property])
+        ax.axvline(median, linestyle=":", color=colour)
     else:
         patches: List[Polygon]
         hist_val, bin_edges, patches = ax.hist(
@@ -349,6 +358,10 @@ def compare_property(property, show: bool):
                 ax.set_yscale("log")
                 if is_bottom_row and is_left_col:
                     ax.legend()
+            if property == "Mvir":
+                ax.set_ylim(0.5, 1.5)
+            if property == "Vmax":
+                ax.set_ylim(0.7, 1.3)
             if not is_top_row:
                 last_ytick: YTick = ax.yaxis.get_major_ticks()[-1]
                 last_ytick.set_visible(False)
