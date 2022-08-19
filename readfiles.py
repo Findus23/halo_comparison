@@ -73,3 +73,24 @@ def read_halo_file(file: Path) -> DataFrame:
 
 def read_fof_file(path: Path):
     file = path / ""
+
+def read_g4_file(file: Path, zoom_type: str) -> Tuple[np.ndarray, np.ndarray]:
+    reference_file = h5py.File(file)
+
+    hubble_param = reference_file["Parameters"].attrs["HubbleParam"]
+    if zoom_type == 'pbh':
+        highres_parttype = 'PartType0'
+        lowres_parttype = 'PartType1'
+    elif zoom_type == 'cdm':
+        highres_parttype = 'PartType1'
+        lowres_parttype = 'PartType2'
+        highres_mass = reference_file['Header'].attrs['MassTable'][1] / hubble_param
+    else:
+        raise ValueError('Please select pbh or cdm as zoom_type!')
+
+    highres_coordinates = reference_file[highres_parttype]["Coordinates"][:] #all coordinates in Mpc/h without adaption!
+    lowres_coordinates = reference_file[lowres_parttype]["Coordinates"][:]
+
+    reference_file.close()
+
+    return highres_coordinates, lowres_coordinates

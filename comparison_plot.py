@@ -181,7 +181,7 @@ def plot_comparison_hist(ax: Axes, file: Path, property: str, m_min=None, m_max=
     if property == "match":
         labels = {
             (-inf, 30): "$M<30$",
-            (None, None): "$M$",
+            (None, None): "all $M$ $[10^{10}$ $\mathrm{M}_\odot]$",
             (30, 100): "$30<M<100$",
             (100, inf): "$100<M$",
         }
