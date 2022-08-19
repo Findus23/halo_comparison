@@ -288,7 +288,7 @@ fig, ax = plt.subplots(
     # sharex="all", sharey="all"
 )
 fig.subplots_adjust(hspace=0, wspace=0)
-labels = ["Haar (DB2)", "DB2", "DB4", "DB8", "DB16"]
+labels = ["Haar (DB2)", "DB4", "DB8", "DB16"]
 
 prange = [[0., 1.], [0., 3.], [0., 7.]]
 for p in prange:
