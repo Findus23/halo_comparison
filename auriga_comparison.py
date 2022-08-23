@@ -93,9 +93,9 @@ for dir in sorted(root_dir.glob("*")):
         if levelmax != 11:
             continue
 
-    input_file = dir / "output_0007.hdf5"
+    input_file = dir / "output_0009.hdf5"
     if mode == Mode.richings:
-        input_file = dir / "output_0002.hdf5"
+        input_file = dir / "output_0004.hdf5"
     if is_by_adrian or is_ramses:
         input_file = dir / "output_0000.hdf5"
         softening_length = None
