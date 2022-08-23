@@ -1,4 +1,3 @@
-import random
 from pathlib import Path
 from typing import List
 
@@ -8,7 +7,7 @@ import numpy as np
 from matplotlib.colors import LogNorm
 from scipy.interpolate import griddata
 
-from fix_hdf5_masses import calculate_T
+from temperatures import calculate_T
 from utils import create_figure
 
 
@@ -51,11 +50,7 @@ def create_2d_slice(
 
         print("after", coords.shape)
         print("calculating temperatures")
-        print(np.random.choice(energies,10))
         temperatures = np.array([calculate_T(u) for u in energies])
-        print(temperatures.min(),temperatures.max(),temperatures.mean())
-        print("done")
-        exit()
 
         other_axis = {"X": ("Y", "Z"), "Y": ("X", "Z"), "Z": ("X", "Y")}
         x_axis_label, y_axis_label = other_axis[axis]
