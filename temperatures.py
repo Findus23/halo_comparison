@@ -16,9 +16,6 @@ const_boltzmann_k_cgs = 1.380649e-16
 
 const_proton_mass = const_proton_mass_cgs / UnitMass_in_cgs
 const_boltzmann_k = const_boltzmann_k_cgs / UnitMass_in_cgs / UnitLength_in_cgs ** 2 * (UnitTime_in_cgs ** 2)
-print(const_proton_mass)
-print(const_boltzmann_k)
-print()
 
 
 @njit
@@ -33,7 +30,11 @@ def calculate_T(u):
     else:
         return T_transition
 
+
 if __name__ == "__main__":
+    print(const_proton_mass)
+    print(const_boltzmann_k)
+    print()
     internal_energies = [6.3726251e+02, 7.7903375e+02, 1.7425287e+04, 6.4113910e+04, 3.8831848e+04,
                          1.1073163e+03, 7.7394878e+03, 7.5230023e+04, 9.1036992e+04, 2.4060946e+00]
 

@@ -13,7 +13,7 @@ from matplotlib.axes import Axes
 from matplotlib.colors import LogNorm
 from matplotlib.figure import Figure
 
-from cic import cic_from_radius
+from cic import cic_from_radius, cic_range
 from halo_mass_profile import halo_mass_profile
 from nfw import fit_nfw
 from paths import auriga_dir, richings_dir
@@ -168,9 +168,6 @@ for dir in sorted(root_dir.glob("*")):
     #     linestyle="dotted"
     # )
 
-    if has_baryons:
-        create_2d_slice(input_file, center, property="InternalEnergies")
-
     centers[dir.name] = center
     if is_by_adrian:
         with reference_file.open("wb") as f:
@@ -230,6 +227,35 @@ for dir in sorted(root_dir.glob("*")):
         )
     )
     i += 1
+
+    if has_baryons:
+        fig3, axs_baryon = plt.subplots(nrows=1, ncols=5, sharex="all", sharey="all", figsize=(10, 4))
+        extent = [46, 52, 54, 60]  # xrange[0], xrange[-1], yrange[0], yrange[-1]
+        for ii, property in enumerate(["cic", "Densities", "Entropies", "InternalEnergies", "Temperatures"]):
+            print(property)
+            if property == "cic":
+                grid, _ = cic_range(X + center[0], Y + center[1], 1000, *extent, periodic=False)
+            else:
+                grid = create_2d_slice(input_file, center, property=property, extent=extent)
+            print("minmax", grid.min(), grid.max())
+            assert grid.min() != grid.max()
+            ax_baryon: Axes = axs_baryon[ii]
+            img = ax_baryon.imshow(
+                grid,
+                norm=LogNorm(),
+                interpolation="none",
+                origin="lower",
+                extent=extent,
+            )
+            ax_baryon.set_title(property)
+            # ax_baryon.set_xlabel("X")
+            # ax_baryon.set_ylabel("Y")
+            ax_baryon.set_aspect("equal")
+        fig3.suptitle(input_file.parent.stem)
+        fig3.tight_layout()
+        fig3.savefig(Path("~/tmp/slice.png").expanduser(), dpi=300)
+        plt.show()
+
     # plot_cic(
     #     rho, extent,
     #     title=str(dir.name)

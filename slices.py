@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List
+from typing import List, Tuple
 
 import h5py
 import matplotlib.pyplot as plt
@@ -11,56 +11,46 @@ from temperatures import calculate_T
 from utils import create_figure
 
 
+def filter_3d(
+        coords: np.ndarray, data: np.ndarray,
+        extent: List[float]
+) -> Tuple[np.ndarray, np.ndarray]:
+    filter = (
+            (extent[0] < coords[::, 0]) &
+            (coords[::, 0] < extent[1]) &
+
+            (extent[2] < coords[::, 1]) &
+            (coords[::, 1] < extent[3])
+    )
+    print("before", coords.shape)
+    data = data[filter]
+    coords = coords[filter]
+
+    print("after", coords.shape)
+    return coords, data
+
+
 def create_2d_slice(
-        input_file: Path, center: List[float], property: str, axis="Z", thickness=3, method="nearest"
-):
-    axis_names = ["X", "Y", "Z"]
-    cut_axis = axis_names.index(axis)
-    limits = {
-        "X": (46, 52),
-        "Y": (54, 60),
-        "Z": (center[cut_axis] - 10, center[cut_axis] + 10)
-    }
+        input_file: Path, center: List[float], extent,
+        property="InternalEnergies", method="nearest"
+) -> np.ndarray:
+    cut_axis = 2  # Z
     with h5py.File(input_file) as f:
         pt0 = f["PartType0"]
         coords = pt0["Coordinates"][:]
-        energies = pt0["InternalEnergies"][:]
-        entropies = pt0["Entropies"][:]
+        data = pt0[property if property != "Temperatures" else "InternalEnergies"][:]
 
-        print((center[cut_axis] - thickness < coords[::, cut_axis]).shape)
-        # in_slice = (center[cut_axis] - thickness < coords[::, cut_axis]) & (
-        #         coords[::, cut_axis] < center[cut_axis] + thickness)
-        # print("got slice")
-        # coords_in_slice = coords[in_slice]
-        # data_in_slice = data[in_slice]
-        filter = (
-                (limits["X"][0] < coords[::, 0]) &
-                (coords[::, 0] < limits["X"][1]) &
+        coords, data = filter_3d(coords, data, extent)
+        if property == "Temperatures":
+            print("calculating temperatures")
+            data = np.array([calculate_T(u) for u in data])
 
-                (limits["Y"][0] < coords[::, 1]) &
-                (coords[::, 1] < limits["Y"][1]) &
-
-                (limits["Z"][0] < coords[::, 2]) &
-                (coords[::, 2] < limits["Z"][1])
-        )
-        print("before", coords.shape)
-        energies = energies[filter]
-        entropies = entropies[filter]
-        coords = coords[filter]
-
-        print("after", coords.shape)
-        print("calculating temperatures")
-        temperatures = np.array([calculate_T(u) for u in energies])
-
-        other_axis = {"X": ("Y", "Z"), "Y": ("X", "Z"), "Z": ("X", "Y")}
-        x_axis_label, y_axis_label = other_axis[axis]
-        x_axis = axis_names.index(x_axis_label)
-        y_axis = axis_names.index(y_axis_label)
-        xrange = np.linspace(coords[::, x_axis].min(), coords[::, x_axis].max(), 1000)
-        yrange = np.linspace(coords[::, y_axis].min(), coords[::, y_axis].max(), 1000)
+        xrange = np.linspace(extent[0],extent[1], 1000)
+        yrange = np.linspace(extent[2],extent[3], 1000)
         gx, gy, gz = np.meshgrid(xrange, yrange, center[cut_axis])
         print("interpolating")
-        grid = griddata(coords, temperatures, (gx, gy, gz), method=method)[::, ::, 0]
+        grid = griddata(coords, data, (gx, gy, gz), method=method)[::, ::, 0]
+        return grid
         print(grid.shape)
         # stats, x_edge, y_edge, _ = binned_statistic_2d(
         #     coords_in_slice[::, x_axis],
@@ -85,6 +75,4 @@ def create_2d_slice(
         ax.set_aspect("equal")
         fig.colorbar(img, label="Temperatures")
         fig.tight_layout()
-        fig.savefig(Path("~/tmp/slice.png").expanduser(), dpi=300)
         plt.show()
-        exit()
