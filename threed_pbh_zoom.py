@@ -41,8 +41,13 @@ def plotnp3d(pl: Plotter, data: np.ndarray, color="white"):
     glrenderer.SetPass(blur_pass)
 
 if __name__ == "__main__":
-    input_file = cdm_zoom_dir / f"snapshot_{int(sys.argv[1]):03d}.hdf5"
-    highres_coords, lowres_coords = read_g4_file(input_file, 'cdm')
+    if sys.argv[1] == 'cdm':
+        input_file = cdm_zoom_dir / f"snapshot_{int(sys.argv[2]):03d}.hdf5" 
+    elif sys.argv[1] == 'pbh':
+        input_file = pbh_zoom_dir / f"snapshot_{int(sys.argv[2]):03d}.hdf5"
+    else: 
+        raise ValueError('Please select pbh or cdm as zoom_type!')
+    highres_coords, lowres_coords = read_g4_file(input_file, sys.argv[1])
 
     random_highres_selection = highres_coords[np.random.choice(highres_coords.shape[0], 100000, replace=False)]
     random_lowres_selection = lowres_coords[np.random.choice(lowres_coords.shape[0], 100000, replace=False)]
