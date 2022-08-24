@@ -13,6 +13,7 @@ from matplotlib.axes import Axes
 from matplotlib.colors import LogNorm
 from matplotlib.figure import Figure
 
+from cache import HDFCache
 from cic import cic_from_radius, cic_range
 from halo_mass_profile import halo_mass_profile
 from nfw import fit_nfw
@@ -29,6 +30,8 @@ class Mode(Enum):
 
 
 mode = Mode.richings
+
+cache = HDFCache(Path("auriga_cache.hdf5"))
 
 
 def dir_name_to_parameter(dir_name: str):
@@ -129,7 +132,6 @@ def main():
             h = 0.6777
             hr_coordinates, particles_meta, center = load_ramses_data(dir / "output_00007")
             df = pd.DataFrame(hr_coordinates, columns=["X", "Y", "Z"])
-            center = center
             softening_length = None
         else:
             df, particles_meta = read_file(input_file)
@@ -228,17 +230,23 @@ def main():
         i += 1
 
         if has_baryons:
+            interpolation_method = "nearest"  # "linear"
             fig3, axs_baryon = plt.subplots(nrows=1, ncols=5, sharex="all", sharey="all", figsize=(10, 4))
             extent = [46, 52, 54, 60]  # xrange[0], xrange[-1], yrange[0], yrange[-1]
+            extent = [42, 62, 50, 70]
             for ii, property in enumerate(["cic", "Densities", "Entropies", "InternalEnergies", "Temperatures"]):
-                print(property)
-                if property == "cic":
-                    grid, _ = cic_range(X + center[0], Y + center[1], 1000, *extent, periodic=False)
-                    grid = grid.T
+                key = f"grid_{property}_{interpolation_method}"
+                cached_grid = cache.get(key, str(input_file))
+                if cached_grid is not None and False:
+                    grid = cached_grid
                 else:
-                    grid = create_2d_slice(input_file, center, property=property, extent=extent)
-                print("minmax", grid.min(), grid.max())
-                assert grid.min() != grid.max()
+                    if property == "cic":
+                        grid, _ = cic_range(X + center[0], Y + center[1], 1000, *extent, periodic=False)
+                        grid = grid.T
+                    else:
+                        grid = create_2d_slice(input_file, center, property=property,
+                                               extent=extent, method=interpolation_method)
+                    cache.set(key, grid, str(input_file), compressed=True)
                 ax_baryon: Axes = axs_baryon[ii]
                 img = ax_baryon.imshow(
                     grid,
@@ -254,6 +262,7 @@ def main():
             fig3.suptitle(input_file.parent.stem)
             fig3.tight_layout()
             fig3.savefig(Path("~/tmp/slice.png").expanduser(), dpi=300)
+            # exit()
             plt.show()
 
         # plot_cic(

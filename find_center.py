@@ -1,26 +1,22 @@
 import hashlib
-import json
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
+from cache import HDFCache
 from utils import print_progress
 
-cache_file = "center_cache.json"
-
-try:
-    with open(cache_file, "r") as f:
-        center_cache = json.load(f)
-except FileNotFoundError:
-    center_cache = {}
+cache = HDFCache(Path("center_cache.hdf5"))
 
 
 def find_center(df: pd.DataFrame, center: np.ndarray, initial_radius=1):
-    # plt.figure()
+    plt.figure()
     all_particles = df[["X", "Y", "Z"]].to_numpy()
     hash = hashlib.sha256(np.ascontiguousarray(all_particles).data).hexdigest()
-    if hash in center_cache:
-        return np.array(center_cache[hash])
+    cached_center = cache.get(hash)
+    if cached_center is not None:
+        return np.array(cached_center)
     radius = initial_radius
     center_history = []
     i = 0
@@ -44,7 +40,5 @@ def find_center(df: pd.DataFrame, center: np.ndarray, initial_radius=1):
     # plt.colorbar(label="step")
     # plt.show()
     print()
-    center_cache[hash] = center.tolist()
-    with open(cache_file, "w") as f:
-        json.dump(center_cache, f)
+    cache.set(hash, center)
     return center
