@@ -15,6 +15,7 @@ from matplotlib.figure import Figure
 
 from cache import HDFCache
 from cic import cic_from_radius, cic_range
+from find_center import find_center
 from halo_mass_profile import halo_mass_profile
 from nfw import fit_nfw
 from paths import auriga_dir, richings_dir
@@ -55,7 +56,8 @@ def main():
     ax1: Axes = fig1.gca()
     fig2: Figure = plt.figure(figsize=figsize_from_page_fraction())
     ax2: Axes = fig2.gca()
-
+    fig4, axs_baryon = plt.subplots(nrows=3, ncols=5, sharex="all", sharey="all", figsize=(10, 4))
+    baryon_plot_counter = 0
     for ax in [ax1, ax2]:
         ax.set_xlabel(r"R [Mpc]")
     ax1.set_ylabel(r"M [$10^{10} \mathrm{M}_\odot$]")
@@ -92,7 +94,7 @@ def main():
             print(levelmin, levelmin_TF, levelmax)
             if not has_baryons:
                 continue
-            if levelmax != 11:
+            if is_ramses:
                 continue
 
         input_file = dir / "output_0009.hdf5"
@@ -150,6 +152,7 @@ def main():
             part_numbers.append(len(df) * particles_meta.particle_mass)
             # halo = halos.loc[1]
             center = np.array([halo.X, halo.Y, halo.Z])
+        center = find_center(df, center)
         log_radial_bins, bin_masses, bin_densities, center = halo_mass_profile(
             df, center, particles_meta, plot=False, num_bins=100, vmin=0.002, vmax=6.5
         )
@@ -231,13 +234,12 @@ def main():
 
         if has_baryons:
             interpolation_method = "nearest"  # "linear"
-            fig3, axs_baryon = plt.subplots(nrows=1, ncols=5, sharex="all", sharey="all", figsize=(10, 4))
             extent = [46, 52, 54, 60]  # xrange[0], xrange[-1], yrange[0], yrange[-1]
             extent = [42, 62, 50, 70]
             for ii, property in enumerate(["cic", "Densities", "Entropies", "InternalEnergies", "Temperatures"]):
                 key = f"grid_{property}_{interpolation_method}"
                 cached_grid = cache.get(key, str(input_file))
-                if cached_grid is not None and False:
+                if cached_grid is not None:
                     grid = cached_grid
                 else:
                     if property == "cic":
@@ -247,7 +249,7 @@ def main():
                         grid = create_2d_slice(input_file, center, property=property,
                                                extent=extent, method=interpolation_method)
                     cache.set(key, grid, str(input_file), compressed=True)
-                ax_baryon: Axes = axs_baryon[ii]
+                ax_baryon: Axes = axs_baryon[baryon_plot_counter, ii]
                 img = ax_baryon.imshow(
                     grid,
                     norm=LogNorm(),
@@ -259,11 +261,8 @@ def main():
                 # ax_baryon.set_xlabel("X")
                 # ax_baryon.set_ylabel("Y")
                 ax_baryon.set_aspect("equal")
-            fig3.suptitle(input_file.parent.stem)
-            fig3.tight_layout()
-            fig3.savefig(Path("~/tmp/slice.png").expanduser(), dpi=300)
             # exit()
-            plt.show()
+            baryon_plot_counter += 1
 
         # plot_cic(
         #     rho, extent,
@@ -298,9 +297,14 @@ def main():
     cbar_ax = fig3.add_axes([0.85, 0.05, 0.05, 0.9])
     fig3.colorbar(img, cax=cbar_ax)
 
+
     fig1.savefig(Path(f"~/tmp/auriga1.pdf").expanduser())
     fig2.savefig(Path(f"~/tmp/auriga2.pdf").expanduser())
     fig3.savefig(Path("~/tmp/auriga3.pdf").expanduser())
+
+    fig4.tight_layout()
+    fig4.savefig(Path("~/tmp/slice.png").expanduser(), dpi=300)
+
     pprint(centers)
     plt.show()
     print(part_numbers)

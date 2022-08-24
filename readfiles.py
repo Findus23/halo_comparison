@@ -21,9 +21,14 @@ def read_file(file: Path) -> Tuple[pd.DataFrame, ParticlesMeta]:
         reference_file = h5py.File(file)
         has_fof = "FOFGroupIDs" in reference_file["PartType1"]
 
-        masses = reference_file["PartType1"]["Masses"]
-        if not np.all(masses == masses[0]):
-            raise ValueError("only equal mass particles are supported for now")
+        try:
+            masses = reference_file["PartType1"]["Masses"]
+            if not np.all(masses == masses[0]):
+                raise ValueError("only equal mass particles are supported for now")
+            meta = ParticlesMeta(particle_mass=masses[0])
+
+        except KeyError:
+            meta = ParticlesMeta(particle_mass=0)
         df = pd.DataFrame(
             reference_file["PartType1"]["Coordinates"], columns=["X", "Y", "Z"]
         )
@@ -43,7 +48,6 @@ def read_file(file: Path) -> Tuple[pd.DataFrame, ParticlesMeta]:
         if has_fof:
             print("sorting")
             df.sort_values("FOFGroupIDs", inplace=True)
-        meta = ParticlesMeta(particle_mass=masses[0])
         print("saving cache")
         with meta_cache_file.open("wb") as f:
             pickle.dump(meta, f)
@@ -74,23 +78,28 @@ def read_halo_file(file: Path) -> DataFrame:
 def read_fof_file(path: Path):
     file = path / ""
 
-def read_g4_file(file: Path, zoom_type: str) -> Tuple[np.ndarray, np.ndarray]:
-    reference_file = h5py.File(file)
 
-    hubble_param = reference_file["Parameters"].attrs["HubbleParam"]
-    if zoom_type == 'pbh':
-        highres_parttype = 'PartType0'
-        lowres_parttype = 'PartType1'
-    elif zoom_type == 'cdm':
-        highres_parttype = 'PartType1'
-        lowres_parttype = 'PartType2'
-        highres_mass = reference_file['Header'].attrs['MassTable'][1] / hubble_param
-    else:
-        raise ValueError('Please select pbh or cdm as zoom_type!')
+def read_g4_file(file: Path, zoom_type: str) -> Tuple[np.ndarray, np.ndarray, float, float]:
+    with h5py.File(file) as reference_file:
 
-    highres_coordinates = reference_file[highres_parttype]["Coordinates"][:] #all coordinates in Mpc/h without adaption!
-    lowres_coordinates = reference_file[lowres_parttype]["Coordinates"][:]
+        hubble_param = reference_file["Parameters"].attrs["HubbleParam"]
+        masstable = reference_file['Header'].attrs['MassTable']
+        if zoom_type == 'pbh':
+            highres_parttype = 'PartType0'
+            lowres_parttype = 'PartType1'
+            highres_mass = masstable[0] / hubble_param
+            lowres_mass = masstable[1] / hubble_param
 
-    reference_file.close()
+        elif zoom_type == 'cdm':
+            highres_parttype = 'PartType1'
+            lowres_parttype = 'PartType2'
+            highres_mass = masstable[1] / hubble_param
+            lowres_mass = masstable[2] / hubble_param
+        else:
+            raise ValueError('Please select pbh or cdm as zoom_type!')
 
-    return highres_coordinates, lowres_coordinates
+        # all coordinates in Mpc/h without adaption!
+        highres_coordinates = reference_file[highres_parttype]["Coordinates"][:]
+        lowres_coordinates = reference_file[lowres_parttype]["Coordinates"][:]
+
+    return highres_coordinates, lowres_coordinates, highres_mass, lowres_mass

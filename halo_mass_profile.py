@@ -24,7 +24,6 @@ def halo_mass_profile(
     plot=False,
     num_bins=30,
 ):
-    center = find_center(particles, center)
     positions = particles[["X", "Y", "Z"]].to_numpy()
     distances = np.linalg.norm(positions - center, axis=1)
     group_radius = distances.max()

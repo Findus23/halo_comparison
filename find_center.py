@@ -11,9 +11,13 @@ cache = HDFCache(Path("center_cache.hdf5"))
 
 
 def find_center(df: pd.DataFrame, center: np.ndarray, initial_radius=1):
-    plt.figure()
+    # plt.figure()
     all_particles = df[["X", "Y", "Z"]].to_numpy()
-    hash = hashlib.sha256(np.ascontiguousarray(all_particles).data).hexdigest()
+    hashdata = hashlib.sha256()
+    hashdata.update(np.ascontiguousarray(all_particles).data)
+    hashdata.update(np.ascontiguousarray(center).data)
+    hashdata.update(np.array(initial_radius))
+    hash = hashdata.hexdigest()
     cached_center = cache.get(hash)
     if cached_center is not None:
         return np.array(cached_center)
@@ -31,7 +35,7 @@ def find_center(df: pd.DataFrame, center: np.ndarray, initial_radius=1):
         center_of_mass = in_radius_particles.mean(axis=0)
         new_center = (center_of_mass + center) / 2
         shift = np.linalg.norm(center - new_center)
-        radius = max(2 * shift, radius * 0.9)
+        radius = max(0.8 * shift, radius * 0.9)
         center = new_center
         i += 1
     center_history = np.array(center_history)
