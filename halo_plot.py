@@ -129,7 +129,10 @@ def main():
 
             #     break
             # break
-    ylabels = [item for item in waveforms for _ in range(2)]
+    if is_box:
+        ylabels = waveforms
+    else:
+        ylabels = [item for item in waveforms for _ in range(2)]
     rowcolumn_labels(axes, ylabels, isrow=True)
     rowcolumn_labels(axes, resolutions, isrow=False)
 
