@@ -17,7 +17,7 @@ def cic_comparison(pbh_high_coord, ref_high_coord,center):
     i = 0
     for coord in [ref_high_coord, pbh_high_coord]:
         rho, extent = cic_from_radius(
-            coord[::, 0], coord[::, 2], 3000, center[0], center[2], .2, periodic=False
+            coord[::, 0], coord[::, 1], 3000, center[0], center[1], 2, periodic=False
         )
         rhos.append(rho)
 
@@ -32,16 +32,17 @@ def cic_comparison(pbh_high_coord, ref_high_coord,center):
 
 def main():
     ref_data = read_g4_file(
-        pbh_dir / "CDM-L50-N128" / "snapshot_039.hdf5",
+        pbh_dir / "cdm" / "snapshot_005.hdf5",
         zoom_type="cdm")
     pbh_data = read_g4_file(
-        pbh_dir / "DM-L50-N128" / "snapshot_039.hdf5",
+        pbh_dir / "10000sigma" / "snapshot_005.hdf5",
         zoom_type="pbh")
+    center = [30, 32, 30]
+    cic_comparison(ref_data[0], pbh_data[0],center)
     fig1: Figure = plt.figure(figsize=figsize_from_page_fraction())
     ax1: Axes = fig1.gca()
     fig2: Figure = plt.figure(figsize=figsize_from_page_fraction())
     ax2: Axes = fig2.gca()
-    center = [32.423177, 37.255220, 36.026005]
     centered = False
     for data in [ref_data, pbh_data]:
         highres_coords, lowres_coords, highres_mass, lowres_mass = data
