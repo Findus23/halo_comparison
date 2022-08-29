@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 from pprint import pprint
+from subprocess import run
 from typing import List, Tuple
 
 import h5py
@@ -12,6 +13,7 @@ from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
 from matplotlib.colors import LogNorm
 from matplotlib.figure import Figure
+from matplotlib.image import AxesImage
 
 from cache import HDFCache
 from cic import cic_from_radius, cic_range
@@ -19,7 +21,7 @@ from find_center import find_center
 from halo_mass_profile import halo_mass_profile
 from nfw import fit_nfw
 from paths import auriga_dir, richings_dir
-from ramses import load_ramses_data
+from ramses import load_ramses_data, get_slice_argument, load_slice_data
 from readfiles import read_file, read_halo_file, ParticlesMeta
 from slices import create_2d_slice
 from utils import read_swift_config, print_wall_time, figsize_from_page_fraction
@@ -33,6 +35,11 @@ class Mode(Enum):
 mode = Mode.richings
 
 cache = HDFCache(Path("auriga_cache.hdf5"))
+
+if mode == Mode.richings:
+    boxsize = 67.77
+else:
+    boxsize = None  # not yet needed
 
 
 def dir_name_to_parameter(dir_name: str):
@@ -56,7 +63,7 @@ def main():
     ax1: Axes = fig1.gca()
     fig2: Figure = plt.figure(figsize=figsize_from_page_fraction())
     ax2: Axes = fig2.gca()
-    fig4, axs_baryon = plt.subplots(nrows=3, ncols=5, sharex="all", sharey="all", figsize=(10, 4))
+    fig4, axs_baryon = plt.subplots(nrows=2, ncols=4, sharex="all", sharey="all", figsize=(10, 4))
     baryon_plot_counter = 0
     for ax in [ax1, ax2]:
         ax.set_xlabel(r"R [Mpc]")
@@ -94,8 +101,10 @@ def main():
             print(levelmin, levelmin_TF, levelmax)
             if not has_baryons:
                 continue
-            if is_ramses:
+            if levelmax != 11:
                 continue
+            # if not is_ramses:
+            #     continue
 
         input_file = dir / "output_0009.hdf5"
         if mode == Mode.richings:
@@ -132,7 +141,7 @@ def main():
             softening_length = None
         elif "ramses" in dir.name:
             h = 0.6777
-            hr_coordinates, particles_meta, center = load_ramses_data(dir / "output_00007")
+            hr_coordinates, particles_meta, center = load_ramses_data(dir / "output_00009")
             df = pd.DataFrame(hr_coordinates, columns=["X", "Y", "Z"])
             softening_length = None
         else:
@@ -234,23 +243,52 @@ def main():
 
         if has_baryons:
             interpolation_method = "nearest"  # "linear"
-            extent = [46, 52, 54, 60]  # xrange[0], xrange[-1], yrange[0], yrange[-1]
-            extent = [42, 62, 50, 70]
-            for ii, property in enumerate(["cic", "Densities", "Entropies", "InternalEnergies", "Temperatures"]):
-                key = f"grid_{property}_{interpolation_method}"
+            radius = 10
+            # xrange[0], xrange[-1], yrange[0], yrange[-1]
+            extent = [center[0] - radius, center[0] + radius,
+                      center[1] - radius, center[1] + radius]
+            # extent = [42, 62, 50, 70]
+            ramses_done = False
+            for ii, property in enumerate(["cic", "Densities", "Entropies", "Temperatures"]):
+                print("property:", property)
+                key = f"grid_{property}_{interpolation_method}_{radius}"
                 cached_grid = cache.get(key, str(input_file))
-                if cached_grid is not None:
+                if cached_grid is not None and not is_ramses:
                     grid = cached_grid
                 else:
                     if property == "cic":
-                        grid, _ = cic_range(X + center[0], Y + center[1], 1000, *extent, periodic=False)
-                        grid = grid.T
+                        rho, _ = cic_range(X + center[0], Y + center[1], 1000, *extent, periodic=False)
+                        # TODO: filter in Z-axis
+                        grid = 1.1 + rho.T
                     else:
-                        grid = create_2d_slice(input_file, center, property=property,
-                                               extent=extent, method=interpolation_method)
+                        if not is_ramses:
+                            grid = create_2d_slice(input_file, center, property=property,
+                                                   extent=extent, method=interpolation_method)
+                        else:
+                            frac_center = center / 100
+                            frac_extent = np.array(extent) / 100
+
+                            print(frac_extent)
+                            print(frac_center)
+                            args, imager_dir = get_slice_argument(frac_extent, frac_center, dir / "output_00009",
+                                                                  depth=.001)
+                            print(" ".join(args))
+                            if not ramses_done:
+                                run(args, cwd=imager_dir)
+                                ramses_done = True
+                            property_map = {
+                                "Densities": "rhomap",
+                                "Entropies": "Smap",  # TODO: check
+                                "InternalEnergies": None,
+                                "Temperatures": "Tmap"
+
+                            }
+
+                            fname = imager_dir / f"snapshot_{property_map[property]}_zproj_zobs-0p00.bin"
+                            grid = load_slice_data(fname).T
                     cache.set(key, grid, str(input_file), compressed=True)
                 ax_baryon: Axes = axs_baryon[baryon_plot_counter, ii]
-                img = ax_baryon.imshow(
+                img: AxesImage = ax_baryon.imshow(
                     grid,
                     norm=LogNorm(),
                     interpolation="none",
@@ -289,6 +327,7 @@ def main():
             norm=LogNorm(vmin=vmin_scaled, vmax=vmax_scaled),
             extent=extent,
             origin="lower",
+            interpolation="none"
         )
         ax.set_title(result.title)
 
@@ -296,7 +335,6 @@ def main():
     fig3.subplots_adjust(right=0.825)
     cbar_ax = fig3.add_axes([0.85, 0.05, 0.05, 0.9])
     fig3.colorbar(img, cax=cbar_ax)
-
 
     fig1.savefig(Path(f"~/tmp/auriga1.pdf").expanduser())
     fig2.savefig(Path(f"~/tmp/auriga2.pdf").expanduser())
