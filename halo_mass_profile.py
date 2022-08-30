@@ -1,13 +1,14 @@
 import sys
 from pathlib import Path
+from typing import Dict
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
+from scipy.spatial import KDTree
 
-from find_center import find_center
 from readfiles import ParticlesMeta, read_file, read_halo_file
 
 
@@ -16,19 +17,19 @@ def V(r):
 
 
 def halo_mass_profile(
-    particles: pd.DataFrame,
-    center: np.ndarray,
-    particles_meta: ParticlesMeta,
-    vmin: float,
-    vmax: float,
-    plot=False,
-    num_bins=30,
+        particles: pd.DataFrame,
+        center: np.ndarray,
+        particles_meta: ParticlesMeta,
+        rmin: float,
+        rmax: float,
+        plot=False,
+        num_bins=30,
 ):
     positions = particles[["X", "Y", "Z"]].to_numpy()
     distances = np.linalg.norm(positions - center, axis=1)
     group_radius = distances.max()
 
-    log_radial_bins = np.geomspace(vmin, vmax, num_bins)
+    log_radial_bins = np.geomspace(rmin, rmax, num_bins)
 
     bin_masses = []
     bin_densities = []
@@ -62,6 +63,31 @@ def halo_mass_profile(
         plt.show()
 
     return log_radial_bins, bin_masses, bin_densities, center
+
+
+def property_profile(positions: np.ndarray, center: np.ndarray, properties: Dict[str, np.ndarray],
+                     rmin: float, rmax: float, num_bins: int):
+    print("building KDTree")
+    tree = KDTree(positions)
+    print("done")
+
+    log_radial_bins = np.geomspace(rmin, rmax, num_bins)
+
+    particles_inner_ring = set(tree.query_ball_point(center, rmin))
+    means = {}
+    for key in properties.keys():
+        means[key] = []
+    for r in log_radial_bins[1:]:
+        print(r)
+        particles_inside = set(tree.query_ball_point(center, r))
+        particles_in_ring = particles_inside - particles_inner_ring
+        for property, property_values in properties.items():
+            prop_in_ring = property_values[list(particles_in_ring)]
+            mean_in_ring = np.mean(prop_in_ring)
+            means[property].append(mean_in_ring)
+        particles_inner_ring = particles_inside
+
+    return log_radial_bins, means
 
 
 if __name__ == "__main__":

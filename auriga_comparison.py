@@ -9,16 +9,21 @@ from typing import List, Tuple
 import h5py
 import numpy as np
 import pandas as pd
+import pynbody
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
 from matplotlib.colors import LogNorm
 from matplotlib.figure import Figure
 from matplotlib.image import AxesImage
+from numpy import log10
+from pynbody.array import SimArray
+from pynbody.snapshot import FamilySubSnap
+from pynbody.snapshot.ramses import RamsesSnap
 
 from cache import HDFCache
 from cic import cic_from_radius, cic_range
 from find_center import find_center
-from halo_mass_profile import halo_mass_profile
+from halo_mass_profile import halo_mass_profile, property_profile
 from nfw import fit_nfw
 from paths import auriga_dir, richings_dir
 from ramses import load_ramses_data, get_slice_argument, load_slice_data
@@ -64,6 +69,10 @@ def main():
     fig2: Figure = plt.figure(figsize=figsize_from_page_fraction())
     ax2: Axes = fig2.gca()
     fig4, axs_baryon = plt.subplots(nrows=2, ncols=4, sharex="all", sharey="all", figsize=(10, 4))
+    fig5: Figure = plt.figure(figsize=figsize_from_page_fraction())
+    ax5: Axes = fig5.gca()
+    fig6: Figure = plt.figure(figsize=figsize_from_page_fraction())
+    ax6: Axes = fig6.gca()
     baryon_plot_counter = 0
     for ax in [ax1, ax2]:
         ax.set_xlabel(r"R [Mpc]")
@@ -103,8 +112,8 @@ def main():
                 continue
             if levelmax != 11:
                 continue
-            # if not is_ramses:
-            #     continue
+            if not is_ramses:
+                continue
 
         input_file = dir / "output_0009.hdf5"
         if mode == Mode.richings:
@@ -163,7 +172,7 @@ def main():
             center = np.array([halo.X, halo.Y, halo.Z])
         center = find_center(df, center)
         log_radial_bins, bin_masses, bin_densities, center = halo_mass_profile(
-            df, center, particles_meta, plot=False, num_bins=100, vmin=0.002, vmax=6.5
+            df, center, particles_meta, plot=False, num_bins=100, rmin=0.002, rmax=6.5
         )
         i_min_border = np.argmax(
             0.01 < log_radial_bins
@@ -243,6 +252,7 @@ def main():
 
         if has_baryons:
             interpolation_method = "nearest"  # "linear"
+            bary_file = dir / "output_00009" if is_ramses else input_file
             radius = 10
             # xrange[0], xrange[-1], yrange[0], yrange[-1]
             extent = [center[0] - radius, center[0] + radius,
@@ -252,7 +262,7 @@ def main():
             for ii, property in enumerate(["cic", "Densities", "Entropies", "Temperatures"]):
                 print("property:", property)
                 key = f"grid_{property}_{interpolation_method}_{radius}"
-                cached_grid = cache.get(key, str(input_file))
+                cached_grid = cache.get(key, str(bary_file))
                 if cached_grid is not None and not is_ramses:
                     grid = cached_grid
                 else:
@@ -262,7 +272,7 @@ def main():
                         grid = 1.1 + rho.T
                     else:
                         if not is_ramses:
-                            grid = create_2d_slice(input_file, center, property=property,
+                            grid = create_2d_slice(bary_file, center, property=property,
                                                    extent=extent, method=interpolation_method)
                         else:
                             frac_center = center / 100
@@ -270,7 +280,7 @@ def main():
 
                             print(frac_extent)
                             print(frac_center)
-                            args, imager_dir = get_slice_argument(frac_extent, frac_center, dir / "output_00009",
+                            args, imager_dir = get_slice_argument(frac_extent, frac_center, bary_file,
                                                                   depth=.001)
                             print(" ".join(args))
                             if not ramses_done:
@@ -301,6 +311,34 @@ def main():
                 ax_baryon.set_aspect("equal")
             # exit()
             baryon_plot_counter += 1
+
+            if not is_ramses:  # TODO
+                continue
+            s: RamsesSnap = pynbody.load(str(bary_file))
+            gas_data: FamilySubSnap = s.gas
+            temperature_array: SimArray = gas_data["temp"]
+            p_array: SimArray = gas_data["p"]
+            rho_array: SimArray = gas_data["rho"]
+            coord_array: SimArray = gas_data["pos"]
+            coordinates = np.asarray(coord_array.in_units("Mpc"))
+            properties = {
+                "temperature": np.asarray(temperature_array.in_units("K")),
+                "entropy": np.asarray(log10(p_array / rho_array ** (5 / 3))),
+            }
+
+            r, prof = property_profile(coordinates, center, properties, num_bins=100, rmin=0.002, rmax=6.5)
+            ax5.loglog(r[1:], prof["temperature"])
+            ax6.semilogx(r[1:], prof["entropy"])
+            plt.show()
+            exit()
+            # # quick baryon profiles using pynbody
+            # s.gas["pos"] -= np.asarray(center)
+            # print("profile")
+            # p = Profile(s.gas, ndim=3)
+            # fig, ax = create_figure()
+            # ax5.plot(p['rbins'], p['density'], 'k')
+            # plt.show()
+            # exit()
 
         # plot_cic(
         #     rho, extent,
