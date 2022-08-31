@@ -1,12 +1,15 @@
 from pathlib import Path
 from typing import List
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pynbody
+from pynbody.analysis.profile import Profile
 from pynbody.array import SimArray
 from pynbody.snapshot.ramses import RamsesSnap
 
 from readfiles import ParticlesMeta
+from utils import create_figure
 
 
 def load_ramses_data(ramses_dir: Path):
@@ -15,7 +18,12 @@ def load_ramses_data(ramses_dir: Path):
     coord_array: SimArray = s.dm["pos"]
     a = s.properties["a"]
     print("RAMSES a", a)
-
+    # p = Profile(s.gas, ndim=3)
+    # s.gas["pos"]-=
+    # fig,ax=create_figure()
+    # ax.plot(p['rbins'], p['density'], 'k')
+    # plt.show()
+    # exit()
     masses = np.asarray(mass_array.in_units("1e10 Msol"))
     high_res_mass = np.amin(np.unique(masses))  # get lowest mass of particles
     is_high_res_particle = masses == high_res_mass
@@ -25,6 +33,7 @@ def load_ramses_data(ramses_dir: Path):
 
     particles_meta = ParticlesMeta(particle_mass=high_res_mass)
     center = np.median(hr_coordinates, axis=0)
+
     return hr_coordinates, particles_meta, center
 
 

@@ -4,12 +4,12 @@ from typing import Dict
 
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
-from scipy.spatial import KDTree
 
 from readfiles import ParticlesMeta, read_file, read_halo_file
+from temperatures import calculate_T
+from utils import print_progress
 
 
 def V(r):
@@ -17,7 +17,7 @@ def V(r):
 
 
 def halo_mass_profile(
-        particles: pd.DataFrame,
+        positions: np.ndarray,
         center: np.ndarray,
         particles_meta: ParticlesMeta,
         rmin: float,
@@ -25,9 +25,7 @@ def halo_mass_profile(
         plot=False,
         num_bins=30,
 ):
-    positions = particles[["X", "Y", "Z"]].to_numpy()
     distances = np.linalg.norm(positions - center, axis=1)
-    group_radius = distances.max()
 
     log_radial_bins = np.geomspace(rmin, rmax, num_bins)
 
@@ -65,27 +63,31 @@ def halo_mass_profile(
     return log_radial_bins, bin_masses, bin_densities, center
 
 
-def property_profile(positions: np.ndarray, center: np.ndarray, properties: Dict[str, np.ndarray],
+def property_profile(positions: np.ndarray, center: np.ndarray, masses: np.ndarray, properties: Dict[str, np.ndarray],
                      rmin: float, rmax: float, num_bins: int):
-    print("building KDTree")
-    tree = KDTree(positions)
-    print("done")
-
+    distances = np.linalg.norm(positions - center, axis=1)
     log_radial_bins = np.geomspace(rmin, rmax, num_bins)
 
-    particles_inner_ring = set(tree.query_ball_point(center, rmin))
     means = {}
     for key in properties.keys():
         means[key] = []
-    for r in log_radial_bins[1:]:
-        print(r)
-        particles_inside = set(tree.query_ball_point(center, r))
-        particles_in_ring = particles_inside - particles_inner_ring
+    for k in range(num_bins - 1):
+        bin_start = log_radial_bins[k]
+        bin_end = log_radial_bins[k + 1]
+        print_progress(k, num_bins - 2, bin_end)
+        in_bin = np.where((bin_start < distances) & (distances < bin_end))[0]
+        masses_in_ring = masses[in_bin]
         for property, property_values in properties.items():
-            prop_in_ring = property_values[list(particles_in_ring)]
-            mean_in_ring = np.mean(prop_in_ring)
+            if property == "InternalEnergies":
+                continue
+            prop_in_ring = property_values[in_bin]
+            if property == "Temperatures":
+                prop_in_ring = np.array([calculate_T(u) for u in prop_in_ring])
+
+            # mean_in_ring_unweighted = np.mean(prop_in_ring)
+            mean_in_ring = (prop_in_ring * masses_in_ring).sum() / masses_in_ring.sum()
+            # print(mean_in_ring_unweighted, mean_in_ring)
             means[property].append(mean_in_ring)
-        particles_inner_ring = particles_inside
 
     return log_radial_bins, means
 
@@ -105,4 +107,4 @@ if __name__ == "__main__":
 
     halo = df_halos.loc[halo_id]
 
-    halo_mass_profile(particles_in_halo, halo, particles_meta, plot=True)
+    halo_mass_profile(particles_in_halo[["X", "Y", "Z"]].to_numpy(), halo, particles_meta, plot=True)
