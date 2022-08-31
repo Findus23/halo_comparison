@@ -38,6 +38,7 @@ def get_slice_argument(extent: List[float], center: List[float], ramses_dir: Pat
                        depth: float):
     xmin, xmax, ymin, ymax = extent
     _, _, zcenter = center
+    interpolate=interpolation_method=="linear"
     arguments = {
         "x": (xmin + xmax) / 2,
         "y": (ymin + ymax) / 2,
@@ -45,14 +46,14 @@ def get_slice_argument(extent: List[float], center: List[float], ramses_dir: Pat
         "w": xmax - xmin,
         "h": ymax - ymin,
         "d": depth,
-        "l": 12
+        "l": 14 if interpolate else 12
     }
     from paths import ramses_imager
     args = [str(ramses_imager)]
     for k, v in arguments.items():
         args.append(f"-{k} {v}")
 
-    if interpolation_method == "linear":
+    if interpolate:
         args.append("-i")
 
     args.append(str(ramses_dir / "info_00009.txt"))
