@@ -1,15 +1,12 @@
 from pathlib import Path
 from typing import List
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pynbody
-from pynbody.analysis.profile import Profile
 from pynbody.array import SimArray
 from pynbody.snapshot.ramses import RamsesSnap
 
 from readfiles import ParticlesMeta
-from utils import create_figure
 
 
 def load_ramses_data(ramses_dir: Path):
@@ -37,7 +34,8 @@ def load_ramses_data(ramses_dir: Path):
     return hr_coordinates, particles_meta, center
 
 
-def get_slice_argument(extent: List[float], center: List[float], ramses_dir: Path, depth: float):
+def get_slice_argument(extent: List[float], center: List[float], ramses_dir: Path, interpolation_method: str,
+                       depth: float):
     xmin, xmax, ymin, ymax = extent
     _, _, zcenter = center
     arguments = {
@@ -53,6 +51,9 @@ def get_slice_argument(extent: List[float], center: List[float], ramses_dir: Pat
     args = [str(ramses_imager)]
     for k, v in arguments.items():
         args.append(f"-{k} {v}")
+
+    if interpolation_method == "linear":
+        args.append("-i")
 
     args.append(str(ramses_dir / "info_00009.txt"))
     return args, ramses_imager.parent

@@ -30,7 +30,7 @@ from paths import auriga_dir, richings_dir
 from ramses import load_ramses_data, get_slice_argument, load_slice_data
 from readfiles import read_file, read_halo_file, ParticlesMeta
 from slices import create_2d_slice, filter_3d
-from utils import read_swift_config, print_wall_time, figsize_from_page_fraction
+from utils import read_swift_config, figsize_from_page_fraction
 
 
 class Mode(Enum):
@@ -142,7 +142,7 @@ def main():
         else:
             try:
                 swift_conf = read_swift_config(dir)
-                print_wall_time(dir)
+                # print_wall_time(dir)
             except FileNotFoundError:
                 continue
             gravity_conf = swift_conf["Gravity"]
@@ -313,7 +313,8 @@ def main():
                     print("grid not yet cached, calculating now")
                     if property == "cic":
                         coords_in_box = filter_3d(coords, extent, zlimit=(center[2] - .1, center[2] + .1))
-                        rho, _ = cic_range(coords_in_box[::, 0], coords_in_box[::, 1], resolution, *extent, periodic=False)
+                        rho, _ = cic_range(coords_in_box[::, 0], coords_in_box[::, 1], resolution, *extent,
+                                           periodic=False)
                         grid = 1.1 + rho.T
                     else:
                         if not is_ramses:
@@ -330,7 +331,8 @@ def main():
                             print(frac_center)
                             args, imager_dir = get_slice_argument(
                                 frac_extent, frac_center,
-                                bary_file, depth=.001
+                                bary_file,interpolation_method,
+                                depth=.001
                             )
                             print(" ".join(args))
                             if not ramses_done:
