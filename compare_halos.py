@@ -28,6 +28,7 @@ class Counterset:
     bad_match: int = 0
     negative_cnfw: int = 0
     too_small_halo: int = 0
+    not_a_field_halo: int = 0
     checking_50: int = 0
     checking_150: int = 0
     num_matches: int = 0
@@ -119,6 +120,10 @@ def compare_halo_resolutions(
             print(f"halo is too small ({len(halo_particle_ids)}")
             print("skipping")
             counters.too_small_halo += 1
+            continue
+        if ref_halo.Structuretype != 10:
+            print("not a field halo")
+            counters.not_a_field_halo += 1
             continue
         print("LEN", len(halo_particle_ids), ref_halo.Mass_tot)
         offset_x, offset_y = ref_halo.X, ref_halo.Y
