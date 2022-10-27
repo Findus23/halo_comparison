@@ -28,6 +28,7 @@ class Counterset:
     bad_match: int = 0
     negative_cnfw: int = 0
     too_small_halo: int = 0
+    not_a_field_halo: int = 0
     checking_50: int = 0
     checking_150: int = 0
     num_matches: int = 0
@@ -45,16 +46,16 @@ def apply_offset(value, offset):
 
 
 def compare_halo_resolutions(
-    ref_waveform: str,
-    comp_waveform: str,
-    reference_resolution: int,
-    comparison_resolution: int,
-    plot=False,
-    plot3d=False,
-    plot_cic=False,
-    single=False,
-    velo_halos=False,
-    force=False,
+        ref_waveform: str,
+        comp_waveform: str,
+        reference_resolution: int,
+        comparison_resolution: int,
+        plot=False,
+        plot3d=False,
+        plot_cic=False,
+        single=False,
+        velo_halos=False,
+        force=False,
 ):
     reference_dir = base_dir / f"{ref_waveform}_{reference_resolution}_100"
     comparison_dir = base_dir / f"{comp_waveform}_{comparison_resolution}_100/"
@@ -119,6 +120,10 @@ def compare_halo_resolutions(
             print(f"halo is too small ({len(halo_particle_ids)}")
             print("skipping")
             counters.too_small_halo += 1
+            continue
+        if ref_halo.Structuretype != 10:
+            print("not a field halo")
+            counters.not_a_field_halo += 1
             continue
         print("LEN", len(halo_particle_ids), ref_halo.Mass_tot)
         offset_x, offset_y = ref_halo.X, ref_halo.Y
@@ -243,9 +248,9 @@ def compare_halo_resolutions(
             mass_factor_limit = 5
 
             if not (
-                1 / mass_factor_limit
-                < (comp_halo_masses[halo_id] / ref_halo_mass)
-                < mass_factor_limit
+                    1 / mass_factor_limit
+                    < (comp_halo_masses[halo_id] / ref_halo_mass)
+                    < mass_factor_limit
             ):
                 # print("mass not similar, skipping")
                 num_skipped_for_mass += 1
@@ -258,9 +263,9 @@ def compare_halo_resolutions(
 
             # similarity = len(shared_particles) / len(union_particles)
             similarity = len(shared_particles) / (
-                len(halo_particle_ids)
-                + len(particle_ids_in_comp_halo)
-                - len(shared_particles)
+                    len(halo_particle_ids)
+                    + len(particle_ids_in_comp_halo)
+                    - len(shared_particles)
             )
             # assert similarity_orig == similarity
             # print(shared_size)
@@ -295,6 +300,10 @@ def compare_halo_resolutions(
             if plot3d:
                 plotdf3d(pl, df, color="#fed9a6")  # light orange
             if similarity > best_halo_match:
+                comp_halo_in_comparison: pd.Series = df_comp_halo.loc[halo_id]
+                if comp_halo_in_comparison.Structuretype != ref_halo.Structuretype:
+                    print("different Structuretype")
+                    continue
                 best_halo_match = similarity
                 best_halo = halo_id
         print(f"skipped {num_skipped_for_mass} halos due to mass ratio")
@@ -312,11 +321,11 @@ def compare_halo_resolutions(
             [ref_halo.add_prefix("ref_"), comp_halo.add_prefix("comp_")]
         )
         distance = (
-            linalg.norm(
-                np.array([ref_halo.X, ref_halo.Y, ref_halo.Z])
-                - np.array([comp_halo.X, comp_halo.Y, comp_halo.Z])
-            )
-            / ref_halo.Rvir
+                linalg.norm(
+                    np.array([ref_halo.X, ref_halo.Y, ref_halo.Z])
+                    - np.array([comp_halo.X, comp_halo.Y, comp_halo.Z])
+                )
+                / ref_halo.Rvir
         )
         halo_data["distance"] = distance
         halo_data["match"] = best_halo_match
@@ -353,7 +362,7 @@ def precalculate_halo_membership(df_comp, df_comp_halo):
         print_progress(i, len(df_comp_halo), halo["Sizes"])
         size = int(halo["Sizes"])
         halo_id = int(i)
-        halo_particles = df_comp.iloc[pointer : pointer + size]
+        halo_particles = df_comp.iloc[pointer: pointer + size]
 
         # check_id = halo_particles["FOFGroupIDs"].to_numpy()
         # assert (check_id == i).all()

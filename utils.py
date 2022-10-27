@@ -39,6 +39,9 @@ def read_swift_config(dir: Path):
 
 
 def print_wall_time(dir: Path):
+    """
+    Attention: This idea is flawed as it only shows the wall time of the last time the simulation was restarted
+    """
     with (dir / "swift.log").open() as f:
         last_line = f.readlines()[-1]
     print(last_line)

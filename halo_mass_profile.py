@@ -1,14 +1,15 @@
 import sys
 from pathlib import Path
+from typing import Dict
 
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 
-from find_center import find_center
 from readfiles import ParticlesMeta, read_file, read_halo_file
+from temperatures import calculate_T
+from utils import print_progress
 
 
 def V(r):
@@ -16,19 +17,17 @@ def V(r):
 
 
 def halo_mass_profile(
-    particles: pd.DataFrame,
-    center: np.ndarray,
-    particles_meta: ParticlesMeta,
-    vmin: float,
-    vmax: float,
-    plot=False,
-    num_bins=30,
+        positions: np.ndarray,
+        center: np.ndarray,
+        particles_meta: ParticlesMeta,
+        rmin: float,
+        rmax: float,
+        plot=False,
+        num_bins=30,
 ):
-    positions = particles[["X", "Y", "Z"]].to_numpy()
     distances = np.linalg.norm(positions - center, axis=1)
-    group_radius = distances.max()
 
-    log_radial_bins = np.geomspace(vmin, vmax, num_bins)
+    log_radial_bins = np.geomspace(rmin, rmax, num_bins)
 
     bin_masses = []
     bin_densities = []
@@ -64,6 +63,35 @@ def halo_mass_profile(
     return log_radial_bins, bin_masses, bin_densities, center
 
 
+def property_profile(positions: np.ndarray, center: np.ndarray, masses: np.ndarray, properties: Dict[str, np.ndarray],
+                     rmin: float, rmax: float, num_bins: int):
+    distances = np.linalg.norm(positions - center, axis=1)
+    log_radial_bins = np.geomspace(rmin, rmax, num_bins)
+
+    means = {}
+    for key in properties.keys():
+        means[key] = []
+    for k in range(num_bins - 1):
+        bin_start = log_radial_bins[k]
+        bin_end = log_radial_bins[k + 1]
+        print_progress(k, num_bins - 2, bin_end)
+        in_bin = np.where((bin_start < distances) & (distances < bin_end))[0]
+        masses_in_ring = masses[in_bin]
+        for property, property_values in properties.items():
+            if property == "InternalEnergies":
+                continue
+            prop_in_ring = property_values[in_bin]
+            if property == "Temperatures":
+                prop_in_ring = np.array([calculate_T(u) for u in prop_in_ring])
+
+            # mean_in_ring_unweighted = np.mean(prop_in_ring)
+            mean_in_ring = (prop_in_ring * masses_in_ring).sum() / masses_in_ring.sum()
+            # print(mean_in_ring_unweighted, mean_in_ring)
+            means[property].append(mean_in_ring)
+
+    return log_radial_bins, means
+
+
 if __name__ == "__main__":
     input_file = Path(sys.argv[1])
     df, particles_meta = read_file(input_file)
@@ -79,4 +107,4 @@ if __name__ == "__main__":
 
     halo = df_halos.loc[halo_id]
 
-    halo_mass_profile(particles_in_halo, halo, particles_meta, plot=True)
+    halo_mass_profile(particles_in_halo[["X", "Y", "Z"]].to_numpy(), halo, particles_meta, plot=True)
