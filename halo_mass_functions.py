@@ -2,9 +2,8 @@ from math import log
 from pathlib import Path
 
 import numpy as np
-
-# from colossus.cosmology import cosmology
-# from colossus.lss import mass_function
+from colossus.cosmology import cosmology
+from colossus.lss import mass_function
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
@@ -33,14 +32,30 @@ def monofonic_tests():
     else:
         resolutions.append(512)
 
-    for i, waveform in enumerate(["DB2", "shannon"]):
+    plank_cosmo = cosmology.cosmologies["planck18"]
+    our_cosmo = {
+        # "sigma8": 0.807,
+        "H0": 0.67742 * 100,
+        "Om0": 0.3099,
+        "Ob0": 0.048891054,
+        "ns": 0.96822,
+    }
+
+    cosmology.addCosmology("ourCosmo", params={**plank_cosmo, **our_cosmo})
+    cosmology.setCosmology("ourCosmo")
+    print(cosmology.getCurrent())
+
+    for i, waveform in enumerate(["DB2", "shannon", "shannon_rehalo"]):
         for j, resolution in enumerate(resolutions):
+            if waveform == "shannon_rehalo" and resolution != 128:
+                continue
             print(waveform, resolution)
             dir = base_dir / f"{waveform}_{resolution}_100"
             halos = read_velo_halos(dir)
 
             # halos.to_csv("weird_halos.csv")
-            halo_masses: np.ndarray = halos["Mvir"].to_numpy()
+            halo_masses: np.ndarray = halos["Mvir"].to_numpy() * 1e10 * 0.67742
+            halo_masses = halo_masses[halo_masses > 0]
 
             (
                 Ns,
@@ -58,7 +73,7 @@ def monofonic_tests():
             name = f"{waveform} {resolution}"
             ax.step(
                 left_edges,
-                number_densities,
+                number_densities / (0.67742 ** 3),
                 where="post",
                 color=f"C{i}",
                 linestyle=linestyles[j],
@@ -76,6 +91,13 @@ def monofonic_tests():
 
             # break
         # break
+
+    mfunc = mass_function.massFunction(
+        left_edges, 1, mdef="vir", model="tinker08", q_out="dndlnM"
+    )
+
+    ax.plot(left_edges, mfunc, label="tinker08", color="C4")
+
     plt.legend()
     fig.savefig(Path(f"~/tmp/halo_mass_function.pdf").expanduser())
     plt.show()
