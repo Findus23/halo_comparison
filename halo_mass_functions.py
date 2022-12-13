@@ -44,18 +44,22 @@ def monofonic_tests():
     cosmology.addCosmology("ourCosmo", params={**plank_cosmo, **our_cosmo})
     cosmology.setCosmology("ourCosmo")
     print(cosmology.getCurrent())
-
-    for i, waveform in enumerate(["DB2", "shannon", "shannon_rehalo"]):
+    x = None
+    for i, waveform in enumerate(
+            ["DB2", "shannon", "shannon_rehalo", "resim_master", "resim_newrandom", "resim_newerrandom",
+             "resim_newswift"]):
         for j, resolution in enumerate(resolutions):
-            if waveform == "shannon_rehalo" and resolution != 128:
+            if (waveform == "shannon_rehalo" or "resim" in waveform) and resolution != 128:
                 continue
             print(waveform, resolution)
             dir = base_dir / f"{waveform}_{resolution}_100"
             halos = read_velo_halos(dir)
 
-            # halos.to_csv("weird_halos.csv")
             halo_masses: np.ndarray = halos["Mvir"].to_numpy() * 1e10 * 0.67742
-            halo_masses = halo_masses[halo_masses > 0]
+            # halo_masses = halo_masses[halo_masses > 0]
+
+            # halos = read_halo_file(dir/"fof_output_0004.hdf5")
+            # halo_masses: np.ndarray = halos["Masses"].to_numpy() * 1e10 * 0.67742
 
             (
                 Ns,
@@ -68,6 +72,8 @@ def monofonic_tests():
 
             ax.set_xscale("log")
             ax.set_yscale("log")
+            if resolution == resolutions[-1]:
+                x = left_edges
 
             # ax.bar(centers, number_densities, width=widths, log=True, fill=False)
             name = f"{waveform} {resolution}"
@@ -75,35 +81,38 @@ def monofonic_tests():
                 left_edges,
                 number_densities / (0.67742 ** 3),
                 where="post",
-                color=f"C{i}",
+                color=f"C{i + 1}",
                 linestyle=linestyles[j],
                 label=name,
             )
 
-            ax.fill_between(
-                left_edges,
-                lower_error_limit,
-                upper_error_limit,
-                alpha=0.5,
-                linewidth=0,
-                step="post",
-            )
+            # ax.fill_between(
+            #     left_edges,
+            #     lower_error_limit,
+            #     upper_error_limit,
+            #     alpha=0.5,
+            #     linewidth=0,
+            #     step="post",
+            # )
 
             # break
         # break
 
     mfunc = mass_function.massFunction(
-        left_edges, 1, mdef="vir", model="tinker08", q_out="dndlnM"
+        x, 1, mdef="vir", model="tinker08", q_out="dndlnM"
     )
 
-    ax.plot(left_edges, mfunc, label="tinker08", color="C4")
+    ax.plot(x, mfunc, label="tinker08 (vir)", color="C0")
+    ax.set_xlabel("M")
+    ax.set_ylabel("dndlnM")
 
-    plt.legend()
-    fig.savefig(Path(f"~/tmp/halo_mass_function.pdf").expanduser())
+    ax.legend()
+    fig.tight_layout()
+    fig.savefig(Path(f"~/tmp/halo_mass_function.svg").expanduser(), transparent=True)
     plt.show()
 
 
-def halo_mass_function(halo_masses, num_bins=30, sim_volume=100 ** 3):
+def halo_mass_function(halo_masses, num_bins=60, sim_volume=100 ** 3):
     bins = np.geomspace(halo_masses.min(), halo_masses.max(), num_bins + 1)
     digits = np.digitize(halo_masses, bins)
     number_densities = []
