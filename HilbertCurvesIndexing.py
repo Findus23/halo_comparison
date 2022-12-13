@@ -8,7 +8,7 @@ from pathlib import Path
 import matplotlib.cm as cm
 import matplotlib.pyplot as plt
 import numpy as np
-import siphash
+from numpy.random import SeedSequence, Generator, PCG64
 
 # dictionary containing the first order hilbert curves
 from utils import figsize_from_page_fraction
@@ -140,9 +140,6 @@ plt.ylabel("$y$")
 plt.tight_layout()
 plt.savefig(Path(f"~/tmp/hilbert_indexcolor.eps").expanduser())
 
-key = b"0123456789ABCDEF"
-num = 123
-print(siphash.SipHash_2_4(key, bytes(num)).hash())
 
 order = 6
 curve = hilbert_curve(order, "u")
@@ -157,22 +154,24 @@ sublevel = order - 4
 
 cmap = cm.get_cmap("jet")
 
-plt.figure()
 
-key = b"0123456789ABCDEF"
+s = 10  # arbitrary lenght of each sequence drawn for every point
 
 fig = plt.figure(figsize=figsize_from_page_fraction(height_to_width=1))
 t = {}
 sublevel = 7
 for i in range(2 ** (2 * sublevel)):
+    pcg = PCG64(1234)
+    pcg = pcg.advance(i * s)
+    rng = Generator(pcg)
     il = i * N // (2 ** (2 * sublevel))
     ir = (i + 1) * N // 2 ** (2 * sublevel)
-    sipkey = siphash.SipHash_2_4(key, bytes(il)).hash()
+    random_value = rng.random()
     plt.plot(
         cumulative_curve[il : ir + 1, 0],
         cumulative_curve[il : ir + 1, 1],
         lw=0.5,
-        c=cmap(sipkey / 2 ** 64),
+        c=cmap(random_value),
     )
 
 plt.xlabel("$x$")
