@@ -75,6 +75,14 @@ def read_halo_file(file: Path) -> DataFrame:
     return df
 
 
+def read_gadget_halos(directory: Path):
+    reference_file = h5py.File(directory / "output" / "fof_subhalo_tab_019.hdf5")
+    df1 = pd.DataFrame(reference_file["Subhalo"]["SubhaloPos"], columns=["X", "Y", "Z"])
+    df2 = pd.DataFrame(reference_file["Subhalo"]["SubhaloMass"], columns=["Masses"])
+    df = df1.merge(df2, "outer", left_index=True, right_index=True)
+    return df
+
+
 def read_fof_file(path: Path):
     file = path / ""
 

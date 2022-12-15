@@ -10,6 +10,7 @@ from matplotlib.figure import Figure
 
 from paths import base_dir, has_1024_simulations
 from read_vr_files import read_velo_halos
+from readfiles import read_gadget_halos
 from utils import print_progress, figsize_from_page_fraction
 
 
@@ -46,17 +47,26 @@ def monofonic_tests():
     print(cosmology.getCurrent())
     x = None
     for i, waveform in enumerate(
-            ["DB2", "shannon", "shannon_rehalo", "resim_master", "resim_newrandom", "resim_newerrandom",
-             "resim_newswift"]):
+            [
+                "DB2", "shannon", "shannon_rehalo",
+                # "resim_master", "resim_newrandom", "resim_newerrandom",
+                # "resim_newswift",
+                "resim_mastergadget"
+            ]):
         for j, resolution in enumerate(resolutions):
             if (waveform == "shannon_rehalo" or "resim" in waveform) and resolution != 128:
                 continue
             print(waveform, resolution)
             dir = base_dir / f"{waveform}_{resolution}_100"
-            halos = read_velo_halos(dir)
-
-            halo_masses: np.ndarray = halos["Mvir"].to_numpy() * 1e10 * 0.67742
+            if "gadget" in waveform:
+                halos = read_gadget_halos(dir)
+                halo_masses: np.ndarray = halos["Masses"].to_numpy() * 1e10
+            else:
+                halos = read_velo_halos(dir)
+                halo_masses: np.ndarray = halos["Mvir"].to_numpy() * 1e10 * 0.67742
             # halo_masses = halo_masses[halo_masses > 0]
+            halo_masses.sort()
+            print(halo_masses[-4:])
 
             # halos = read_halo_file(dir/"fof_output_0004.hdf5")
             # halo_masses: np.ndarray = halos["Masses"].to_numpy() * 1e10 * 0.67742
@@ -68,7 +78,7 @@ def monofonic_tests():
                 number_densities,
                 lower_error_limit,
                 upper_error_limit,
-            ) = halo_mass_function(halo_masses)
+            ) = halo_mass_function(halo_masses, sim_volume=(100 * 0.67742) ** 3)
 
             ax.set_xscale("log")
             ax.set_yscale("log")
@@ -79,11 +89,12 @@ def monofonic_tests():
             name = f"{waveform} {resolution}"
             ax.step(
                 left_edges,
-                number_densities / (0.67742 ** 3),
+                number_densities,
                 where="post",
                 color=f"C{i + 1}",
                 linestyle=linestyles[j],
                 label=name,
+                zorder=10
             )
 
             # ax.fill_between(
@@ -99,12 +110,31 @@ def monofonic_tests():
         # break
 
     mfunc = mass_function.massFunction(
-        x, 1, mdef="vir", model="tinker08", q_out="dndlnM"
+        x, z=0, mdef="vir", model="tinker08", q_out="dndlnM"
     )
 
     ax.plot(x, mfunc, label="tinker08 (vir)", color="C0")
-    ax.set_xlabel("M")
-    ax.set_ylabel("dndlnM")
+    ax.set_xlabel("Mass ($h^{-1} M_{\odot}$)")
+    ax.set_ylabel(r"$\frac{dN}{d\log M}$ ($h^{3}Mpc^{-3}$)")
+
+    # s: GadgetHDFSnap = pynbody.load(str(base_dir / "resim_mastergadget_128_100" / "output" / "snapshot_019.hdf5"))
+    # s.physical_units()
+    # h3 = s.properties["h"] ** 3
+    # bin_center, bin_counts, err = pynbody.analysis.hmf.simulation_halo_mass_function(
+    #     s, log_M_min=10, log_M_max=15, delta_log_M=0.1
+    # )
+    # ax.errorbar(
+    #     bin_center, bin_counts * h3,
+    #     yerr=err,
+    #     fmt='o',
+    #     capthick=2,
+    #     elinewidth=2,
+    #     color='darkgoldenrod'
+    # )
+    # m, sig, dn_dlogm = pynbody.analysis.hmf.halo_mass_function(
+    #     s, log_M_min=10, log_M_max=15, delta_log_M=0.1, kern="ST"
+    # )
+    # ax.plot(m, dn_dlogm, color='darkmagenta', linewidth=2)
 
     ax.legend()
     fig.tight_layout()
@@ -202,7 +232,7 @@ def hmf_from_rockstar_tree(file: Path):
     cosmology.setCosmology("aurigaCosmo")
     print(cosmology.getCurrent())
     mfunc = mass_function.massFunction(
-        left_edges, 1, mdef="vir", model="tinker08", q_out="dndlnM"
+        left_edges, z=0, mdef="vir", model="tinker08", q_out="dndlnM"
     )
 
     ax.plot(left_edges, mfunc)
