@@ -4,17 +4,26 @@
 
 import itertools
 import subprocess
-from multiprocessing import Pool, cpu_count
+from multiprocessing import Pool
 from sys import argv
 
+from jobrun.jobrun import jobrun
 from paths import base_dir, spectra_dir
 from spectra_plot import waveforms
 
+vsc = True
+
+
+def spectra_jobrun(args):
+    if vsc:
+        jobrun(args, time="12:00:00", tasks=128, mem=128)
+    else:
+        subprocess.run(args, check=True)
+
 
 def run_spectra(
-    waveform: str, resolution_1: int, resolution_2: int, Lbox: int, time: str
+        waveform: str, resolution_1: int, resolution_2: int, Lbox: int, time: str
 ):
-
     print("starting")
     setup_1 = f"{waveform}_{resolution_1}_{Lbox}"
     setup_2 = f"{waveform}_{resolution_2}_{Lbox}"
@@ -22,13 +31,13 @@ def run_spectra(
     # #For ICs: time == 'ics'
     if time == "ics":
         output_file = (
-            base_dir
-            / f"spectra/{waveform}_{Lbox}/{waveform}_{Lbox}_ics_{resolution_1}_{resolution_2}_cross_spectrum.txt"
+                base_dir
+                / f"spectra/{waveform}_{Lbox}/{waveform}_{Lbox}_ics_{resolution_1}_{resolution_2}_cross_spectrum.txt"
         )
         if output_file.exists():
             print(f"{output_file} already exists, skipping.")
             return
-        subprocess.run(
+        spectra_jobrun(
             [
                 str(spectra),
                 "--ngrid",
@@ -43,20 +52,19 @@ def run_spectra(
                 str(base_dir / f"{setup_1}/ics_{setup_1}.hdf5"),
                 "--input",
                 str(base_dir / f"{setup_2}/ics_{setup_2}.hdf5"),
-            ],
-            check=True,
+            ]
         )
 
     # #For evaluation of results at redshift z=1: time == 'z=1' | NOT ADAPTED FOR VSC5 YET!
     elif time == "z=1":
         output_file = (
-            base_dir
-            / f"spectra/{waveform}_{Lbox}/{waveform}_{Lbox}_a2_{resolution_1}_{resolution_2}_cross_spectrum.txt"
+                base_dir
+                / f"spectra/{waveform}_{Lbox}/{waveform}_{Lbox}_a2_{resolution_1}_{resolution_2}_cross_spectrum.txt"
         )
         if output_file.exists():
             print(f"{output_file} already exists, skipping.")
             return
-        subprocess.run(
+        spectra_jobrun(
             [
                 str(spectra),
                 "--ngrid",
@@ -71,20 +79,20 @@ def run_spectra(
                 str(base_dir / f"{setup_1}/output_0002.hdf5"),
                 "--input",
                 str(base_dir / f"{setup_2}/output_0002.hdf5"),
-            ],
-            check=True,
+            ]
         )
+
 
     # #For evaluation of final results: time == 'end'
     elif time == "end":
         output_file = (
-            base_dir
-            / f"spectra/{waveform}_{Lbox}/{waveform}_{Lbox}_a4_{resolution_1}_{resolution_2}_cross_spectrum.txt"
+                base_dir
+                / f"spectra/{waveform}_{Lbox}/{waveform}_{Lbox}_a4_{resolution_1}_{resolution_2}_cross_spectrum.txt"
         )
         if output_file.exists():
             print(f"{output_file} already exists, skipping.")
             return
-        subprocess.run(
+        spectra_jobrun(
             [
                 str(spectra),
                 "--ngrid",
@@ -99,8 +107,7 @@ def run_spectra(
                 str(base_dir / f"{setup_1}/output_0004.hdf5"),
                 "--input",
                 str(base_dir / f"{setup_2}/output_0004.hdf5"),
-            ],
-            check=True,
+            ]
         )
     else:
         raise ValueError(f"invalid time ({time})")
