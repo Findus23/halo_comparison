@@ -4,7 +4,7 @@
 
 import itertools
 import subprocess
-from multiprocessing import Pool
+from pathlib import Path
 from sys import argv
 
 from jobrun.jobrun import jobrun
@@ -16,7 +16,7 @@ vsc = True
 
 def spectra_jobrun(args):
     if vsc:
-        jobrun(args, time="12:00:00", tasks=128, mem=128)
+        jobrun(args, time="12:00:00", tasks=128, mem=128, source=Path("/gpfs/data/fs71636/lwinkler/spack_notes.txt"))
     else:
         subprocess.run(args, check=True)
 
@@ -146,5 +146,7 @@ if __name__ == "__main__":
         args = cross_run(resolutions=resolutions, Lbox=Lbox, time=time)
     else:
         raise ValueError("missing argv[2] (power|cross)")
-    with Pool(processes=1) as p:
-        p.starmap(run_spectra, args)
+    for a in args:
+        run_spectra(*a)
+    # with Pool(processes=1) as p:
+    #     p.starmap(run_spectra, args)
