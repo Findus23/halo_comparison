@@ -55,7 +55,7 @@ def run_spectra(
             ]
         )
 
-    # #For evaluation of results at redshift z=1: time == 'z=1' | NOT ADAPTED FOR VSC5 YET!
+    # #For evaluation of results at redshift z=1: time == 'z=1'
     elif time == "z=1":
         output_file = (
                 base_dir
@@ -68,7 +68,7 @@ def run_spectra(
             [
                 str(spectra),
                 "--ngrid",
-                "1024",
+                "2048",
                 "--format=3",
                 "--output",
                 str(
