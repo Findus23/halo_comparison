@@ -16,7 +16,7 @@ vsc = True
 
 def spectra_jobrun(args):
     if vsc:
-        jobrun(args, time="12:00:00", tasks=128, mem=128, source=Path("/gpfs/data/fs71636/lwinkler/spack_notes.txt"))
+        jobrun(args, time="12:00:00", nodes=1, source=Path("/gpfs/data/fs71636/lwinkler/spack-latest.sh"))
     else:
         subprocess.run(args, check=True)
 
