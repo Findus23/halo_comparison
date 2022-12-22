@@ -31,7 +31,7 @@ def jobrun(
         "time": time,
         "nodes": nodes,
         "tasks": tasks,
-        "mem": mem,
+        "mem": f"{mem}G",
         "job-name": name,
         "output": jobscript_dir / f"out-{name}-%a_%a.txt"
     }
