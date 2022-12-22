@@ -16,6 +16,8 @@ def jobrun(
         tasks: int = None,
         nodes: int = None,
         mem: int = None,
+        qos: str = None,
+        account: str = None,
         source: Path = None,
         sbatch: bool = True
 ):
@@ -32,6 +34,8 @@ def jobrun(
         "nodes": nodes,
         "tasks": tasks,
         "mem": f"{mem}G",
+        "qos": qos,
+        "account": account,
         "job-name": name,
         "output": jobscript_dir / f"out-{name}-%a_%a.txt"
     }
