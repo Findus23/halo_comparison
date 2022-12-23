@@ -39,6 +39,7 @@ def run_spectra(
                 base_dir
                 / f"spectra/{waveform}_{Lbox}/{waveform}_{Lbox}_ics_{resolution_1}_{resolution_2}_cross_spectrum.txt"
         )
+        output_file.parent.mkdir(exist_ok=True, parents=True)
         if output_file.exists():
             print(f"{output_file} already exists, skipping.")
             return
@@ -66,6 +67,7 @@ def run_spectra(
                 base_dir
                 / f"spectra/{waveform}_{Lbox}/{waveform}_{Lbox}_a2_{resolution_1}_{resolution_2}_cross_spectrum.txt"
         )
+        output_file.parent.mkdir(exist_ok=True, parents=True)
         if output_file.exists():
             print(f"{output_file} already exists, skipping.")
             return
@@ -94,6 +96,7 @@ def run_spectra(
                 base_dir
                 / f"spectra/{waveform}_{Lbox}/{waveform}_{Lbox}_a4_{resolution_1}_{resolution_2}_cross_spectrum.txt"
         )
+        output_file.parent.mkdir(exist_ok=True, parents=True)
         if output_file.exists():
             print(f"{output_file} already exists, skipping.")
             return

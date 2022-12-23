@@ -33,7 +33,7 @@ def jobrun(
         "time": time,
         "nodes": nodes,
         "tasks": tasks,
-        "mem": mem,
+        "mem": f"{mem}G",
         "qos": qos,
         "account": account,
         "job-name": name,
