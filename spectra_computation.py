@@ -8,7 +8,7 @@ from pathlib import Path
 from sys import argv
 
 from jobrun.jobrun import jobrun
-from paths import base_dir, account, qos
+from paths import base_dir, account, qos, spectra_dir
 from spectra_plot import waveforms
 
 vsc = True
