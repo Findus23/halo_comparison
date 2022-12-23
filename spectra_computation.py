@@ -8,15 +8,20 @@ from pathlib import Path
 from sys import argv
 
 from jobrun.jobrun import jobrun
-from paths import base_dir, spectra_dir
+from paths import base_dir, account, qos
 from spectra_plot import waveforms
 
 vsc = True
 
 
-def spectra_jobrun(args):
+def spectra_jobrun(args, maxres: int):
+    mem = 380 if maxres == 1048 else 280
     if vsc:
-        jobrun(args, time="12:00:00", nodes=1, source=Path("/gpfs/data/fs71636/lwinkler/spack-latest.sh"))
+        jobrun(
+            args, time="12:00:00", nodes=1, mem=mem,
+            source=Path("/gpfs/data/fs71636/lwinkler/spack-latest.sh"),
+            qos=qos, account=account
+        )
     else:
         subprocess.run(args, check=True)
 
@@ -52,7 +57,7 @@ def run_spectra(
                 str(base_dir / f"{setup_1}/ics_{setup_1}.hdf5"),
                 "--input",
                 str(base_dir / f"{setup_2}/ics_{setup_2}.hdf5"),
-            ]
+            ], max(resolution_1, resolution_2)
         )
 
     # #For evaluation of results at redshift z=1: time == 'z=1'
@@ -79,7 +84,7 @@ def run_spectra(
                 str(base_dir / f"{setup_1}/output_0002.hdf5"),
                 "--input",
                 str(base_dir / f"{setup_2}/output_0002.hdf5"),
-            ]
+            ], max(resolution_1, resolution_2)
         )
 
 
@@ -107,7 +112,7 @@ def run_spectra(
                 str(base_dir / f"{setup_1}/output_0004.hdf5"),
                 "--input",
                 str(base_dir / f"{setup_2}/output_0004.hdf5"),
-            ]
+            ], max(resolution_1, resolution_2)
         )
     else:
         raise ValueError(f"invalid time ({time})")
