@@ -157,16 +157,16 @@ def compare_halo_resolutions(
         )
         # print(list(halo_distances))
 
-        print(f"find nearby halos (50x{ref_halo.Rvir:.1f})")
+        print(f"find nearby halos (50x{ref_halo.R_200mean:.1f})")
         print(ref_halo[["X", "Y", "Z"]].values)
-        # Find IDs of halos that are less than 50 Rvir away
+        # Find IDs of halos that are less than 50 R_200mean away
         nearby_halos = set(
-            df_comp_halo.loc[halo_distances < ref_halo.Rvir * 50].index.to_list()
+            df_comp_halo.loc[halo_distances < ref_halo.R_200mean * 50].index.to_list()
         )
         if len(nearby_halos) < 10:
-            print(f"only {len(nearby_halos)} halos, expanding to 150xRvir")
+            print(f"only {len(nearby_halos)} halos, expanding to 150xR_200mean")
             nearby_halos = set(
-                df_comp_halo.loc[halo_distances < ref_halo.Rvir * 150].index.to_list()
+                df_comp_halo.loc[halo_distances < ref_halo.R_200mean * 150].index.to_list()
             )
             counters.checking_150 += 1
 
@@ -290,7 +290,7 @@ def compare_halo_resolutions(
                         apply_offset(comp_halo.X, offset_x),
                         apply_offset(comp_halo.Y, offset_y),
                     ),
-                    comp_halo["Rvir"],
+                    comp_halo["R_200mean"],
                     zorder=10,
                     linewidth=1,
                     edgecolor=color,
@@ -325,7 +325,7 @@ def compare_halo_resolutions(
                     np.array([ref_halo.X, ref_halo.Y, ref_halo.Z])
                     - np.array([comp_halo.X, comp_halo.Y, comp_halo.Z])
                 )
-                / ref_halo.Rvir
+                / ref_halo.R_200mean
         )
         halo_data["distance"] = distance
         halo_data["match"] = best_halo_match
