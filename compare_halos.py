@@ -1,7 +1,7 @@
 import copy
 import json
-from dataclasses import dataclass
-from typing import Dict
+from dataclasses import dataclass, field
+from typing import Dict, List
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -31,7 +31,9 @@ class Counterset:
     not_a_field_halo: int = 0
     checking_50: int = 0
     checking_150: int = 0
+    none_in_150: int = 0
     num_matches: int = 0
+    unmatched_masses: List[float] = field(default_factory=list)
 
 
 def apply_offset_to_list(value_list, offset):
@@ -99,7 +101,7 @@ def compare_halo_resolutions(
     print(f"Memory ref: {memory_usage(df_ref):.2f} MB")
     print(f"Memory comp: {memory_usage(df_comp):.2f} MB")
 
-    comp_halo_masses = dict(df_comp_halo["Mvir"])
+    comp_halo_masses = dict(df_comp_halo["Mass_200crit"])
 
     counters = Counterset()
 
@@ -109,7 +111,7 @@ def compare_halo_resolutions(
         print(f"{index} of {len(df_ref_halo)} original halos")
         halo_particle_ids = ref_halo_lookup[int(index)]
         ref_halo: pd.Series = df_ref_halo.loc[index]
-        ref_halo_mass = ref_halo["Mvir"]
+        ref_halo_mass = ref_halo["Mass_200crit"]
         if ref_halo["cNFW"] < 0:
             print("NEGATIVE")
             print(ref_halo["cNFW"])
@@ -151,28 +153,32 @@ def compare_halo_resolutions(
             after_len = len(halo_particle_ids)
             print(f"{prev_len} => {after_len} (factor {prev_len / after_len:.2f})")
 
-        halo_distances = np.linalg.norm(
-            ref_halo[["X", "Y", "Z"]].values - df_comp_halo[["X", "Y", "Z"]].values,
-            axis=1,
-        )
+        box_size = 100
+        dx = ref_halo[["X", "Y", "Z"]].values - df_comp_halo[["X", "Y", "Z"]].values
+        half_box = box_size / 2
+        dx[dx > half_box] -= box_size
+        dx[dx < -half_box] += box_size
+        halo_distances = np.linalg.norm(dx,axis=1)
         # print(list(halo_distances))
 
-        print(f"find nearby halos (50x{ref_halo.R_200mean:.1f})")
+        print(f"find nearby halos (50x{ref_halo.R_200crit:.1f})")
         print(ref_halo[["X", "Y", "Z"]].values)
-        # Find IDs of halos that are less than 50 R_200mean away
+        # Find IDs of halos that are less than 50 R_200crit away
         nearby_halos = set(
-            df_comp_halo.loc[halo_distances < ref_halo.R_200mean * 50].index.to_list()
+            df_comp_halo.loc[halo_distances < ref_halo.R_200crit * 50].index.to_list()
         )
         if len(nearby_halos) < 10:
-            print(f"only {len(nearby_halos)} halos, expanding to 150xR_200mean")
+            print(f"only {len(nearby_halos)} halos, expanding to 150xR_200crit")
             nearby_halos = set(
-                df_comp_halo.loc[halo_distances < ref_halo.R_200mean * 150].index.to_list()
+                df_comp_halo.loc[halo_distances < ref_halo.R_200crit * 150].index.to_list()
             )
             counters.checking_150 += 1
 
         if not nearby_halos:
-            raise Exception("no halos are nearby")
-            # continue
+            counters.unmatched_masses.append(ref_halo.Mass_200crit)
+            counters.none_in_150 += 1
+            print("no halos are nearby")
+            continue
         print(f"found {len(nearby_halos)} halos")
         if plot or plot3d or plot_cic or (not velo_halos):
             print("look up halo particles in comparison dataset")
@@ -290,7 +296,7 @@ def compare_halo_resolutions(
                         apply_offset(comp_halo.X, offset_x),
                         apply_offset(comp_halo.Y, offset_y),
                     ),
-                    comp_halo["R_200mean"],
+                    comp_halo["R_200crit"],
                     zorder=10,
                     linewidth=1,
                     edgecolor=color,
@@ -308,10 +314,12 @@ def compare_halo_resolutions(
                 best_halo = halo_id
         print(f"skipped {num_skipped_for_mass} halos due to mass ratio")
         if not best_halo:
+            counters.unmatched_masses.append(ref_halo.Mass_200crit)
             counters.no_match += 1
             continue
         minimum_j = 0.1
         if best_halo_match < minimum_j:
+            counters.unmatched_masses.append(ref_halo.Mass_200crit)
             counters.bad_match += 1
             continue
         comp_halo: pd.Series = df_comp_halo.loc[best_halo]
@@ -325,7 +333,7 @@ def compare_halo_resolutions(
                     np.array([ref_halo.X, ref_halo.Y, ref_halo.Z])
                     - np.array([comp_halo.X, comp_halo.Y, comp_halo.Z])
                 )
-                / ref_halo.R_200mean
+                / ref_halo.R_200crit
         )
         halo_data["distance"] = distance
         halo_data["match"] = best_halo_match
