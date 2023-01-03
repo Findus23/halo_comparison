@@ -5,28 +5,21 @@ description = ""
 authors = ["Lukas Winkler <git@lw1.at>"]
 
 [tool.poetry.dependencies]
-python = "^3.9,<3.11"
+python = "^3.10,<3.12"
 matplotlib = "^3.5.2"
 numpy = "^1.21.3"
 h5py = "^3.6.0"
-vtk = {url = "https://github.com/pyvista/pyvista-wheels/raw/main/vtk-9.1.0.dev0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"}
-pyvista = "^0.34.1"
+pyvista = "^0.37.0"
 pandas = "^1.4.2"
 scipy = "^1.8.0"
 pynbody = "^1.1.0"
-numba = "^0.55.1"
+numba = "^0.56.1"
 tables = "^3.7.0"
-pythran = "^0.11.0"
 PyYAML = "^6.0"
 siphash = "^0.0.1"
+velociraptor = "^0.15.8"
 
 [tool.poetry.dev-dependencies]
-
-[[tool.poetry.source]]
-name = "vtk"
-url = "https://wheels.pyvista.org/"
-default = false
-secondary = false
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
