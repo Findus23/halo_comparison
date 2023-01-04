@@ -158,7 +158,7 @@ def compare_halo_resolutions(
         half_box = box_size / 2
         dx[dx > half_box] -= box_size
         dx[dx < -half_box] += box_size
-        halo_distances = np.linalg.norm(dx,axis=1)
+        halo_distances = np.linalg.norm(dx, axis=1)
         # print(list(halo_distances))
 
         print(f"find nearby halos (50x{ref_halo.R_200crit:.1f})")
@@ -328,13 +328,11 @@ def compare_halo_resolutions(
         halo_data = pd.concat(
             [ref_halo.add_prefix("ref_"), comp_halo.add_prefix("comp_")]
         )
-        distance = (
-                linalg.norm(
-                    np.array([ref_halo.X, ref_halo.Y, ref_halo.Z])
-                    - np.array([comp_halo.X, comp_halo.Y, comp_halo.Z])
-                )
-                / ref_halo.R_200crit
-        )
+        dx = np.array([ref_halo.X, ref_halo.Y, ref_halo.Z]) - np.array([comp_halo.X, comp_halo.Y, comp_halo.Z])
+        dx[dx > half_box] -= box_size
+        dx[dx < -half_box] += box_size
+
+        distance = linalg.norm(dx) / ref_halo.R_200crit
         halo_data["distance"] = distance
         halo_data["match"] = best_halo_match
         halo_data["num_skipped_for_mass"] = num_skipped_for_mass
