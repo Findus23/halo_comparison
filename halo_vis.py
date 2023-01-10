@@ -92,12 +92,13 @@ def main():
     if has_1024_simulations:
         resolutions.append(1024)
     coords = {}
+    radius = None
     if argv[1] == "box":
         initial_halo_id = 0
         first_halo = False
+        radius = 15
         for wf in waveforms:
-            coords[wf] = (15, 85, 85, 85)
-
+            coords[wf] = (radius, 85, 85, 85)
     else:
         initial_halo_id = int(argv[1])
         first_halo = True
@@ -136,8 +137,14 @@ def main():
                 halo, halo_particles, meta, image_coords = load_halo_data(
                     waveform, resolution, halo_id, coords[waveform]
                 )
+                if not radius:
+                    radius = image_coords[0]
                 if not coords[waveform]:
-                    coords[waveform] = image_coords
+                    tmp=list(image_coords)
+                    tmp[0] = radius
+                    coords[waveform] = tuple(tmp)
+
+
                 print(coords[waveform])
                 # print("mass", halo["Mvir"])
                 # print("sleep")
@@ -163,10 +170,10 @@ def main():
                 dataset_group.create_dataset("mass", data=meta.particle_mass)
                 if halo_id:
                     dataset_group.create_dataset("halo_id", data=halo_id)
-                imsave(
-                    rho,
-                    f"out_halo{initial_halo_id}_{waveform}_{resolution}_{halo_id}.png",
-                )
+                # imsave(
+                #     rho,
+                #     f"out_halo{initial_halo_id}_{waveform}_{resolution}_{halo_id}.png",
+                # )
         halo_group.create_dataset("vmin_vmax", data=[vmin, vmax])
 
 

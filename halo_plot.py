@@ -43,10 +43,10 @@ def main():
     if has_1024_simulations:
         resolutions.append(1024)
     fig: Figure = plt.figure(
-        figsize=figsize_from_page_fraction(columns=2, height_to_width=1 if is_box else 1.2)
+        figsize=figsize_from_page_fraction(columns=2, height_to_width=1.05), layout="constrained"
     )
     axes: List[List[Axes]] = fig.subplots(
-        len(waveforms) if is_box else len(waveforms) * 2, 4, sharex="row", sharey="row"
+        len(waveforms), 4, sharex="row", sharey="row"
     )
     with h5py.File(vis_datafile) as vis_out:
         halo_group = vis_out[str(initial_halo_id)]
@@ -57,11 +57,7 @@ def main():
             for j, resolution in enumerate(resolutions):
                 dir = base_dir / f"{waveform}_{resolution}_100"
                 halos = read_velo_halos(dir)
-                if is_box:
-                    ax_both = axes[i][j]
-                else:
-                    ax_both = axes[i * 2][j]
-                    ax_without = axes[i * 2 + 1][j]
+                ax = axes[i][j]
                 dataset_group = halo_group[f"{waveform}_{resolution}"]
                 rho = np.asarray(dataset_group["rho"])
                 # radius, X, Y, Z
@@ -73,58 +69,55 @@ def main():
                 vmax_scaled = (vmax + offset) * mass
                 rho = (rho + offset) * mass
                 extent = coord_to_2d_extent(coords)
-                for ax in [ax_both, ax_without] if not is_box else [ax_both]:
-                    img = ax.imshow(
-                        rho.T.T,
-                        norm=LogNorm(vmin=vmin_scaled, vmax=vmax_scaled),
-                        extent=extent,
-                        origin="lower",
-                        cmap="Greys",
-                        interpolation="none"
-                    )  # ax.set_axis_off()
-                    ax.set_xticks([])
-                    ax.set_yticks([])
-                    if not is_box:
-                        ax.set_ylim(Y - radius * .5, Y + radius * .5)
-                    if j == 0:
-                        scalebar = AnchoredSizeBar(
-                            ax.transData,
-                            1,
-                            "1 Mpc",
-                            "lower left",
-                            # pad=0.1,
-                            color="black",
-                            frameon=False,
-                            # size_vertical=1
-                        )
-                        ax.add_artist(scalebar)
+                img = ax.imshow(
+                    rho.T.T,
+                    norm=LogNorm(vmin=vmin_scaled, vmax=vmax_scaled),
+                    extent=extent,
+                    origin="lower",
+                    cmap="Greys",
+                    interpolation="none"
+                )  # ax.set_axis_off()
+                ax.set_xticks([])
+                ax.set_yticks([])
+                if j == 0:
+                    scalebar = AnchoredSizeBar(
+                        ax.transData,
+                        1,
+                        "1 Mpc",
+                        "lower left",
+                        # pad=0.1,
+                        color="black",
+                        frameon=False,
+                        # size_vertical=1
+                    )
+                    ax.add_artist(scalebar)
 
                 if not is_box:
                     found_main_halo = False
                     for halo_id, halo in halos.iterrows():
-                        if halo["Vmax"] > 75:
+                        if halo["Vmax"] > 50:
                             if in_area(coords, halo.X, halo.Y, halo.Z):
                                 if halo_id == main_halo_id:
                                     color = "C2"
                                 elif halo["Structuretype"] > 10:
-                                    color = "C0"
-                                else:
                                     color = "C1"
+                                else:
+                                    color = "C0"
                                 if halo_id == main_halo_id:
                                     found_main_halo = True
                                     print("plotting main halo")
                                 circle = Circle(
                                     (halo.Y - Y + X, halo.X - X + Y),
-                                    halo["Rvir"],
+                                    halo["R_200crit"],
                                     zorder=10,
                                     linewidth=1,
                                     edgecolor=color,
                                     fill=None,
                                     alpha=0.2,
                                 )
-                                ax_both.add_artist(circle)
-
-                    assert found_main_halo
+                                ax.add_artist(circle)
+                    print(found_main_halo)
+                    # assert found_main_halo
                 print(img)
 
             #     break
