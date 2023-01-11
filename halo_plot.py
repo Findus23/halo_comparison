@@ -116,16 +116,13 @@ def main():
                                     alpha=0.2,
                                 )
                                 ax.add_artist(circle)
-                    print(found_main_halo)
-                    # assert found_main_halo
+
+                    assert found_main_halo
                 print(img)
 
             #     break
             # break
-    if is_box:
-        ylabels = waveforms
-    else:
-        ylabels = [item for item in waveforms for _ in range(2)]
+    ylabels = waveforms
     rowcolumn_labels(axes, ylabels, isrow=True)
     rowcolumn_labels(axes, resolutions, isrow=False)
 
