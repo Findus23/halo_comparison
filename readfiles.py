@@ -17,7 +17,10 @@ class ParticlesMeta:
 def read_file(file: Path) -> Tuple[pd.DataFrame, ParticlesMeta]:
     cache_file = file.with_suffix(".cache.pickle")
     meta_cache_file = file.with_suffix(".cache_meta.pickle")
-    if not (cache_file.exists() and meta_cache_file.exists()):
+    cache_is_outdated = file.stat().st_mtime > cache_file.stat().st_mtime
+    if cache_is_outdated:
+        print("cache is outdated")
+    if not (cache_file.exists() and meta_cache_file.exists()) or cache_is_outdated:
         reference_file = h5py.File(file)
         has_fof = "FOFGroupIDs" in reference_file["PartType1"]
 
