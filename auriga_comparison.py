@@ -26,7 +26,7 @@ from cic import cic_from_radius, cic_range
 from find_center import find_center
 from halo_mass_profile import halo_mass_profile, property_profile
 from nfw import fit_nfw
-from paths import auriga_dir, richings_dir
+from paths import auriga_dir, richings_dir, auriga_dir_new
 from ramses import load_ramses_data, get_slice_argument, load_slice_data
 from readfiles import read_file, read_halo_file, ParticlesMeta
 from slices import create_2d_slice, filter_3d
@@ -60,6 +60,7 @@ def dir_name_to_parameter(dir_name: str):
     return map(
         int,
         dir_name.lstrip("auriga6_halo")
+        .lstrip("auriga6_music20_")
         .lstrip("richings21_")
         .lstrip("bary_")
         .lstrip("ramses_")
@@ -109,19 +110,29 @@ def main():
     vmin = np.Inf
     vmax = -np.Inf
     root_dir = auriga_dir if mode == Mode.auriga6 else richings_dir
+    if True:
+        root_dir = auriga_dir_new
     i = 0
+    mapping={}
     for dir in sorted(root_dir.glob("*")):
+        dir=dir.resolve()
+        print("----------------------------")
         if not dir.is_dir() or "bak" in dir.name:
             continue
         is_ramses = "ramses" in dir.name
         has_baryons = "bary" in dir.name or is_ramses
         is_by_adrian = "arj" in dir.name
+        is_resim=dir.name[0].isdigit() or is_by_adrian
 
         print(dir.name)
 
         if not is_by_adrian:
             levelmin, levelmin_TF, levelmax = dir_name_to_parameter(dir.name)
             print(levelmin, levelmin_TF, levelmax)
+         #   if not is_resim:
+          #      continue
+            if levelmax <12 and not is_by_adrian:
+                continue
             if plottype == Plot.auriga_plots:
                 if (levelmin, levelmin_TF, levelmax) == (7, 9, 9):
                     continue
@@ -153,11 +164,14 @@ def main():
                 assert softening_length == gravity_conf["comoving_baryon_softening"]
 
             ideal_softening_length = levelmax_to_softening_length(levelmax)
-            if not np.isclose(softening_length, levelmax_to_softening_length(levelmax)):
-                raise ValueError(
-                    f"softening length for levelmax {levelmax} should be {ideal_softening_length} "
-                    f"but is {softening_length}"
-                )
+            if not np.isclose(softening_length, ideal_softening_length):
+                if softening_length<ideal_softening_length:
+                    print(f"softening length smaller than calculated: {softening_length}<{ideal_softening_length} ({levelmax=})")
+                else:
+                    raise ValueError(
+                        f"softening length for levelmax {levelmax} should be {ideal_softening_length} "
+                        f"but is {softening_length}"
+                    )
         print(input_file)
         if mode == Mode.richings and is_by_adrian:
             h = 0.6777
@@ -221,6 +235,8 @@ def main():
 
         ax2.loglog(log_radial_bins[:-1], bin_densities, label=label, c=f"C{i}")
 
+        mapping[i]=dir.name
+
         if reference_file.exists() and not is_by_adrian:
             with reference_file.open("rb") as f:
                 data: List[np.ndarray] = pickle.load(f)
@@ -261,6 +277,7 @@ def main():
             title=f"levelmin={levelmin}, levelmin_TF={levelmin_TF}, levelmax={levelmax}" if not is_by_adrian else "Reference",
             levels=(levelmin, levelmin_TF, levelmax) if not is_by_adrian else (100, 100, 100),
         )
+        res.title = res.title + "\n" + dir.name
         images.append(res)
         i += 1
 
@@ -331,7 +348,7 @@ def main():
                             print(frac_center)
                             args, imager_dir = get_slice_argument(
                                 frac_extent, frac_center,
-                                bary_file,interpolation_method,
+                                bary_file, interpolation_method,
                                 depth=.001
                             )
                             print(" ".join(args))
@@ -378,7 +395,7 @@ def main():
         figsize=figsize_from_page_fraction(columns=2, height_to_width=33 / 48)
     )
     axes: List[Axes] = fig3.subplots(2, 3, sharex="all", sharey="all").flatten()
-    images.sort(key=lambda r: r.levels, reverse=True)
+    # images.sort(key=lambda r: r.levels, reverse=True)
 
     for result, ax in zip(images, axes):
         data = 1.1 + result.rho
@@ -418,6 +435,7 @@ def main():
     pprint(centers)
     plt.show()
     print(part_numbers)
+    print(mapping)
 
 
 if __name__ == '__main__':
