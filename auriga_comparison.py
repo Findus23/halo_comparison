@@ -26,7 +26,7 @@ from cic import cic_from_radius, cic_range
 from find_center import find_center
 from halo_mass_profile import halo_mass_profile, property_profile
 from nfw import fit_nfw
-from paths import auriga_dir, richings_dir, auriga_dir_new
+from paths import auriga_dir, richings_dir, auriga_dir_new, richings_dir_new
 from ramses import load_ramses_data, get_slice_argument, load_slice_data
 from readfiles import read_file, read_halo_file, ParticlesMeta
 from slices import create_2d_slice, filter_3d
@@ -34,26 +34,13 @@ from utils import read_swift_config, figsize_from_page_fraction
 
 
 class Mode(Enum):
-    richings = 1
-    auriga6 = 2
+    richings = "richings"
+    auriga6 = "auriga"
 
 
-class Plot(Enum):
-    auriga_plots = "auriga"
-    richings_bary = "richings_bary"
-
-
-mode = Mode.richings
-
-try:
-    plottype = Plot(argv[1])
-except KeyError:
-    plottype = None
+mode = Mode(argv[1])
 
 cache = HDFCache(Path("auriga_cache.hdf5"))
-
-if plottype == Plot.auriga_plots:
-    mode = Mode.auriga6
 
 
 def dir_name_to_parameter(dir_name: str):
@@ -96,7 +83,7 @@ def main():
 
     part_numbers = []
 
-    reference_file = Path(f"auriga_reference_{mode}.pickle")
+    reference_file = Path(f"auriga_reference_{mode.value}.pickle")
 
     centers = {}
 
@@ -111,41 +98,44 @@ def main():
     vmax = -np.Inf
     root_dir = auriga_dir if mode == Mode.auriga6 else richings_dir
     if True:
-        root_dir = auriga_dir_new
+        root_dir = auriga_dir_new if mode == Mode.auriga6 else richings_dir_new
     i = 0
-    mapping={}
+    mapping = {}
     for dir in sorted(root_dir.glob("*")):
-        dir=dir.resolve()
+        dir = dir.resolve()
         print("----------------------------")
         if not dir.is_dir() or "bak" in dir.name:
             continue
         is_ramses = "ramses" in dir.name
         has_baryons = "bary" in dir.name or is_ramses
         is_by_adrian = "arj" in dir.name
-        is_resim=dir.name[0].isdigit() or is_by_adrian
+        is_resim = dir.name[0].isdigit() or is_by_adrian
 
         print(dir.name)
 
         if not is_by_adrian:
             levelmin, levelmin_TF, levelmax = dir_name_to_parameter(dir.name)
             print(levelmin, levelmin_TF, levelmax)
-         #   if not is_resim:
-          #      continue
-            if levelmax <12 and not is_by_adrian:
-                continue
-            if plottype == Plot.auriga_plots:
+            #   if not is_resim:
+            #      continue
+            # if levelmax < 12 and not is_by_adrian:
+            #     continue
+            if mode == Mode.auriga6:
+                print("sdfds")
                 if (levelmin, levelmin_TF, levelmax) == (7, 9, 9):
+                    print("Aaaa")
                     continue
-            elif plottype == Plot.richings_bary:
-                if not has_baryons:
-                    continue
-                if levelmax != 11:
-                    continue
+            elif mode == Mode.richings:
+                pass
+                # if not has_baryons:
+                #     continue
+                # if levelmax != 11:
+                #     continue
             # if not is_ramses:
             #     continue
-
         input_file = dir / "output_0007.hdf5"
-        if mode == Mode.richings:
+        print(input_file)
+        if mode == Mode.richings and not is_resim:
             input_file = dir / "output_0004.hdf5"
         if is_by_adrian or is_ramses:
             input_file = dir / "output_0000.hdf5"
@@ -155,6 +145,7 @@ def main():
                 swift_conf = read_swift_config(dir)
                 # print_wall_time(dir)
             except FileNotFoundError:
+                print(f"file not found: {dir}")
                 continue
             gravity_conf = swift_conf["Gravity"]
             softening_length = gravity_conf["comoving_DM_softening"]
@@ -165,8 +156,9 @@ def main():
 
             ideal_softening_length = levelmax_to_softening_length(levelmax)
             if not np.isclose(softening_length, ideal_softening_length):
-                if softening_length<ideal_softening_length:
-                    print(f"softening length smaller than calculated: {softening_length}<{ideal_softening_length} ({levelmax=})")
+                if softening_length < ideal_softening_length:
+                    print(
+                        f"softening length smaller than calculated: {softening_length}<{ideal_softening_length} ({levelmax=})")
                 else:
                     raise ValueError(
                         f"softening length for levelmax {levelmax} should be {ideal_softening_length} "
@@ -235,7 +227,7 @@ def main():
 
         ax2.loglog(log_radial_bins[:-1], bin_densities, label=label, c=f"C{i}")
 
-        mapping[i]=dir.name
+        mapping[i] = dir.name
 
         if reference_file.exists() and not is_by_adrian:
             with reference_file.open("rb") as f:
@@ -426,11 +418,11 @@ def main():
     axs_baryon[0][0].set_ylabel("Swift")
     axs_baryon[1][0].set_ylabel("Ramses")
 
-    fig1.savefig(Path(f"~/tmp/{plottype.value}1.pdf").expanduser())
-    fig2.savefig(Path(f"~/tmp/{plottype.value}2.pdf").expanduser())
-    fig3.savefig(Path(f"~/tmp/{plottype.value}3.pdf").expanduser())
+    fig1.savefig(Path(f"~/tmp/{mode.value}1.pdf").expanduser())
+    fig2.savefig(Path(f"~/tmp/{mode.value}2.pdf").expanduser())
+    fig3.savefig(Path(f"~/tmp/{mode.value}3.pdf").expanduser())
 
-    fig4.savefig(Path(f"~/tmp/{plottype.value}4.pdf").expanduser())
+    fig4.savefig(Path(f"~/tmp/{mode.value}4.pdf").expanduser())
 
     pprint(centers)
     plt.show()
