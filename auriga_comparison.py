@@ -1,3 +1,4 @@
+import json
 import pickle
 from dataclasses import dataclass
 from enum import Enum
@@ -20,6 +21,7 @@ from numpy import log10
 from pynbody.array import SimArray
 from pynbody.snapshot import FamilySubSnap
 from pynbody.snapshot.ramses import RamsesSnap
+from scipy import constants
 
 from cache import HDFCache
 from cic import cic_from_radius, cic_range
@@ -28,6 +30,7 @@ from halo_mass_profile import halo_mass_profile, property_profile
 from nfw import fit_nfw
 from paths import auriga_dir, richings_dir, auriga_dir_new, richings_dir_new
 from ramses import load_ramses_data, get_slice_argument, load_slice_data
+from read_vr_files import read_velo_halos
 from readfiles import read_file, read_halo_file, ParticlesMeta
 from slices import create_2d_slice, filter_3d
 from utils import read_swift_config, figsize_from_page_fraction
@@ -66,16 +69,21 @@ def main():
     fig2: Figure = plt.figure(figsize=figsize_from_page_fraction())
     ax2: Axes = fig2.gca()
     axs_baryon: List[List[Axes]]
+    fig4: Figure
     fig4, axs_baryon = plt.subplots(
         nrows=2, ncols=4,
         sharex="all", sharey="all",
-        figsize=figsize_from_page_fraction(columns=2, height_to_width=0.5)
+        figsize=figsize_from_page_fraction(columns=2, height_to_width=0.55),
+        layout='constrained'
     )
     fig5: Figure = plt.figure(figsize=figsize_from_page_fraction())
     ax5: Axes = fig5.gca()
     fig6: Figure = plt.figure(figsize=figsize_from_page_fraction())
     ax6: Axes = fig6.gca()
     baryon_plot_counter = 0
+    vminmax = {}
+    extents = []
+
     for ax in [ax1, ax2]:
         ax.set_xlabel(r"R [Mpc]")
     ax1.set_ylabel(r"M [$10^{10} \mathrm{M}_\odot$]")
@@ -86,6 +94,15 @@ def main():
     reference_file = Path(f"auriga_reference_{mode.value}.pickle")
 
     centers = {}
+    halo_props = {
+        "R_200crit": {},
+        "Mass_200crit": {},
+        "cNFW_200crit": {},
+        "FOF_Mass": {},
+        "FOF_Size": {},
+    }
+    halo_props["Mass_200crit"]["Au6_paper"] = 104.39
+    halo_props["R_200crit"]["Au6_paper"] = 213.83 / 1000
 
     @dataclass
     class Result:
@@ -127,12 +144,14 @@ def main():
                     continue
             elif mode == Mode.richings:
                 pass
-                # if not has_baryons:
-                #     continue
+                if not has_baryons:
+                    continue
                 # if levelmax != 11:
                 #     continue
             # if not is_ramses:
             #     continue
+            if dir.name in ["bary_ramses_7_10_11"]:
+                continue
         input_file = dir / "output_0007.hdf5"
         print(input_file)
         if mode == Mode.richings and not is_resim:
@@ -180,8 +199,6 @@ def main():
         else:
             df, particles_meta = read_file(input_file)
             df_halos = read_halo_file(input_file.with_name("fof_" + input_file.name))
-            # vr_halo = read_velo_halos(dir, veloname="velo_out").loc[1]
-            # particles_in_halo = df.loc[df["FOFGroupIDs"] == 3]
 
             halo_id = 1
             while True:
@@ -194,6 +211,20 @@ def main():
             part_numbers.append(len(df) * particles_meta.particle_mass)
             # halo = halos.loc[1]
             center = np.array([halo.X, halo.Y, halo.Z])
+            halo_props["FOF_Mass"][dir.name] = halo["Masses"]
+            halo_props["FOF_Size"][dir.name] = halo["Sizes"]
+
+            if mode == Mode.auriga6:
+                vr_halo = read_velo_halos(dir, veloname="velo_out").loc[1]
+                print(vr_halo["R_200crit"])
+                halo_props["R_200crit"][dir.name] = vr_halo["R_200crit"]
+                halo_props["Mass_200crit"][dir.name] = vr_halo["Mass_200crit"]
+                halo_props["cNFW_200crit"][dir.name] = vr_halo["cNFW_200crit"]
+                center2 = np.array([vr_halo.X, vr_halo.Y, vr_halo.Z])
+                print("center-diff", center2 - center)
+                print("center-diff", center)
+                print("center-diff", center2)
+
         center = find_center(df, center)
         log_radial_bins, bin_masses, bin_densities, center = halo_mass_profile(
             df[["X", "Y", "Z"]].to_numpy(), center, particles_meta, plot=False,
@@ -306,12 +337,19 @@ def main():
                     bary_properties["Temperatures"] = bary_properties["InternalEnergies"]
 
             radius = 1.9
-            resolution = 1000
+            resolution = 200
             # xrange[0], xrange[-1], yrange[0], yrange[-1]
             extent = [center[0] - radius, center[0] + radius,
                       center[1] - radius, center[1] + radius]
+            extents.append(extent)
             # extent = [42, 62, 50, 70]
             ramses_done = False
+            labels = {
+                "cic": "$\\rho_{DM}$",
+                "Densities": "$\\rho$",
+                "Entropies": "$s$",
+                "Temperatures": "$T$",
+            }
             for ii, property in enumerate(["cic", "Densities", "Entropies", "Temperatures"]):
                 print("property:", property)
                 key = f"grid_{resolution}_{property}_{interpolation_method}_{radius}"
@@ -355,17 +393,33 @@ def main():
 
                             fname = imager_dir / f"snapshot_{property_map[property]}_zproj_zobs-0p00.bin"
                             grid = load_slice_data(fname).T
+
                     cache.set(key, grid, str(bary_file), compressed=True)
+                if property == "Densities" and is_ramses:
+                    # convert g/cm^3 to 1e10 Msol Mpc^-3
+                    solar_mass_in_gram = 1.988e33
+                    mpc_in_cm = constants.parsec * constants.mega * 100
+                    grid = np.asarray(grid)
+                    grid *= (mpc_in_cm ** 3 / solar_mass_in_gram / 1e10)
+
                 ax_baryon = axs_baryon[baryon_plot_counter][ii]
+                if property in vminmax:
+                    minmax = vminmax[property]
+                else:
+                    minmax = np.min(grid), np.max(grid)
+                    vminmax[property] = minmax
+                print("minmax", minmax)
                 img: AxesImage = ax_baryon.imshow(
                     grid,
-                    norm=LogNorm(),
+                    norm=LogNorm(vmin=minmax[0], vmax=minmax[1]),
                     interpolation="none",
                     origin="lower",
                     extent=extent,
                 )
+
                 if baryon_plot_counter == 0:
-                    ax_baryon.set_title(property)
+                    fig4.colorbar(img, ax=ax_baryon, location="top", label=labels[property])
+                    # ax_baryon.set_title(property)
                 # ax_baryon.set_xlabel("X")
                 # ax_baryon.set_ylabel("Y")
                 ax_baryon.set_aspect("equal")
@@ -381,6 +435,15 @@ def main():
             ax6.set_title("Pressures")
             ax5.loglog(r[1:], prof["Densities"], label=label)
             ax6.loglog(r[1:], prof["Pressures"], label=label)
+
+    extents = np.asarray(extents)
+
+    global_xlim = extents[:, 0].max(), extents[:, 1].min()
+    global_ylim = extents[:, 2].max(), extents[:, 3].min()
+
+    for ax in axs_baryon.flatten():
+        ax.set_xlim(global_xlim)
+        ax.set_ylim(global_ylim)
 
     fig3: Figure = plt.figure(
         # just a bit more than 2/3 so that the two rows don't overlap
@@ -412,7 +475,7 @@ def main():
 
     for ax in [ax1, ax2, ax5, ax6]:
         ax.legend()
-    for fig in [fig1, fig2, fig3, fig4, fig5, fig6]:
+    for fig in [fig1, fig2, fig3, fig5, fig6]:
         fig.tight_layout()
         fig.subplots_adjust(wspace=0, hspace=0)
     axs_baryon[0][0].set_ylabel("Swift")
@@ -425,6 +488,7 @@ def main():
     fig4.savefig(Path(f"~/tmp/{mode.value}4.pdf").expanduser())
 
     pprint(centers)
+    print(json.dumps(halo_props, indent=4))
     plt.show()
     print(part_numbers)
     print(mapping)
