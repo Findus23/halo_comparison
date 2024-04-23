@@ -143,7 +143,6 @@ def main():
                     print("Aaaa")
                     continue
             elif mode == Mode.richings:
-                pass
                 if not has_baryons:
                     continue
                 # if levelmax != 11:
@@ -337,7 +336,7 @@ def main():
                     bary_properties["Temperatures"] = bary_properties["InternalEnergies"]
 
             radius = 1.9
-            resolution = 200
+            resolution = 500
             # xrange[0], xrange[-1], yrange[0], yrange[-1]
             extent = [center[0] - radius, center[0] + radius,
                       center[1] - radius, center[1] + radius]
@@ -436,14 +435,15 @@ def main():
             ax5.loglog(r[1:], prof["Densities"], label=label)
             ax6.loglog(r[1:], prof["Pressures"], label=label)
 
-    extents = np.asarray(extents)
+    if mode==Mode.richings:
+        extents = np.asarray(extents)
+        print(extents)
+        global_xlim = extents[:, 0].max(), extents[:, 1].min()
+        global_ylim = extents[:, 2].max(), extents[:, 3].min()
 
-    global_xlim = extents[:, 0].max(), extents[:, 1].min()
-    global_ylim = extents[:, 2].max(), extents[:, 3].min()
-
-    for ax in axs_baryon.flatten():
-        ax.set_xlim(global_xlim)
-        ax.set_ylim(global_ylim)
+        for ax in axs_baryon.flatten():
+            ax.set_xlim(global_xlim)
+            ax.set_ylim(global_ylim)
 
     fig3: Figure = plt.figure(
         # just a bit more than 2/3 so that the two rows don't overlap
@@ -488,7 +488,9 @@ def main():
     fig4.savefig(Path(f"~/tmp/{mode.value}4.pdf").expanduser())
 
     pprint(centers)
-    print(json.dumps(halo_props, indent=4))
+    if mode == Mode.auriga6:
+        with open("halo_props.json","w") as f:
+            json.dump(halo_props,f, indent=4)
     plt.show()
     print(part_numbers)
     print(mapping)
