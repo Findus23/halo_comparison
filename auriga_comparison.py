@@ -17,6 +17,7 @@ from matplotlib.axes import Axes
 from matplotlib.colors import LogNorm
 from matplotlib.figure import Figure
 from matplotlib.image import AxesImage
+from mpl_toolkits.axes_grid1.anchored_artists import AnchoredSizeBar
 from numpy import log10
 from pynbody.array import SimArray
 from pynbody.snapshot import FamilySubSnap
@@ -344,10 +345,10 @@ def main():
             # extent = [42, 62, 50, 70]
             ramses_done = False
             labels = {
-                "cic": "$\\rho_{DM}$",
-                "Densities": "$\\rho$",
+                "cic": "$\\rho_{\\mathrm{DM}}$ [$10^{10}\\mathrm{M}_\\odot \\mathrm{Mpc}^{-3}$]",
+                "Densities": "$\\rho_{\\mathrm{gas}}$ [$10^{10}\\mathrm{M}_\\odot \\mathrm{Mpc}^{-3}$]",
                 "Entropies": "$s$",
-                "Temperatures": "$T$",
+                "Temperatures": "$T$ [K]",
             }
             for ii, property in enumerate(["cic", "Densities", "Entropies", "Temperatures"]):
                 print("property:", property)
@@ -408,6 +409,8 @@ def main():
                     minmax = np.min(grid), np.max(grid)
                     vminmax[property] = minmax
                 print("minmax", minmax)
+                if is_ramses:
+                    np.save(f"/home/lukas/tmp/ramses_grid_{property}", grid)
                 img: AxesImage = ax_baryon.imshow(
                     grid,
                     norm=LogNorm(vmin=minmax[0], vmax=minmax[1]),
@@ -444,6 +447,21 @@ def main():
         for ax in axs_baryon.flatten():
             ax.set_xlim(global_xlim)
             ax.set_ylim(global_ylim)
+            ax.set_xticks([])
+            ax.set_yticks([])
+            scalebar = AnchoredSizeBar(
+                ax.transData,
+                1,
+                "1 Mpc",
+                "lower left",
+                # pad=0.1,
+                color="white",
+                frameon=False,
+                # size_vertical=1
+            )
+            ax.add_artist(scalebar)
+
+
 
     fig3: Figure = plt.figure(
         # just a bit more than 2/3 so that the two rows don't overlap
