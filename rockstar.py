@@ -16,7 +16,7 @@ def make_names_unique(names: list[str]) -> list[str]:
     return newlist
 
 
-def largest_halo_properties(dir: Path):
+def read_rockstar_halos(dir: Path) -> tuple[pd.DataFrame, Path]:
     file = dir / "halos_127.0.ascii"
     if not file.exists():
         file = dir / "halos_0.0.ascii"
@@ -37,6 +37,12 @@ def largest_halo_properties(dir: Path):
     df["Rs_kpc"] = df.Rs / h
 
     df["con"] = df.r200c_kpc / df.Rs_kpc
+
+    return df, file
+
+
+def largest_halo_properties(dir: Path):
+    df, file = read_rockstar_halos(dir)
 
     main_halo = df.iloc[0]
 
